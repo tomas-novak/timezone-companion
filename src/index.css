@@ -141,6 +141,117 @@
   .day-checkbox-active {
     @apply bg-primary text-primary-foreground border-primary;
   }
+
+  /* Schedule View Styles */
+  .schedule-view {
+    @apply rounded-xl border bg-card overflow-hidden;
+  }
+
+  .schedule-header {
+    @apply sticky top-0 z-20 flex border-b bg-card;
+  }
+
+  .schedule-header-cell {
+    @apply flex-1 min-w-[100px] px-3 py-3 text-center text-sm font-medium border-r last:border-r-0;
+  }
+
+  .schedule-time-column {
+    @apply w-12 flex-shrink-0 border-r;
+  }
+
+  .schedule-grid-container {
+    @apply overflow-auto max-h-[500px];
+  }
+
+  .schedule-grid {
+    @apply relative;
+  }
+
+  .schedule-row {
+    @apply relative flex border-b last:border-b-0;
+    min-height: 48px;
+  }
+
+  .schedule-time-label {
+    @apply flex items-center justify-center text-xs text-muted-foreground font-mono;
+  }
+
+  .schedule-day-badge {
+    @apply text-[10px] font-semibold text-primary;
+  }
+
+  .schedule-cell {
+    @apply flex-1 min-w-[100px] flex items-center justify-center gap-1.5 px-2 py-2 text-sm font-mono border-r last:border-r-0 transition-colors;
+  }
+
+  .schedule-time-text {
+    @apply text-foreground font-medium;
+  }
+
+  .schedule-day-badge-inline {
+    @apply text-[10px] font-bold text-muted-foreground uppercase mr-1;
+  }
+
+  /* Cell backgrounds for working hours status */
+  .schedule-cell-working {
+    background-color: hsl(var(--primary) / 0.25);
+  }
+
+  .schedule-cell-reasonable {
+    background-color: hsl(var(--primary) / 0.1);
+  }
+
+  .schedule-cell-outside {
+    @apply bg-muted/30;
+  }
+
+  .dark .schedule-cell-working {
+    background-color: hsl(var(--primary) / 0.3);
+  }
+
+  .dark .schedule-cell-reasonable {
+    background-color: hsl(var(--primary) / 0.12);
+  }
+
+  .dark .schedule-cell-outside {
+    @apply bg-muted/20;
+  }
+
+  /* Current time bar */
+  .schedule-current-bar {
+    @apply absolute left-0 right-0 z-10 flex items-center h-[40px] pointer-events-none;
+    transform: translateY(-50%);
+    background: linear-gradient(90deg, hsl(var(--primary) / 0.95), hsl(var(--brand-teal-shade) / 0.95));
+    border-radius: 8px;
+    margin: 0 4px;
+    box-shadow: 0 2px 12px hsl(var(--primary) / 0.4);
+  }
+
+  .schedule-current-bar-label {
+    @apply flex items-center gap-1 px-3 text-primary-foreground text-xs font-medium whitespace-nowrap;
+    width: 108px;
+    flex-shrink: 0;
+  }
+
+  .schedule-current-indicator {
+    @apply text-primary-foreground/70 text-[10px];
+  }
+
+  .schedule-current-bar-times {
+    @apply flex flex-1;
+  }
+
+  .schedule-current-time-cell {
+    @apply flex-1 min-w-[100px] flex items-center justify-center gap-1.5 text-primary-foreground;
+  }
+
+  .schedule-current-day {
+    @apply text-[10px] font-semibold opacity-80;
+  }
+
+  .schedule-current-time {
+    @apply text-sm font-bold;
+  }
 }
 
 @layer utilities {
