@@ -131,7 +131,6 @@ export function ScheduleView({ zoneSettings, now, use24Hour }: ScheduleViewProps
     <div className="schedule-view">
       {/* Header row - sticky */}
       <div className="schedule-header">
-        <div className="schedule-header-cell schedule-time-column" />
         {zones.map((zone) => (
           <div key={zone.id} className="schedule-header-cell">
             <span className="font-semibold">{zone.city}</span>
@@ -147,14 +146,6 @@ export function ScheduleView({ zoneSettings, now, use24Hour }: ScheduleViewProps
 
             return (
               <div key={hour} className="schedule-row">
-                {/* Time label column */}
-                <div className="schedule-time-column schedule-time-label">
-                  {hour === 0 && (
-                    <span className="schedule-day-badge">
-                      {pragueNow.toFormat("EEE").toUpperCase()}
-                    </span>
-                  )}
-                </div>
 
                 {/* Zone columns */}
                 {zones.map((zone) => {
@@ -186,6 +177,10 @@ export function ScheduleView({ zoneSettings, now, use24Hour }: ScheduleViewProps
                       top: `${hourProgress * 100}%`,
                     }}
                   >
+                    <div className="schedule-current-bar-label">
+                      <span className="schedule-current-indicator">⋮⋮</span>
+                      <span className="font-medium">Now</span>
+                    </div>
                     <div className="schedule-current-bar-label">
                       <span className="schedule-current-indicator">⋮⋮</span>
                       <span className="font-medium">Current time</span>

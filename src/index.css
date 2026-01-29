@@ -229,7 +229,7 @@
 
   .schedule-current-bar-label {
     @apply flex items-center gap-1 px-3 text-primary-foreground text-xs font-medium whitespace-nowrap;
-    width: 108px;
+    width: 70px;
     flex-shrink: 0;
   }
 
