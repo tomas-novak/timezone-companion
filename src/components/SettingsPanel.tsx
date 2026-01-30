@@ -12,28 +12,53 @@ import {
 interface SettingsPanelProps {
   zoneSettings: Record<string, ZoneSettings>;
   zoneOrder: string[];
+  use24Hour: boolean;
   onUpdateZone: (zoneId: string, updates: Partial<ZoneSettings>) => void;
   onMoveZone: (zoneId: string, direction: "up" | "down") => void;
 }
 
-function TimeInput({
+function formatHourDisplay(hour: number, use24Hour: boolean): string {
+  if (use24Hour) {
+    return `${hour.toString().padStart(2, "0")}:00`;
+  }
+  const suffix = hour >= 12 ? "PM" : "AM";
+  const h12 = hour % 12 || 12;
+  return `${h12}:00 ${suffix}`;
+}
+
+function parseHourFromValue(value: string): number {
+  const [hours] = value.split(":").map(Number);
+  return hours;
+}
+
+function HourSelect({
   value,
   onChange,
   label,
+  use24Hour,
 }: {
   value: string;
   onChange: (value: string) => void;
   label: string;
+  use24Hour: boolean;
 }) {
+  const currentHour = parseHourFromValue(value);
+  const hours = Array.from({ length: 24 }, (_, i) => i);
+
   return (
     <div className="flex flex-col gap-1">
       <label className="text-xs text-muted-foreground">{label}</label>
-      <input
-        type="time"
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
+      <select
+        value={currentHour}
+        onChange={(e) => onChange(`${e.target.value.padStart(2, "0")}:00`)}
         className="time-input"
-      />
+      >
+        {hours.map((hour) => (
+          <option key={hour} value={hour}>
+            {formatHourDisplay(hour, use24Hour)}
+          </option>
+        ))}
+      </select>
     </div>
   );
 }
@@ -75,6 +100,7 @@ function DaySelector({
 function ZoneSettingsCard({
   zone,
   settings,
+  use24Hour,
   onUpdate,
   onMoveUp,
   onMoveDown,
@@ -84,6 +110,7 @@ function ZoneSettingsCard({
 }: {
   zone: (typeof TIMEZONE_CONFIGS)[0];
   settings: ZoneSettings;
+  use24Hour: boolean;
   onUpdate: (updates: Partial<ZoneSettings>) => void;
   onMoveUp: () => void;
   onMoveDown: () => void;
@@ -131,16 +158,18 @@ function ZoneSettingsCard({
       <div className="mb-4">
         <p className="text-sm font-medium mb-2">Working Hours</p>
         <div className="flex flex-wrap items-end gap-3 mb-2">
-          <TimeInput
+          <HourSelect
             value={settings.workingStart}
             onChange={(v) => onUpdate({ workingStart: v })}
             label="Start"
+            use24Hour={use24Hour}
           />
           <span className="pb-2 text-muted-foreground">–</span>
-          <TimeInput
+          <HourSelect
             value={settings.workingEnd}
             onChange={(v) => onUpdate({ workingEnd: v })}
             label="End"
+            use24Hour={use24Hour}
           />
         </div>
         <div className="mt-2">
@@ -158,16 +187,18 @@ function ZoneSettingsCard({
       <div>
         <p className="text-sm font-medium mb-2">Reasonable Hours</p>
         <div className="flex flex-wrap items-end gap-3">
-          <TimeInput
+          <HourSelect
             value={settings.reasonableStart}
             onChange={(v) => onUpdate({ reasonableStart: v })}
             label="Start"
+            use24Hour={use24Hour}
           />
           <span className="pb-2 text-muted-foreground">–</span>
-          <TimeInput
+          <HourSelect
             value={settings.reasonableEnd}
             onChange={(v) => onUpdate({ reasonableEnd: v })}
             label="End"
+            use24Hour={use24Hour}
           />
         </div>
       </div>
@@ -175,7 +206,7 @@ function ZoneSettingsCard({
   );
 }
 
-export function SettingsPanel({ zoneSettings, zoneOrder, onUpdateZone, onMoveZone }: SettingsPanelProps) {
+export function SettingsPanel({ zoneSettings, zoneOrder, use24Hour, onUpdateZone, onMoveZone }: SettingsPanelProps) {
   const [isOpen, setIsOpen] = useState(false);
 
   // Get zones in order
@@ -208,6 +239,7 @@ export function SettingsPanel({ zoneSettings, zoneOrder, onUpdateZone, onMoveZon
               key={zone.id}
               zone={zone}
               settings={zoneSettings[zone.id]}
+              use24Hour={use24Hour}
               onUpdate={(updates) => onUpdateZone(zone.id, updates)}
               onMoveUp={() => onMoveZone(zone.id, "up")}
               onMoveDown={() => onMoveZone(zone.id, "down")}

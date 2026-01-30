@@ -71,6 +71,7 @@ const Index = () => {
         <SettingsPanel
           zoneSettings={settings.zones}
           zoneOrder={settings.zoneOrder}
+          use24Hour={settings.use24Hour}
           onUpdateZone={updateZoneSettings}
           onMoveZone={moveZone}
         />
