@@ -2,7 +2,6 @@ import { useState } from "react";
 import { Header } from "@/components/Header";
 import { ClockCard } from "@/components/ClockCard";
 import { SettingsPanel } from "@/components/SettingsPanel";
-import { MeetingOverlap } from "@/components/MeetingOverlap";
 import { ScheduleView } from "@/components/ScheduleView";
 import { Footer } from "@/components/Footer";
 import { useLiveClock } from "@/hooks/useLiveClock";
@@ -51,13 +50,6 @@ const Index = () => {
                 />
               ))}
             </div>
-
-            {/* Meeting Overlap */}
-            <MeetingOverlap
-              zoneSettings={settings.zones}
-              now={now}
-              use24Hour={settings.use24Hour}
-            />
           </TabsContent>
 
           <TabsContent value="schedule">

@@ -9,15 +9,15 @@ export function Footer() {
           How it works
         </h3>
 
-        <div className="grid gap-6 md:grid-cols-3 text-sm">
+        <div className="grid gap-6 md:grid-cols-2 text-sm">
           <div className="space-y-2">
             <div className="flex items-center gap-2 font-medium">
               <Clock size={14} className="text-primary" />
               Time Zones
             </div>
             <p className="text-muted-foreground">
-              This app displays live clocks for Tunis (Tunisia), Prague (Czech Republic),
-              Muscat (Oman), and Doha (Qatar).
+              This app displays live clocks for Prague (Czech Republic), Tunis (Tunisia),
+              Doha (Qatar), and Muscat (Oman).
             </p>
           </div>
 
@@ -28,19 +28,7 @@ export function Footer() {
             </div>
             <p className="text-muted-foreground">
               Each zone has configurable working hours and days. Cards glow when the zone
-              is currently within working hours.
-            </p>
-          </div>
-
-          <div className="space-y-2">
-            <div className="flex items-center gap-2 font-medium">
-              <Globe size={14} className="text-primary" />
-              Reasonable Hours & Overlap
-            </div>
-            <p className="text-muted-foreground">
-              "Reasonable hours" define when people are typically available (default 08:00–19:00).
-              The overlap finder locates the next window when all 4 zones are within their
-              reasonable hours.
+              is currently within working hours. Use the Schedule View to compare all zones side-by-side.
             </p>
           </div>
         </div>
