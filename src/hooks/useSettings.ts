@@ -42,10 +42,34 @@ export function useSettings() {
     []
   );
 
+  const updateZoneOrder = useCallback((newOrder: string[]) => {
+    setSettings((prev) => ({
+      ...prev,
+      zoneOrder: newOrder,
+    }));
+  }, []);
+
+  const moveZone = useCallback((zoneId: string, direction: "up" | "down") => {
+    setSettings((prev) => {
+      const currentIndex = prev.zoneOrder.indexOf(zoneId);
+      if (currentIndex === -1) return prev;
+      
+      const newIndex = direction === "up" ? currentIndex - 1 : currentIndex + 1;
+      if (newIndex < 0 || newIndex >= prev.zoneOrder.length) return prev;
+      
+      const newOrder = [...prev.zoneOrder];
+      [newOrder[currentIndex], newOrder[newIndex]] = [newOrder[newIndex], newOrder[currentIndex]];
+      
+      return { ...prev, zoneOrder: newOrder };
+    });
+  }, []);
+
   return {
     settings,
     toggle24Hour,
     toggleDarkMode,
     updateZoneSettings,
+    updateZoneOrder,
+    moveZone,
   };
 }

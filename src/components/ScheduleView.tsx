@@ -5,17 +5,10 @@ import { TIMEZONE_CONFIGS } from "@/lib/timezones";
 
 interface ScheduleViewProps {
   zoneSettings: Record<string, ZoneSettings>;
+  zoneOrder: string[];
   now: DateTime;
   use24Hour: boolean;
 }
-
-// Zone order for display
-const ZONE_ORDER = [
-  "Europe/Prague",
-  "Africa/Tunis",
-  "Asia/Qatar",
-  "Asia/Muscat",
-];
 
 function parseTimeToMinutes(time: string): number {
   const [h, m] = time.split(":").map(Number);
@@ -47,17 +40,17 @@ function formatTimeWithMinutes(dt: DateTime, use24Hour: boolean): string {
   return dt.toFormat(use24Hour ? "HH:mm" : "h:mm A");
 }
 
-export function ScheduleView({ zoneSettings, now, use24Hour }: ScheduleViewProps) {
+export function ScheduleView({ zoneSettings, zoneOrder, now, use24Hour }: ScheduleViewProps) {
   const scrollRef = useRef<HTMLDivElement>(null);
   const currentTimeRef = useRef<HTMLDivElement>(null);
 
-  // Get zone configs in display order
+  // Get zone configs in user-defined order
   const zones = useMemo(
     () =>
-      ZONE_ORDER.map((id) => TIMEZONE_CONFIGS.find((z) => z.id === id)!).filter(
-        Boolean
-      ),
-    []
+      zoneOrder
+        .map((id) => TIMEZONE_CONFIGS.find((z) => z.id === id))
+        .filter((z): z is (typeof TIMEZONE_CONFIGS)[0] => z !== undefined),
+    [zoneOrder]
   );
 
   // Get current hour position for scrolling

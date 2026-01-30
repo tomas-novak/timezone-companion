@@ -12,8 +12,13 @@ import { Clock, CalendarDays } from "lucide-react";
 
 const Index = () => {
   const now = useLiveClock();
-  const { settings, toggle24Hour, toggleDarkMode, updateZoneSettings } = useSettings();
+  const { settings, toggle24Hour, toggleDarkMode, updateZoneSettings, moveZone } = useSettings();
   const [activeTab, setActiveTab] = useState("clocks");
+
+  // Get ordered timezone configs
+  const orderedConfigs = settings.zoneOrder
+    .map((id) => TIMEZONE_CONFIGS.find((z) => z.id === id))
+    .filter((z): z is (typeof TIMEZONE_CONFIGS)[0] => z !== undefined);
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -40,7 +45,7 @@ const Index = () => {
           <TabsContent value="clocks" className="space-y-6">
             {/* Clock Grid */}
             <div className="grid gap-4 md:grid-cols-2">
-              {TIMEZONE_CONFIGS.map((config) => (
+              {orderedConfigs.map((config) => (
                 <ClockCard
                   key={config.id}
                   config={config}
@@ -55,6 +60,7 @@ const Index = () => {
           <TabsContent value="schedule">
             <ScheduleView
               zoneSettings={settings.zones}
+              zoneOrder={settings.zoneOrder}
               now={now}
               use24Hour={settings.use24Hour}
             />
@@ -64,7 +70,9 @@ const Index = () => {
         {/* Settings */}
         <SettingsPanel
           zoneSettings={settings.zones}
+          zoneOrder={settings.zoneOrder}
           onUpdateZone={updateZoneSettings}
+          onMoveZone={moveZone}
         />
       </main>
 

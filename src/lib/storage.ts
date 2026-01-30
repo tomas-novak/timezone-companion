@@ -12,9 +12,14 @@ export interface AppSettings {
   use24Hour: boolean;
   isDarkMode: boolean;
   zones: Record<string, ZoneSettings>;
+  zoneOrder: string[];
 }
 
 const STORAGE_KEY = "4zone-clock-settings";
+
+export function getDefaultZoneOrder(): string[] {
+  return TIMEZONE_CONFIGS.map((tz) => tz.id);
+}
 
 export function getDefaultSettings(): AppSettings {
   const zones: Record<string, ZoneSettings> = {};
@@ -33,6 +38,7 @@ export function getDefaultSettings(): AppSettings {
     use24Hour: true,
     isDarkMode: window.matchMedia("(prefers-color-scheme: dark)").matches,
     zones,
+    zoneOrder: getDefaultZoneOrder(),
   };
 }
 
@@ -43,6 +49,12 @@ export function loadSettings(): AppSettings {
       const parsed = JSON.parse(stored);
       const defaults = getDefaultSettings();
       
+      // Validate zoneOrder - ensure all zones are present
+      let zoneOrder = parsed.zoneOrder;
+      if (!Array.isArray(zoneOrder) || zoneOrder.length !== defaults.zoneOrder.length) {
+        zoneOrder = defaults.zoneOrder;
+      }
+      
       // Merge with defaults to handle missing keys
       return {
         ...defaults,
@@ -51,6 +63,7 @@ export function loadSettings(): AppSettings {
           ...defaults.zones,
           ...parsed.zones,
         },
+        zoneOrder,
       };
     }
   } catch (e) {
