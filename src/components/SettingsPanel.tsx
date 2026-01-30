@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { ChevronDown, ChevronUp, Settings2 } from "lucide-react";
+import { ChevronDown, ChevronUp, Settings2, ArrowUp, ArrowDown, GripVertical } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { TIMEZONE_CONFIGS, DAYS_OF_WEEK } from "@/lib/timezones";
 import type { ZoneSettings } from "@/lib/storage";
@@ -11,7 +11,9 @@ import {
 
 interface SettingsPanelProps {
   zoneSettings: Record<string, ZoneSettings>;
+  zoneOrder: string[];
   onUpdateZone: (zoneId: string, updates: Partial<ZoneSettings>) => void;
+  onMoveZone: (zoneId: string, direction: "up" | "down") => void;
 }
 
 function TimeInput({
@@ -74,16 +76,56 @@ function ZoneSettingsCard({
   zone,
   settings,
   onUpdate,
+  onMoveUp,
+  onMoveDown,
+  isFirst,
+  isLast,
+  position,
 }: {
   zone: (typeof TIMEZONE_CONFIGS)[0];
   settings: ZoneSettings;
   onUpdate: (updates: Partial<ZoneSettings>) => void;
+  onMoveUp: () => void;
+  onMoveDown: () => void;
+  isFirst: boolean;
+  isLast: boolean;
+  position: number;
 }) {
   return (
     <div className="rounded-lg border bg-card p-4">
-      <h4 className="font-medium mb-3">
-        {zone.city}, {zone.country}
-      </h4>
+      <div className="flex items-center justify-between mb-3">
+        <div className="flex items-center gap-2">
+          <GripVertical size={16} className="text-muted-foreground" />
+          <span className="text-xs font-medium text-muted-foreground bg-muted px-2 py-0.5 rounded">
+            #{position}
+          </span>
+          <h4 className="font-medium">
+            {zone.city}, {zone.country}
+          </h4>
+        </div>
+        <div className="flex items-center gap-1">
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-7 w-7"
+            onClick={onMoveUp}
+            disabled={isFirst}
+            title="Move up"
+          >
+            <ArrowUp size={14} />
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-7 w-7"
+            onClick={onMoveDown}
+            disabled={isLast}
+            title="Move down"
+          >
+            <ArrowDown size={14} />
+          </Button>
+        </div>
+      </div>
 
       {/* Working Hours */}
       <div className="mb-4">
@@ -133,8 +175,13 @@ function ZoneSettingsCard({
   );
 }
 
-export function SettingsPanel({ zoneSettings, onUpdateZone }: SettingsPanelProps) {
+export function SettingsPanel({ zoneSettings, zoneOrder, onUpdateZone, onMoveZone }: SettingsPanelProps) {
   const [isOpen, setIsOpen] = useState(false);
+
+  // Get zones in order
+  const orderedZones = zoneOrder
+    .map((id) => TIMEZONE_CONFIGS.find((z) => z.id === id))
+    .filter((z): z is (typeof TIMEZONE_CONFIGS)[0] => z !== undefined);
 
   return (
     <Collapsible open={isOpen} onOpenChange={setIsOpen} className="settings-panel">
@@ -153,15 +200,20 @@ export function SettingsPanel({ zoneSettings, onUpdateZone }: SettingsPanelProps
 
       <CollapsibleContent className="mt-4">
         <p className="text-sm text-muted-foreground mb-4">
-          Configure working hours and reasonable hours for each timezone.
+          Configure working hours and reasonable hours for each timezone. Use the arrows to change the display order.
         </p>
         <div className="grid gap-4 md:grid-cols-2">
-          {TIMEZONE_CONFIGS.map((zone) => (
+          {orderedZones.map((zone, index) => (
             <ZoneSettingsCard
               key={zone.id}
               zone={zone}
               settings={zoneSettings[zone.id]}
               onUpdate={(updates) => onUpdateZone(zone.id, updates)}
+              onMoveUp={() => onMoveZone(zone.id, "up")}
+              onMoveDown={() => onMoveZone(zone.id, "down")}
+              isFirst={index === 0}
+              isLast={index === orderedZones.length - 1}
+              position={index + 1}
             />
           ))}
         </div>
