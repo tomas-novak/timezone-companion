@@ -122,17 +122,17 @@ export function ScheduleView({ zoneSettings, zoneOrder, now, use24Hour }: Schedu
 
   return (
     <div className="schedule-view">
-      {/* Header row - sticky */}
-      <div className="schedule-header">
-        {zones.map((zone) => (
-          <div key={zone.id} className="schedule-header-cell">
-            <span className="font-semibold">{zone.city}</span>
-          </div>
-        ))}
-      </div>
-
-      {/* Scrollable grid */}
+      {/* Scrollable container for both header and grid */}
       <div ref={scrollRef} className="schedule-grid-container">
+        {/* Header row - sticky */}
+        <div className="schedule-header">
+          {zones.map((zone) => (
+            <div key={zone.id} className="schedule-header-cell">
+              <span className="font-semibold">{zone.city}</span>
+            </div>
+          ))}
+        </div>
+
         <div className="schedule-grid">
           {hours.map((hour) => {
             const isCurrentHour = hour === currentHour;
