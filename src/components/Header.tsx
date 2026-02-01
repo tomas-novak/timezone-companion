@@ -23,10 +23,7 @@ export function Header({
           <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary text-primary-foreground">
             <Clock size={20} />
           </div>
-          <div>
-            <h1 className="text-lg font-semibold leading-none">OFTI</h1>
-            <p className="text-xs text-muted-foreground">offices time</p>
-          </div>
+          <h1 className="text-lg font-semibold">OFTI offices time</h1>
         </div>
 
         {/* Controls */}
