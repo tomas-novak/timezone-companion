@@ -2,7 +2,7 @@ import { DateTime } from "luxon";
 import type { TimeZoneConfig } from "@/lib/timezones";
 import type { ZoneSettings } from "@/lib/storage";
 import { getWorkStatus, type WorkStatus } from "@/lib/workStatus";
-import { Clock, Briefcase, Coffee, Calendar } from "lucide-react";
+import { Clock, Briefcase, Coffee, Calendar, Sun } from "lucide-react";
 
 interface ClockCardProps {
   config: TimeZoneConfig;
@@ -18,6 +18,13 @@ function WorkStatusBadge({ status }: { status: WorkStatus }) {
         <span className="badge-working">
           <Briefcase size={12} />
           Working hours
+        </span>
+      );
+    case "reasonable":
+      return (
+        <span className="badge-reasonable">
+          <Sun size={12} />
+          Reasonable hours
         </span>
       );
     case "outside":
