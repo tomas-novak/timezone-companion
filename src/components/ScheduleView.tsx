@@ -170,10 +170,6 @@ export function ScheduleView({ zoneSettings, zoneOrder, now, use24Hour }: Schedu
                       top: `${hourProgress * 100}%`,
                     }}
                   >
-                    <div className="schedule-current-bar-label">
-                      <span className="schedule-current-indicator">⋮⋮</span>
-                      <span className="font-medium">Now</span>
-                    </div>
                     <div className="schedule-current-bar-times">
                       {zones.map((zone) => {
                         const localNow = now.setZone(zone.id);
