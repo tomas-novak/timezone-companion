@@ -1,6 +1,7 @@
-import { Moon, Sun, Clock } from "lucide-react";
+import { Moon, Sun } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
+import logo from "@/assets/logo.png";
 
 interface HeaderProps {
   use24Hour: boolean;
@@ -20,9 +21,7 @@ export function Header({
       <div className="container flex h-16 items-center justify-between">
         {/* Logo / Title */}
         <div className="flex items-center gap-3">
-          <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary text-primary-foreground">
-            <Clock size={20} />
-          </div>
+          <img src={logo} alt="OFTI logo" className="h-9 w-9 rounded-lg object-cover" />
           <h1 className="text-lg font-semibold">OFTI offices time</h1>
         </div>
 
