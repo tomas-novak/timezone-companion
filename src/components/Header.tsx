@@ -24,8 +24,8 @@ export function Header({
             <Clock size={20} />
           </div>
           <div>
-            <h1 className="text-lg font-semibold leading-none">4-Zone Clock</h1>
-            <p className="text-xs text-muted-foreground">& Planner</p>
+            <h1 className="text-lg font-semibold leading-none">OFTI</h1>
+            <p className="text-xs text-muted-foreground">offices time</p>
           </div>
         </div>
 
