@@ -22,7 +22,7 @@ export function Header({
         {/* Logo / Title */}
         <div className="flex items-center gap-3">
           <img src={logo} alt="OFTI logo" className="h-9 w-9 rounded-lg object-cover" />
-          <h1 className="text-lg font-semibold">OFTI offices time</h1>
+          <h1 className="text-lg font-semibold">OFTI offices hours</h1>
         </div>
 
         {/* Controls */}
