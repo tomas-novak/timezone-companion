@@ -44,6 +44,7 @@
     /* Custom tokens */
     --clock-glow: 169 97% 48%;
     --working-badge: 169 97% 48%;
+    --reasonable-badge: 45 93% 47%;
     --outside-badge: 215 16% 47%;
     --weekend-badge: 2 93% 47%;
   }
@@ -79,6 +80,7 @@
 
     --clock-glow: 169 97% 48%;
     --working-badge: 169 97% 48%;
+    --reasonable-badge: 45 93% 47%;
     --outside-badge: 215 20% 65%;
     --weekend-badge: 2 93% 47%;
   }
@@ -112,6 +114,12 @@
     @apply inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium;
     background-color: hsl(var(--working-badge) / 0.15);
     color: hsl(var(--working-badge));
+  }
+
+  .badge-reasonable {
+    @apply inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium;
+    background-color: hsl(var(--reasonable-badge) / 0.15);
+    color: hsl(var(--reasonable-badge));
   }
 
   .badge-outside {

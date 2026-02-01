@@ -11,7 +11,16 @@ function getCurrentMinutes(now: DateTime, zone: string): number {
   return local.hour * 60 + local.minute;
 }
 
-export type WorkStatus = "working" | "outside" | "weekend";
+export type WorkStatus = "working" | "reasonable" | "outside" | "weekend";
+
+function isInTimeRange(currentMins: number, startMins: number, endMins: number): boolean {
+  if (endMins <= startMins) {
+    // Overnight range
+    return currentMins >= startMins || currentMins < endMins;
+  }
+  // Normal range
+  return currentMins >= startMins && currentMins < endMins;
+}
 
 export function getWorkStatus(
   now: DateTime,
@@ -27,20 +36,19 @@ export function getWorkStatus(
   }
 
   const currentMins = getCurrentMinutes(now, zone);
-  const startMins = parseTimeToMinutes(settings.workingStart);
-  const endMins = parseTimeToMinutes(settings.workingEnd);
+  const workStartMins = parseTimeToMinutes(settings.workingStart);
+  const workEndMins = parseTimeToMinutes(settings.workingEnd);
+  const reasonableStartMins = parseTimeToMinutes(settings.reasonableStart);
+  const reasonableEndMins = parseTimeToMinutes(settings.reasonableEnd);
 
-  // Handle overnight range
-  if (endMins <= startMins) {
-    // Overnight: e.g., 22:00 - 06:00
-    if (currentMins >= startMins || currentMins < endMins) {
-      return "working";
-    }
-  } else {
-    // Normal range
-    if (currentMins >= startMins && currentMins < endMins) {
-      return "working";
-    }
+  // Check working hours first
+  if (isInTimeRange(currentMins, workStartMins, workEndMins)) {
+    return "working";
+  }
+
+  // Check reasonable hours
+  if (isInTimeRange(currentMins, reasonableStartMins, reasonableEndMins)) {
+    return "reasonable";
   }
 
   return "outside";
