@@ -6,6 +6,7 @@ export interface ZoneSettings {
   workingDays: number[];
   reasonableStart: string;
   reasonableEnd: string;
+  hidden: boolean;
 }
 
 export interface AppSettings {
@@ -31,6 +32,7 @@ export function getDefaultSettings(): AppSettings {
       workingDays: [...tz.defaultWorkingDays],
       reasonableStart: tz.defaultReasonableStart,
       reasonableEnd: tz.defaultReasonableEnd,
+      hidden: false,
     };
   });
 
