@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { ChevronDown, ChevronUp, Settings2, ArrowUp, ArrowDown, GripVertical } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import { TIMEZONE_CONFIGS, DAYS_OF_WEEK } from "@/lib/timezones";
 import type { ZoneSettings } from "@/lib/storage";
 import {
@@ -183,6 +184,21 @@ function ZoneSettingsCard({
         </div>
       </div>
 
+      {/* Visibility */}
+      <div className="mt-4 border-t pt-4">
+        <p className="text-sm font-medium mb-2">Visibility</p>
+        <label className="flex items-start gap-2 text-sm">
+          <Checkbox
+            checked={settings.hidden}
+            onCheckedChange={(checked) => onUpdate({ hidden: Boolean(checked) })}
+            aria-label={`Hide ${zone.city}`}
+          />
+          <span>
+            Hide this city from the clocks and schedule view.
+          </span>
+        </label>
+      </div>
+
       {/* Reasonable Hours */}
       <div>
         <p className="text-sm font-medium mb-2">Reasonable Hours</p>
@@ -231,7 +247,7 @@ export function SettingsPanel({ zoneSettings, zoneOrder, use24Hour, onUpdateZone
 
       <CollapsibleContent className="mt-4">
         <p className="text-sm text-muted-foreground mb-4">
-          Configure working hours and reasonable hours for each timezone. Use the arrows to change the display order.
+          Configure working hours, reasonable hours, and visibility for each timezone. Use the arrows to change the display order. Hidden cities stay in your settings but are removed from the clock and schedule views.
         </p>
         <div className="grid gap-4 md:grid-cols-2">
           {orderedZones.map((zone, index) => (

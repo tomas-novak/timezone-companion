@@ -49,8 +49,9 @@ export function ScheduleView({ zoneSettings, zoneOrder, now, use24Hour }: Schedu
     () =>
       zoneOrder
         .map((id) => TIMEZONE_CONFIGS.find((z) => z.id === id))
-        .filter((z): z is (typeof TIMEZONE_CONFIGS)[0] => z !== undefined),
-    [zoneOrder]
+        .filter((z): z is (typeof TIMEZONE_CONFIGS)[0] => z !== undefined)
+        .filter((zone) => !zoneSettings[zone.id]?.hidden),
+    [zoneOrder, zoneSettings]
   );
 
   // Get current hour position for scrolling

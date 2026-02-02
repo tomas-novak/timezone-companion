@@ -20,6 +20,8 @@ const Index = () => {
     .map((id) => TIMEZONE_CONFIGS.find((z) => z.id === id))
     .filter((z): z is (typeof TIMEZONE_CONFIGS)[0] => z !== undefined);
 
+  const visibleConfigs = orderedConfigs.filter((config) => !settings.zones[config.id]?.hidden);
+
   return (
     <div className="min-h-screen flex flex-col">
       <Header
@@ -45,7 +47,7 @@ const Index = () => {
           <TabsContent value="clocks" className="space-y-6">
             {/* Clock Grid */}
             <div className="grid gap-4 md:grid-cols-2">
-              {orderedConfigs.map((config) => (
+              {visibleConfigs.map((config) => (
                 <ClockCard
                   key={config.id}
                   config={config}
