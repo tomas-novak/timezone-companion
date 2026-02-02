@@ -16,8 +16,8 @@ export function Footer() {
               Time Zones
             </div>
             <p className="text-muted-foreground">
-              This app displays live clocks for Prague (Czech Republic), Tunis (Tunisia),
-              Doha (Qatar), and Muscat (Oman).
+              This app displays live clocks for Prague (Czech Republic), London (United Kingdom),
+              Tunis (Tunisia), Doha (Qatar), and Muscat (Oman).
             </p>
           </div>
 
