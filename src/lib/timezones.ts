@@ -42,6 +42,16 @@ export const TIMEZONE_CONFIGS: TimeZoneConfig[] = [
     defaultReasonableEnd: "19:00",
   },
   {
+    id: "America/New_York",
+    city: "New York",
+    country: "United States",
+    defaultWorkingDays: [1, 2, 3, 4, 5], // Mon-Fri
+    defaultWorkingStart: "09:00",
+    defaultWorkingEnd: "17:00",
+    defaultReasonableStart: "08:00",
+    defaultReasonableEnd: "19:00",
+  },
+  {
     id: "Asia/Muscat",
     city: "Muscat",
     country: "Oman",
@@ -56,6 +66,16 @@ export const TIMEZONE_CONFIGS: TimeZoneConfig[] = [
     city: "Doha",
     country: "Qatar",
     defaultWorkingDays: [7, 1, 2, 3, 4], // Sun-Thu
+    defaultWorkingStart: "09:00",
+    defaultWorkingEnd: "17:00",
+    defaultReasonableStart: "08:00",
+    defaultReasonableEnd: "19:00",
+  },
+  {
+    id: "Asia/Tokyo",
+    city: "Tokyo",
+    country: "Japan",
+    defaultWorkingDays: [1, 2, 3, 4, 5], // Mon-Fri
     defaultWorkingStart: "09:00",
     defaultWorkingEnd: "17:00",
     defaultReasonableStart: "08:00",
