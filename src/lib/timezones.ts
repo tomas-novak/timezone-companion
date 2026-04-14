@@ -61,6 +61,16 @@ export const TIMEZONE_CONFIGS: TimeZoneConfig[] = [
     defaultReasonableStart: "08:00",
     defaultReasonableEnd: "19:00",
   },
+  {
+    id: "Asia/Baghdad",
+    city: "Baghdad",
+    country: "Iraq",
+    defaultWorkingDays: [7, 1, 2, 3, 4], // Sun-Thu
+    defaultWorkingStart: "09:00",
+    defaultWorkingEnd: "17:00",
+    defaultReasonableStart: "08:00",
+    defaultReasonableEnd: "19:00",
+  },
 ];
 
 export const DAYS_OF_WEEK = [
