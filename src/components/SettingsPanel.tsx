@@ -200,7 +200,7 @@ function ZoneSettingsCard({
       </div>
 
       {/* Reasonable Hours */}
-      <div>
+      <div className="mt-4 border-t pt-4">
         <p className="text-sm font-medium mb-2">Reasonable Hours</p>
         <div className="flex flex-wrap items-end gap-3">
           <HourSelect
