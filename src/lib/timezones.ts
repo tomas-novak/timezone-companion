@@ -71,6 +71,16 @@ export const TIMEZONE_CONFIGS: TimeZoneConfig[] = [
     defaultReasonableStart: "08:00",
     defaultReasonableEnd: "19:00",
   },
+  {
+    id: "Asia/Kolkata",
+    city: "New Delhi",
+    country: "India",
+    defaultWorkingDays: [1, 2, 3, 4, 5], // Mon-Fri
+    defaultWorkingStart: "09:00",
+    defaultWorkingEnd: "17:00",
+    defaultReasonableStart: "08:00",
+    defaultReasonableEnd: "19:00",
+  },
 ];
 
 export const DAYS_OF_WEEK = [
