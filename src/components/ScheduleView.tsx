@@ -27,14 +27,6 @@ function isWithinRange(hour: number, start: string, end: string): boolean {
   return hourMins >= startMins && hourMins < endMins;
 }
 
-function formatHour(hour: number, use24Hour: boolean): string {
-  if (use24Hour) {
-    return `${hour.toString().padStart(2, "0")}:00`;
-  }
-  const suffix = hour >= 12 ? "PM" : "AM";
-  const h12 = hour % 12 || 12;
-  return `${h12}:00 ${suffix}`;
-}
 
 function formatTimeWithMinutes(dt: DateTime, use24Hour: boolean): string {
   return dt.toFormat(use24Hour ? "HH:mm" : "h:mm A");
