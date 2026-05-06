@@ -156,7 +156,7 @@ export function ScheduleView({ zoneSettings, zoneOrder, now, use24Hour }: Schedu
                         <span className="schedule-day-badge-inline">{dayLabel}</span>
                       )}
                       <span className="schedule-time-text">
-                        {formatHour(localTime.hour, use24Hour)}
+                        {formatTimeWithMinutes(localTime, use24Hour)}
                       </span>
                     </div>
                   );
