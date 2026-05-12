@@ -29,7 +29,7 @@ function isWithinRange(hour: number, start: string, end: string): boolean {
 
 
 function formatTimeWithMinutes(dt: DateTime, use24Hour: boolean): string {
-  return dt.toFormat(use24Hour ? "HH:mm" : "h:mm A");
+  return dt.toFormat(use24Hour ? "HH:mm" : "h:mm a");
 }
 
 export function ScheduleView({ zoneSettings, zoneOrder, now, use24Hour }: ScheduleViewProps) {
