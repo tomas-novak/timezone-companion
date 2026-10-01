@@ -2,7 +2,7 @@ import { useState } from "react";
 import { ChevronDown, ChevronUp, Settings2, ArrowUp, ArrowDown, GripVertical } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
-import { TIMEZONE_CONFIGS, DAYS_OF_WEEK } from "@/lib/timezones";
+import { TIMEZONE_CONFIGS, DAYS_OF_WEEK, resolveHomeTz } from "@/lib/timezones";
 import type { ZoneSettings } from "@/lib/storage";
 import {
   Collapsible,
@@ -16,6 +16,8 @@ interface SettingsPanelProps {
   use24Hour: boolean;
   onUpdateZone: (zoneId: string, updates: Partial<ZoneSettings>) => void;
   onMoveZone: (zoneId: string, direction: "up" | "down") => void;
+  homeTz: string | null;
+  onHomeTzChange: (homeTz: string | null) => void;
 }
 
 function formatHourDisplay(hour: number, use24Hour: boolean): string {
@@ -222,8 +224,12 @@ function ZoneSettingsCard({
   );
 }
 
-export function SettingsPanel({ zoneSettings, zoneOrder, use24Hour, onUpdateZone, onMoveZone }: SettingsPanelProps) {
+export function SettingsPanel({ zoneSettings, zoneOrder, use24Hour, onUpdateZone, onMoveZone, homeTz, onHomeTzChange }: SettingsPanelProps) {
   const [isOpen, setIsOpen] = useState(false);
+  const detectedTz = resolveHomeTz(null);
+  const extraZones = [...new Set([detectedTz, resolveHomeTz(homeTz)])].filter(
+    (tz) => !TIMEZONE_CONFIGS.some((zone) => zone.id === tz)
+  );
 
   // Get zones in order
   const orderedZones = zoneOrder
@@ -246,6 +252,27 @@ export function SettingsPanel({ zoneSettings, zoneOrder, use24Hour, onUpdateZone
       </CollapsibleTrigger>
 
       <CollapsibleContent className="mt-4">
+        <div className="flex flex-col gap-1 mb-4">
+          <label htmlFor="home-tz" className="text-xs text-muted-foreground">Home timezone</label>
+          <select
+            id="home-tz"
+            value={homeTz ?? ""}
+            onChange={(e) => onHomeTzChange(e.target.value || null)}
+            className="w-fit rounded-md border bg-background px-2 py-1.5 text-sm"
+          >
+            <option value="">Auto ({detectedTz})</option>
+            {extraZones.map((tz) => (
+              <option key={tz} value={tz}>
+                {tz}
+              </option>
+            ))}
+            {TIMEZONE_CONFIGS.map((zone) => (
+              <option key={zone.id} value={zone.id}>
+                {zone.city}
+              </option>
+            ))}
+          </select>
+        </div>
         <p className="text-sm text-muted-foreground mb-4">
           Configure working hours, reasonable hours, and visibility for each timezone. Use the arrows to change the display order. Hidden cities stay in your settings but are removed from the clock and schedule views.
         </p>

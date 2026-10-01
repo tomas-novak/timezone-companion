@@ -1,4 +1,5 @@
 import { Globe, Clock, Users } from "lucide-react";
+import { TIMEZONE_CONFIGS } from "@/lib/timezones";
 
 export function Footer() {
   return (
@@ -16,8 +17,10 @@ export function Footer() {
               Time Zones
             </div>
             <p className="text-muted-foreground">
-              This app displays live clocks for Prague (Czech Republic), London (United Kingdom),
-              Tunis (Tunisia), Doha (Qatar), and Muscat (Oman).
+              This app displays live clocks for{" "}
+              {TIMEZONE_CONFIGS.map((tz) => `${tz.city} (${tz.country})`).join(", ")}. The
+              schedule and the hour difference on each card are relative to your home timezone,
+              detected from your browser and changeable in Settings.
             </p>
           </div>
 

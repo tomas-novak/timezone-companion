@@ -42,6 +42,10 @@ export function useSettings() {
     []
   );
 
+  const setHomeTz = useCallback((homeTz: string | null) => {
+    setSettings((prev) => ({ ...prev, homeTz }));
+  }, []);
+
   const updateZoneOrder = useCallback((newOrder: string[]) => {
     setSettings((prev) => ({
       ...prev,
@@ -71,5 +75,6 @@ export function useSettings() {
     updateZoneSettings,
     updateZoneOrder,
     moveZone,
+    setHomeTz,
   };
 }

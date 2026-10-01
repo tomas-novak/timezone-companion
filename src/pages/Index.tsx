@@ -6,13 +6,14 @@ import { ScheduleView } from "@/components/ScheduleView";
 import { Footer } from "@/components/Footer";
 import { useLiveClock } from "@/hooks/useLiveClock";
 import { useSettings } from "@/hooks/useSettings";
-import { TIMEZONE_CONFIGS } from "@/lib/timezones";
+import { TIMEZONE_CONFIGS, resolveHomeTz } from "@/lib/timezones";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Clock, CalendarDays } from "lucide-react";
 
 const Index = () => {
   const now = useLiveClock();
-  const { settings, toggle24Hour, toggleDarkMode, updateZoneSettings, moveZone } = useSettings();
+  const { settings, toggle24Hour, toggleDarkMode, updateZoneSettings, moveZone, setHomeTz } = useSettings();
+  const homeTz = resolveHomeTz(settings.homeTz);
   const [activeTab, setActiveTab] = useState("clocks");
 
   // Get ordered timezone configs
@@ -54,6 +55,7 @@ const Index = () => {
                   settings={settings.zones[config.id]}
                   now={now}
                   use24Hour={settings.use24Hour}
+                  homeTz={homeTz}
                 />
               ))}
             </div>
@@ -65,6 +67,7 @@ const Index = () => {
               zoneOrder={settings.zoneOrder}
               now={now}
               use24Hour={settings.use24Hour}
+              homeTz={homeTz}
             />
           </TabsContent>
         </Tabs>
@@ -76,6 +79,8 @@ const Index = () => {
           use24Hour={settings.use24Hour}
           onUpdateZone={updateZoneSettings}
           onMoveZone={moveZone}
+          homeTz={settings.homeTz}
+          onHomeTzChange={setHomeTz}
         />
       </main>
 

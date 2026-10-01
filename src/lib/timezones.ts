@@ -1,3 +1,5 @@
+import { DateTime, IANAZone } from "luxon";
+
 export interface TimeZoneConfig {
   id: string;
   city: string;
@@ -92,3 +94,28 @@ export const DAYS_OF_WEEK = [
   { value: 6, short: "Sat", full: "Saturday" },
   { value: 7, short: "Sun", full: "Sunday" },
 ];
+
+const canonicalTz = (tz: string) => new Intl.DateTimeFormat("en", { timeZone: tz }).resolvedOptions().timeZone;
+
+// ponytail: relies on the engine canonicalizing renamed zones (ICU/Firefox do); otherwise aliases fall back to plain id equality
+export function resolveHomeTz(homeTz: string | null): string {
+  const tz = homeTz && IANAZone.isValidZone(homeTz)
+    ? homeTz
+    : Intl.DateTimeFormat().resolvedOptions().timeZone;
+  return TIMEZONE_CONFIGS.find((zone) => canonicalTz(zone.id) === canonicalTz(tz))?.id ?? tz;
+}
+
+export function formatOffsetDiff(minutes: number): string {
+  if (minutes === 0) return "0 h";
+  const sign = minutes > 0 ? "+" : "−";
+  const abs = Math.abs(minutes);
+  const h = Math.floor(abs / 60);
+  const m = abs % 60;
+  return `${sign}${h}${m ? `:${String(m).padStart(2, "0")}` : ""} h`;
+}
+
+export function getHomeDayHours(now: DateTime, homeTz: string): DateTime[] {
+  const start = now.setZone(homeTz).startOf("day");
+  const hours = Math.round(start.plus({ days: 1 }).diff(start, "hours").hours);
+  return Array.from({ length: hours }, (_, i) => start.plus({ hours: i }));
+}

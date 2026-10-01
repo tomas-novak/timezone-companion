@@ -14,6 +14,7 @@ export interface AppSettings {
   isDarkMode: boolean;
   zones: Record<string, ZoneSettings>;
   zoneOrder: string[];
+  homeTz: string | null;
 }
 
 const STORAGE_KEY = "4zone-clock-settings";
@@ -41,6 +42,7 @@ export function getDefaultSettings(): AppSettings {
     isDarkMode: window.matchMedia("(prefers-color-scheme: dark)").matches,
     zones,
     zoneOrder: getDefaultZoneOrder(),
+    homeTz: null,
   };
 }
 
