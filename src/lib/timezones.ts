@@ -116,6 +116,8 @@ export function formatOffsetDiff(minutes: number): string {
 
 export function getHomeDayHours(now: DateTime, homeTz: string): DateTime[] {
   const start = now.setZone(homeTz).startOf("day");
-  const hours = Math.round(start.plus({ days: 1 }).diff(start, "hours").hours);
+  // startOf("day") is 01:00 where DST starts at midnight; plus({ days: 1 }) keeps that 01:00, so snap back to the next day's own start
+  const end = start.plus({ days: 1 }).startOf("day");
+  const hours = Math.round(end.diff(start, "hours").hours);
   return Array.from({ length: hours }, (_, i) => start.plus({ hours: i }));
 }

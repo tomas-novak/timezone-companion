@@ -46,4 +46,12 @@ describe("getHomeDayHours", () => {
     const fall = getHomeDayHours(at("2026-10-25T12:00"), "Europe/Prague").map((t) => t.hour);
     expect(fall.slice(0, 5)).toEqual([0, 1, 2, 2, 3]);
   });
+
+  it("ends at the next local midnight when DST starts at midnight", () => {
+    const now = DateTime.fromISO("2026-04-24T12:00", { zone: "Africa/Cairo" });
+    const rows = getHomeDayHours(now, "Africa/Cairo");
+    expect(rows).toHaveLength(23);
+    expect(rows[0].hour).toBe(1);
+    expect(rows.at(-1)!.toISODate()).toBe("2026-04-24");
+  });
 });
