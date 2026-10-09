@@ -60,7 +60,7 @@ export function ClockCard({ config, settings, now, use24Hour, homeTz }: ClockCar
   // UTC offset
   const offset = local.toFormat("ZZZZ"); // e.g., "UTC+3"
   const abbr = local.toFormat("ZZZZZ"); // Full timezone name
-  const homeDiff = config.id === homeTz ? "Home" : formatOffsetDiff(local.offset - now.setZone(homeTz).offset);
+  const homeDiff = config.id === homeTz ? "You" : formatOffsetDiff(local.offset - now.setZone(homeTz).offset);
 
   return (
     <div className={`clock-card min-w-0 ${isActive ? "clock-card-active" : ""}`}>

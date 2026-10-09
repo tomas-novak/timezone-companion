@@ -19,8 +19,8 @@ export function Footer() {
             <p className="text-muted-foreground">
               This app displays live clocks for{" "}
               {TIMEZONE_CONFIGS.map((tz) => `${tz.city} (${tz.country})`).join(", ")}. The
-              schedule and the hour difference on each card are relative to your home timezone,
-              detected from your browser and changeable at the top of the page.
+              schedule and the hour difference on each card are relative to your timezone,
+              detected from your browser and changeable under "My timezone" at the top of the page.
             </p>
           </div>
 
