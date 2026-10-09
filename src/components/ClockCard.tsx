@@ -1,5 +1,5 @@
 import { DateTime } from "luxon";
-import type { TimeZoneConfig } from "@/lib/timezones";
+import { formatOffsetDiff, type TimeZoneConfig } from "@/lib/timezones";
 import type { ZoneSettings } from "@/lib/storage";
 import { getWorkStatus, type WorkStatus } from "@/lib/workStatus";
 import { Clock, Briefcase, Coffee, Calendar, Sun } from "lucide-react";
@@ -9,6 +9,7 @@ interface ClockCardProps {
   settings: ZoneSettings;
   now: DateTime;
   use24Hour: boolean;
+  homeTz: string;
 }
 
 function WorkStatusBadge({ status }: { status: WorkStatus }) {
@@ -44,7 +45,7 @@ function WorkStatusBadge({ status }: { status: WorkStatus }) {
   }
 }
 
-export function ClockCard({ config, settings, now, use24Hour }: ClockCardProps) {
+export function ClockCard({ config, settings, now, use24Hour, homeTz }: ClockCardProps) {
   const local = now.setZone(config.id);
   const status = getWorkStatus(now, config.id, settings);
   const isActive = status === "working";
@@ -59,9 +60,10 @@ export function ClockCard({ config, settings, now, use24Hour }: ClockCardProps) 
   // UTC offset
   const offset = local.toFormat("ZZZZ"); // e.g., "UTC+3"
   const abbr = local.toFormat("ZZZZZ"); // Full timezone name
+  const homeDiff = config.id === homeTz ? "You" : formatOffsetDiff(local.offset - now.setZone(homeTz).offset);
 
   return (
-    <div className={`clock-card ${isActive ? "clock-card-active" : ""}`}>
+    <div className={`clock-card min-w-0 ${isActive ? "clock-card-active" : ""}`}>
       {/* Status badge */}
       <div className="absolute right-4 top-4">
         <WorkStatusBadge status={status} />
@@ -85,6 +87,8 @@ export function ClockCard({ config, settings, now, use24Hour }: ClockCardProps) 
       <div className="flex items-center gap-2 text-xs text-muted-foreground">
         <Clock size={12} />
         <span>{offset}</span>
+        <span className="opacity-50">•</span>
+        <span className="font-medium text-foreground">{homeDiff}</span>
         {abbr && abbr !== offset && (
           <>
             <span className="opacity-50">•</span>

@@ -1,13 +1,14 @@
 import { useMemo, useRef, useEffect } from "react";
 import { DateTime } from "luxon";
 import type { ZoneSettings } from "@/lib/storage";
-import { TIMEZONE_CONFIGS } from "@/lib/timezones";
+import { TIMEZONE_CONFIGS, getHomeDayHours } from "@/lib/timezones";
 
 interface ScheduleViewProps {
   zoneSettings: Record<string, ZoneSettings>;
   zoneOrder: string[];
   now: DateTime;
   use24Hour: boolean;
+  homeTz: string;
 }
 
 function parseTimeToMinutes(time: string): number {
@@ -32,7 +33,7 @@ function formatTimeWithMinutes(dt: DateTime, use24Hour: boolean): string {
   return dt.toFormat(use24Hour ? "HH:mm" : "h:mm a");
 }
 
-export function ScheduleView({ zoneSettings, zoneOrder, now, use24Hour }: ScheduleViewProps) {
+export function ScheduleView({ zoneSettings, zoneOrder, now, use24Hour, homeTz }: ScheduleViewProps) {
   const scrollRef = useRef<HTMLDivElement>(null);
   const currentTimeRef = useRef<HTMLDivElement>(null);
 
@@ -46,14 +47,11 @@ export function ScheduleView({ zoneSettings, zoneOrder, now, use24Hour }: Schedu
     [zoneOrder, zoneSettings]
   );
 
-  // Get current hour position for scrolling
-  const pragueNow = now.setZone("Europe/Prague");
-  const currentHour = pragueNow.hour;
-  const currentMinute = pragueNow.minute;
-  const currentSecond = pragueNow.second;
-
-  // Calculate position within the current hour (0-1)
-  const hourProgress = (currentMinute * 60 + currentSecond) / 3600;
+  // Rows are real hours of the home day (23 or 25 on DST days), so the current row is found by elapsed time, not by wall-clock hour
+  const homeHours = getHomeDayHours(now, homeTz);
+  const elapsedHours = now.diff(homeHours[0], "hours").hours;
+  const currentIndex = Math.floor(elapsedHours);
+  const hourProgress = elapsedHours - currentIndex;
 
   // Scroll to current time on mount
   useEffect(() => {
@@ -61,24 +59,20 @@ export function ScheduleView({ zoneSettings, zoneOrder, now, use24Hour }: Schedu
       const container = scrollRef.current;
       const bar = currentTimeRef.current;
       const containerHeight = container.clientHeight;
-      const barTop = bar.offsetTop;
+      // offsetTop is relative to the row (position: relative), so measure against the container
+      const barTop = bar.getBoundingClientRect().top - container.getBoundingClientRect().top + container.scrollTop;
       
       // Scroll so current time is roughly in the center
       container.scrollTop = barTop - containerHeight / 2 + 24;
     }
-  }, []);
-
-  // Generate 24 hours
-  const hours = useMemo(() => Array.from({ length: 24 }, (_, i) => i), []);
+  }, [homeTz]);
 
   // Determine styling for each cell based on working/reasonable hours
-  const getCellStyle = (zoneId: string, hour: number): string => {
+  const getCellStyle = (zoneId: string, homeTime: DateTime): string => {
     const settings = zoneSettings[zoneId];
     if (!settings) return "";
 
-    // Get the local time for this hour at this zone
-    const pragueTime = now.setZone("Europe/Prague").startOf("day").plus({ hours: hour });
-    const localTime = pragueTime.setZone(zoneId);
+    const localTime = homeTime.setZone(zoneId);
     const localHour = localTime.hour;
     const dayOfWeek = localTime.weekday;
 
@@ -95,19 +89,12 @@ export function ScheduleView({ zoneSettings, zoneOrder, now, use24Hour }: Schedu
     return "schedule-cell-outside";
   };
 
-  // Get local time for each zone at a given Prague hour
-  const getLocalTime = (zoneId: string, pragueHour: number): DateTime => {
-    const pragueTime = now.setZone("Europe/Prague").startOf("day").plus({ hours: pragueHour });
-    return pragueTime.setZone(zoneId);
-  };
-
   // Check if a zone's local time crosses into a different day
-  const getDayLabel = (zoneId: string, pragueHour: number): string | null => {
-    const localTime = getLocalTime(zoneId, pragueHour);
-    const pragueTime = now.setZone("Europe/Prague").startOf("day").plus({ hours: pragueHour });
-    
-    // Only show day label if it's different from Prague's day or if it's the first hour of that day
-    if (localTime.day !== pragueTime.day || localTime.hour === 0) {
+  const getDayLabel = (zoneId: string, homeTime: DateTime): string | null => {
+    const localTime = homeTime.setZone(zoneId);
+
+    // Only show day label if it's different from home's day or if it's the first hour of that day
+    if (localTime.day !== homeTime.day || localTime.hour === 0) {
       return localTime.toFormat("EEE").toUpperCase();
     }
     return null;
@@ -127,17 +114,17 @@ export function ScheduleView({ zoneSettings, zoneOrder, now, use24Hour }: Schedu
         </div>
 
         <div className="schedule-grid">
-          {hours.map((hour) => {
-            const isCurrentHour = hour === currentHour;
+          {homeHours.map((homeTime, index) => {
+            const isCurrentHour = index === currentIndex;
 
             return (
-              <div key={hour} className="schedule-row">
+              <div key={homeTime.toMillis()} className="schedule-row">
 
                 {/* Zone columns */}
                 {zones.map((zone) => {
-                  const localTime = getLocalTime(zone.id, hour);
-                  const dayLabel = getDayLabel(zone.id, hour);
-                  const cellStyle = getCellStyle(zone.id, hour);
+                  const localTime = homeTime.setZone(zone.id);
+                  const dayLabel = getDayLabel(zone.id, homeTime);
+                  const cellStyle = getCellStyle(zone.id, homeTime);
 
                   return (
                     <div

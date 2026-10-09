@@ -1,3 +1,5 @@
+import { DateTime, IANAZone } from "luxon";
+
 export interface TimeZoneConfig {
   id: string;
   city: string;
@@ -92,3 +94,37 @@ export const DAYS_OF_WEEK = [
   { value: 6, short: "Sat", full: "Saturday" },
   { value: 7, short: "Sun", full: "Sunday" },
 ];
+
+// Renamed IANA ids (tzdata "backward") that point at a configured zone. Links to other places, such as
+// Europe/Bratislava -> Europe/Prague or Asia/Bahrain -> Asia/Qatar, stay separate on purpose.
+// ponytail: add entries here when a configured zone gains an alias
+const TZ_ALIASES: Record<string, string> = {
+  "Asia/Calcutta": "Asia/Kolkata",
+  "Europe/Belfast": "Europe/London",
+  GB: "Europe/London",
+  "GB-Eire": "Europe/London",
+};
+
+export function resolveHomeTz(homeTz: string | null): string {
+  const tz = homeTz && IANAZone.isValidZone(homeTz)
+    ? homeTz
+    : Intl.DateTimeFormat().resolvedOptions().timeZone;
+  return TZ_ALIASES[tz] ?? tz;
+}
+
+export function formatOffsetDiff(minutes: number): string {
+  if (minutes === 0) return "0 h";
+  const sign = minutes > 0 ? "+" : "−";
+  const abs = Math.abs(minutes);
+  const h = Math.floor(abs / 60);
+  const m = abs % 60;
+  return `${sign}${h}${m ? `:${String(m).padStart(2, "0")}` : ""} h`;
+}
+
+export function getHomeDayHours(now: DateTime, homeTz: string): DateTime[] {
+  const start = now.setZone(homeTz).startOf("day");
+  // startOf("day") is 01:00 where DST starts at midnight; plus({ days: 1 }) keeps that 01:00, so snap back to the next day's own start
+  const end = start.plus({ days: 1 }).startOf("day");
+  const hours = Math.round(end.diff(start, "hours").hours);
+  return Array.from({ length: hours }, (_, i) => start.plus({ hours: i }));
+}
