@@ -256,6 +256,7 @@ export function SettingsPanel({ zoneSettings, zoneOrder, use24Hour, onUpdateZone
           <label htmlFor="home-tz" className="text-xs text-muted-foreground">Home timezone</label>
           <select
             id="home-tz"
+            aria-describedby="home-tz-help"
             value={homeTz ?? ""}
             onChange={(e) => onHomeTzChange(e.target.value || null)}
             className="w-fit rounded-md border bg-background px-2 py-1.5 text-sm"
@@ -272,6 +273,11 @@ export function SettingsPanel({ zoneSettings, zoneOrder, use24Hour, onUpdateZone
               </option>
             ))}
           </select>
+          <p id="home-tz-help" className="text-xs text-muted-foreground max-w-prose">
+            The timezone you are in. The Schedule View is laid out in your hours and each clock shows
+            how far ahead or behind you it is (e.g. +2 h). Auto follows your browser, so it updates when
+            you travel; pick a city to keep it fixed.
+          </p>
         </div>
         <p className="text-sm text-muted-foreground mb-4">
           Configure working hours, reasonable hours, and visibility for each timezone. Use the arrows to change the display order. Hidden cities stay in your settings but are removed from the clock and schedule views.
