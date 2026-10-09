@@ -30,6 +30,8 @@ const Index = () => {
         isDarkMode={settings.isDarkMode}
         onToggle24Hour={toggle24Hour}
         onToggleDarkMode={toggleDarkMode}
+        homeTz={settings.homeTz}
+        onHomeTzChange={setHomeTz}
       />
 
       <main className="flex-1 container py-6 space-y-6">
@@ -79,8 +81,6 @@ const Index = () => {
           use24Hour={settings.use24Hour}
           onUpdateZone={updateZoneSettings}
           onMoveZone={moveZone}
-          homeTz={settings.homeTz}
-          onHomeTzChange={setHomeTz}
         />
       </main>
 

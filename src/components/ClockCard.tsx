@@ -63,7 +63,7 @@ export function ClockCard({ config, settings, now, use24Hour, homeTz }: ClockCar
   const homeDiff = config.id === homeTz ? "Home" : formatOffsetDiff(local.offset - now.setZone(homeTz).offset);
 
   return (
-    <div className={`clock-card ${isActive ? "clock-card-active" : ""}`}>
+    <div className={`clock-card min-w-0 ${isActive ? "clock-card-active" : ""}`}>
       {/* Status badge */}
       <div className="absolute right-4 top-4">
         <WorkStatusBadge status={status} />

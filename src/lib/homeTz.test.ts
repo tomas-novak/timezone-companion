@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { DateTime } from "luxon";
 import { formatOffsetDiff, getHomeDayHours, resolveHomeTz } from "./timezones";
 
@@ -14,19 +14,33 @@ describe("formatOffsetDiff", () => {
 });
 
 describe("resolveHomeTz", () => {
-  const browserTz = Intl.DateTimeFormat().resolvedOptions().timeZone;
+  // Every Intl.DateTimeFormat reports this zone, so the result can't depend on the machine's zone or on Intl canonicalizing aliases
+  const mockBrowserTz = (timeZone: string) =>
+    vi
+      .spyOn(Intl.DateTimeFormat.prototype, "resolvedOptions")
+      .mockReturnValue({ timeZone } as Intl.ResolvedDateTimeFormatOptions);
+
+  afterEach(() => vi.restoreAllMocks());
 
   it("uses the stored zone when valid", () => {
     expect(resolveHomeTz("Asia/Qatar")).toBe("Asia/Qatar");
   });
 
   it("falls back to the browser zone for null or invalid values", () => {
-    expect(resolveHomeTz(null)).toBe(browserTz);
-    expect(resolveHomeTz("Mars/Olympus")).toBe(browserTz);
+    mockBrowserTz("Europe/Berlin");
+    expect(resolveHomeTz(null)).toBe("Europe/Berlin");
+    expect(resolveHomeTz("Mars/Olympus")).toBe("Europe/Berlin");
+  });
+
+  it("maps an aliased browser zone to the configured id", () => {
+    mockBrowserTz("Asia/Calcutta");
+    expect(resolveHomeTz(null)).toBe("Asia/Kolkata");
   });
 
   it("maps an equivalent alias to the configured zone id, but keeps distinct places", () => {
+    mockBrowserTz("Europe/Berlin");
     expect(resolveHomeTz("Asia/Calcutta")).toBe("Asia/Kolkata");
+    expect(resolveHomeTz("Europe/Belfast")).toBe("Europe/London");
     expect(resolveHomeTz("Europe/Bratislava")).toBe("Europe/Bratislava");
   });
 });

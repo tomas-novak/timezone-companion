@@ -95,14 +95,21 @@ export const DAYS_OF_WEEK = [
   { value: 7, short: "Sun", full: "Sunday" },
 ];
 
-const canonicalTz = (tz: string) => new Intl.DateTimeFormat("en", { timeZone: tz }).resolvedOptions().timeZone;
+// Renamed IANA ids (tzdata "backward") that point at a configured zone. Links to other places, such as
+// Europe/Bratislava -> Europe/Prague or Asia/Bahrain -> Asia/Qatar, stay separate on purpose.
+// ponytail: add entries here when a configured zone gains an alias
+const TZ_ALIASES: Record<string, string> = {
+  "Asia/Calcutta": "Asia/Kolkata",
+  "Europe/Belfast": "Europe/London",
+  GB: "Europe/London",
+  "GB-Eire": "Europe/London",
+};
 
-// ponytail: relies on the engine canonicalizing renamed zones (ICU/Firefox do); otherwise aliases fall back to plain id equality
 export function resolveHomeTz(homeTz: string | null): string {
   const tz = homeTz && IANAZone.isValidZone(homeTz)
     ? homeTz
     : Intl.DateTimeFormat().resolvedOptions().timeZone;
-  return TIMEZONE_CONFIGS.find((zone) => canonicalTz(zone.id) === canonicalTz(tz))?.id ?? tz;
+  return TZ_ALIASES[tz] ?? tz;
 }
 
 export function formatOffsetDiff(minutes: number): string {
