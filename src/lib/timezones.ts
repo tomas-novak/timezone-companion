@@ -1,89 +1,66 @@
 import { DateTime, IANAZone } from "luxon";
 
-export interface TimeZoneConfig {
-  id: string;
+export interface CityPreset {
   city: string;
   country: string;
-  defaultWorkingDays: number[];
-  defaultWorkingStart: string;
-  defaultWorkingEnd: string;
-  defaultReasonableStart: string;
-  defaultReasonableEnd: string;
+  workingDays: number[];
 }
 
-// Default working days: 1=Mon, 2=Tue, ... 7=Sun
-export const TIMEZONE_CONFIGS: TimeZoneConfig[] = [
-  {
-    id: "Africa/Tunis",
-    city: "Tunis",
-    country: "Tunisia",
-    defaultWorkingDays: [1, 2, 3, 4, 5], // Mon-Fri
-    defaultWorkingStart: "09:00",
-    defaultWorkingEnd: "17:00",
-    defaultReasonableStart: "08:00",
-    defaultReasonableEnd: "19:00",
-  },
-  {
-    id: "Europe/Prague",
-    city: "Prague",
-    country: "Czech Republic",
-    defaultWorkingDays: [1, 2, 3, 4, 5], // Mon-Fri
-    defaultWorkingStart: "09:00",
-    defaultWorkingEnd: "17:00",
-    defaultReasonableStart: "08:00",
-    defaultReasonableEnd: "19:00",
-  },
-  {
-    id: "Europe/London",
-    city: "London",
-    country: "United Kingdom",
-    defaultWorkingDays: [1, 2, 3, 4, 5], // Mon-Fri
-    defaultWorkingStart: "09:00",
-    defaultWorkingEnd: "17:00",
-    defaultReasonableStart: "08:00",
-    defaultReasonableEnd: "19:00",
-  },
-  {
-    id: "Asia/Muscat",
-    city: "Muscat",
-    country: "Oman",
-    defaultWorkingDays: [7, 1, 2, 3, 4], // Sun-Thu
-    defaultWorkingStart: "09:00",
-    defaultWorkingEnd: "17:00",
-    defaultReasonableStart: "08:00",
-    defaultReasonableEnd: "19:00",
-  },
-  {
-    id: "Asia/Qatar",
-    city: "Doha",
-    country: "Qatar",
-    defaultWorkingDays: [7, 1, 2, 3, 4], // Sun-Thu
-    defaultWorkingStart: "09:00",
-    defaultWorkingEnd: "17:00",
-    defaultReasonableStart: "08:00",
-    defaultReasonableEnd: "19:00",
-  },
-  {
-    id: "Asia/Baghdad",
-    city: "Baghdad",
-    country: "Iraq",
-    defaultWorkingDays: [7, 1, 2, 3, 4], // Sun-Thu
-    defaultWorkingStart: "09:00",
-    defaultWorkingEnd: "17:00",
-    defaultReasonableStart: "08:00",
-    defaultReasonableEnd: "19:00",
-  },
-  {
-    id: "Asia/Kolkata",
-    city: "New Delhi",
-    country: "India",
-    defaultWorkingDays: [1, 2, 3, 4, 5], // Mon-Fri
-    defaultWorkingStart: "09:00",
-    defaultWorkingEnd: "17:00",
-    defaultReasonableStart: "08:00",
-    defaultReasonableEnd: "19:00",
-  },
+// Working days: 1=Mon, 2=Tue, ... 7=Sun
+const MON_FRI = [1, 2, 3, 4, 5];
+const SUN_THU = [7, 1, 2, 3, 4];
+
+export const DEFAULT_HOURS = {
+  workingStart: "09:00",
+  workingEnd: "17:00",
+  reasonableStart: "08:00",
+  reasonableEnd: "19:00",
+};
+
+export const CITY_PRESETS: Record<string, CityPreset> = {
+  "Africa/Tunis": { city: "Tunis", country: "Tunisia", workingDays: MON_FRI },
+  "Europe/Prague": { city: "Prague", country: "Czech Republic", workingDays: MON_FRI },
+  "Europe/London": { city: "London", country: "United Kingdom", workingDays: MON_FRI },
+  "Asia/Muscat": { city: "Muscat", country: "Oman", workingDays: SUN_THU },
+  "Asia/Qatar": { city: "Doha", country: "Qatar", workingDays: SUN_THU },
+  "Asia/Baghdad": { city: "Baghdad", country: "Iraq", workingDays: SUN_THU },
+  "Asia/Kolkata": { city: "New Delhi", country: "India", workingDays: MON_FRI },
+  "Asia/Kuwait": { city: "Kuwait City", country: "Kuwait", workingDays: SUN_THU },
+  "Africa/Algiers": { city: "Algiers", country: "Algeria", workingDays: SUN_THU },
+  "Indian/Maldives": { city: "Malé", country: "Maldives", workingDays: SUN_THU },
+  "Asia/Jakarta": { city: "Jakarta", country: "Indonesia", workingDays: MON_FRI },
+};
+
+export const MAX_ZONES = 8;
+
+export const DEFAULT_TZS = ["Africa/Tunis", "Europe/Prague", "Asia/Muscat", "Asia/Qatar", "Asia/Kolkata"];
+
+export const OOREDOO_TZS = [
+  "Asia/Qatar",
+  "Asia/Muscat",
+  "Asia/Kuwait",
+  "Asia/Baghdad",
+  "Africa/Algiers",
+  "Africa/Tunis",
+  "Indian/Maldives",
+  "Asia/Jakarta",
 ];
+
+export const tzCity = (tz: string) => tz.split("/").pop()!.replace(/_/g, " ");
+
+export function tzLabel(tz: string): string {
+  return (
+    new Intl.DateTimeFormat("en", { timeZone: tz, timeZoneName: "longGeneric" })
+      .formatToParts(new Date())
+      .find((part) => part.type === "timeZoneName")?.value ?? ""
+  );
+}
+
+export function worldTimeZones(): string[] {
+  // Chrome < 99, Firefox < 93 and Safari < 15.4 lack supportedValuesOf; offer the presets there
+  const all = Intl.supportedValuesOf?.("timeZone") ?? Object.keys(CITY_PRESETS);
+  return [...new Set(all.map(canonicalTz))];
+}
 
 export const DAYS_OF_WEEK = [
   { value: 1, short: "Mon", full: "Monday" },
@@ -95,9 +72,9 @@ export const DAYS_OF_WEEK = [
   { value: 7, short: "Sun", full: "Sunday" },
 ];
 
-// Renamed IANA ids (tzdata "backward") that point at a configured zone. Links to other places, such as
+// Renamed IANA ids (tzdata "backward") that point at a preset zone; Chrome still lists some of them. Links to other places, such as
 // Europe/Bratislava -> Europe/Prague or Asia/Bahrain -> Asia/Qatar, stay separate on purpose.
-// ponytail: add entries here when a configured zone gains an alias
+// ponytail: add entries here when a preset zone gains an alias
 const TZ_ALIASES: Record<string, string> = {
   "Asia/Calcutta": "Asia/Kolkata",
   "Europe/Belfast": "Europe/London",
@@ -105,11 +82,13 @@ const TZ_ALIASES: Record<string, string> = {
   "GB-Eire": "Europe/London",
 };
 
+export const canonicalTz = (tz: string) => TZ_ALIASES[tz] ?? tz;
+
 export function resolveHomeTz(homeTz: string | null): string {
   const tz = homeTz && IANAZone.isValidZone(homeTz)
     ? homeTz
     : Intl.DateTimeFormat().resolvedOptions().timeZone;
-  return TZ_ALIASES[tz] ?? tz;
+  return canonicalTz(tz);
 }
 
 export function formatOffsetDiff(minutes: number): string {

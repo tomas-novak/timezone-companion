@@ -1,9 +1,9 @@
 import { useState } from "react";
-import { ChevronDown, ChevronUp, Settings2, ArrowUp, ArrowDown, GripVertical } from "lucide-react";
+import { ChevronDown, ChevronUp, Settings2, ArrowUp, ArrowDown, GripVertical, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Checkbox } from "@/components/ui/checkbox";
-import { TIMEZONE_CONFIGS, DAYS_OF_WEEK } from "@/lib/timezones";
-import type { ZoneSettings } from "@/lib/storage";
+import { Input } from "@/components/ui/input";
+import { DAYS_OF_WEEK } from "@/lib/timezones";
+import type { Zone } from "@/lib/storage";
 import {
   Collapsible,
   CollapsibleContent,
@@ -11,10 +11,10 @@ import {
 } from "@/components/ui/collapsible";
 
 interface SettingsPanelProps {
-  zoneSettings: Record<string, ZoneSettings>;
-  zoneOrder: string[];
+  zones: Zone[];
   use24Hour: boolean;
-  onUpdateZone: (zoneId: string, updates: Partial<ZoneSettings>) => void;
+  onUpdateZone: (zoneId: string, updates: Partial<Zone>) => void;
+  onRemoveZone: (zoneId: string) => void;
   onMoveZone: (zoneId: string, direction: "up" | "down") => void;
 }
 
@@ -99,20 +99,20 @@ function DaySelector({
 }
 
 function ZoneSettingsCard({
-  zone,
-  settings,
+  zone: settings,
   use24Hour,
   onUpdate,
+  onRemove,
   onMoveUp,
   onMoveDown,
   isFirst,
   isLast,
   position,
 }: {
-  zone: (typeof TIMEZONE_CONFIGS)[0];
-  settings: ZoneSettings;
+  zone: Zone;
   use24Hour: boolean;
-  onUpdate: (updates: Partial<ZoneSettings>) => void;
+  onUpdate: (updates: Partial<Zone>) => void;
+  onRemove: () => void;
   onMoveUp: () => void;
   onMoveDown: () => void;
   isFirst: boolean;
@@ -127,9 +127,7 @@ function ZoneSettingsCard({
           <span className="text-xs font-medium text-muted-foreground bg-muted px-2 py-0.5 rounded">
             #{position}
           </span>
-          <h4 className="font-medium">
-            {zone.city}, {zone.country}
-          </h4>
+          <span className="text-xs text-muted-foreground">{settings.tz}</span>
         </div>
         <div className="flex items-center gap-1">
           <Button
@@ -152,7 +150,38 @@ function ZoneSettingsCard({
           >
             <ArrowDown size={14} />
           </Button>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-7 w-7 text-muted-foreground hover:text-destructive"
+            onClick={() => {
+              if (window.confirm(`Remove ${settings.city}?`)) onRemove();
+            }}
+            title="Remove city"
+            aria-label={`Remove ${settings.city}`}
+          >
+            <Trash2 size={14} />
+          </Button>
         </div>
+      </div>
+
+      <div className="mb-4 grid grid-cols-2 gap-2">
+        <label className="flex flex-col gap-1 text-xs text-muted-foreground">
+          City
+          <Input
+            value={settings.city}
+            onChange={(e) => onUpdate({ city: e.target.value })}
+            className="h-8 text-sm text-foreground"
+          />
+        </label>
+        <label className="flex flex-col gap-1 text-xs text-muted-foreground">
+          Country
+          <Input
+            value={settings.country}
+            onChange={(e) => onUpdate({ country: e.target.value })}
+            className="h-8 text-sm text-foreground"
+          />
+        </label>
       </div>
 
       {/* Working Hours */}
@@ -184,21 +213,6 @@ function ZoneSettingsCard({
         </div>
       </div>
 
-      {/* Visibility */}
-      <div className="mt-4 border-t pt-4">
-        <p className="text-sm font-medium mb-2">Visibility</p>
-        <label className="flex items-start gap-2 text-sm">
-          <Checkbox
-            checked={settings.hidden}
-            onCheckedChange={(checked) => onUpdate({ hidden: Boolean(checked) })}
-            aria-label={`Hide ${zone.city}`}
-          />
-          <span>
-            Hide this city from the clocks and schedule view.
-          </span>
-        </label>
-      </div>
-
       {/* Reasonable Hours */}
       <div className="mt-4 border-t pt-4">
         <p className="text-sm font-medium mb-2">Reasonable Hours</p>
@@ -222,20 +236,15 @@ function ZoneSettingsCard({
   );
 }
 
-export function SettingsPanel({ zoneSettings, zoneOrder, use24Hour, onUpdateZone, onMoveZone }: SettingsPanelProps) {
+export function SettingsPanel({ zones, use24Hour, onUpdateZone, onRemoveZone, onMoveZone }: SettingsPanelProps) {
   const [isOpen, setIsOpen] = useState(false);
-
-  // Get zones in order
-  const orderedZones = zoneOrder
-    .map((id) => TIMEZONE_CONFIGS.find((z) => z.id === id))
-    .filter((z): z is (typeof TIMEZONE_CONFIGS)[0] => z !== undefined);
 
   return (
     <Collapsible open={isOpen} onOpenChange={setIsOpen} className="settings-panel">
       <CollapsibleTrigger asChild>
         <Button
           variant="ghost"
-          className="w-full flex items-center justify-between p-0 h-auto hover:bg-transparent"
+          className="w-full flex items-center justify-between p-0 h-auto hover:bg-transparent hover:text-foreground"
         >
           <div className="flex items-center gap-2">
             <Settings2 size={20} className="text-primary" />
@@ -247,20 +256,20 @@ export function SettingsPanel({ zoneSettings, zoneOrder, use24Hour, onUpdateZone
 
       <CollapsibleContent className="mt-4">
         <p className="text-sm text-muted-foreground mb-4">
-          Configure working hours, reasonable hours, and visibility for each timezone. Use the arrows to change the display order. Hidden cities stay in your settings but are removed from the clock and schedule views.
+          Rename cities and configure working and reasonable hours for each one. Use the arrows to change the display order.
         </p>
         <div className="grid gap-4 md:grid-cols-2">
-          {orderedZones.map((zone, index) => (
+          {zones.map((zone, index) => (
             <ZoneSettingsCard
               key={zone.id}
               zone={zone}
-              settings={zoneSettings[zone.id]}
               use24Hour={use24Hour}
               onUpdate={(updates) => onUpdateZone(zone.id, updates)}
+              onRemove={() => onRemoveZone(zone.id)}
               onMoveUp={() => onMoveZone(zone.id, "up")}
               onMoveDown={() => onMoveZone(zone.id, "down")}
               isFirst={index === 0}
-              isLast={index === orderedZones.length - 1}
+              isLast={index === zones.length - 1}
               position={index + 1}
             />
           ))}

@@ -1,4 +1,5 @@
-import { TIMEZONE_CONFIGS } from "./timezones";
+import { IANAZone } from "luxon";
+import { CITY_PRESETS, DEFAULT_HOURS, DEFAULT_TZS, tzCity, tzLabel } from "./timezones";
 
 export interface ZoneSettings {
   workingStart: string;
@@ -6,70 +7,83 @@ export interface ZoneSettings {
   workingDays: number[];
   reasonableStart: string;
   reasonableEnd: string;
-  hidden: boolean;
+}
+
+export interface Zone extends ZoneSettings {
+  id: string;
+  tz: string;
+  city: string;
+  country: string;
 }
 
 export interface AppSettings {
+  version: 2;
   use24Hour: boolean;
   isDarkMode: boolean;
-  zones: Record<string, ZoneSettings>;
-  zoneOrder: string[];
+  zones: Zone[];
   homeTz: string | null;
 }
 
 const STORAGE_KEY = "4zone-clock-settings";
 
-export function getDefaultZoneOrder(): string[] {
-  return TIMEZONE_CONFIGS.map((tz) => tz.id);
+// randomUUID is missing in older browsers and on plain-http hosts other than localhost
+const newId = () => crypto.randomUUID?.() ?? `${Date.now().toString(36)}-${Math.random().toString(36).slice(2)}`;
+
+export function createZone(tz: string, id: string = newId()): Zone {
+  const preset = CITY_PRESETS[tz];
+  return {
+    id,
+    tz,
+    city: preset?.city ?? tzCity(tz),
+    country: preset?.country ?? tzLabel(tz),
+    workingDays: [...(preset?.workingDays ?? [1, 2, 3, 4, 5])],
+    ...DEFAULT_HOURS,
+  };
 }
 
 export function getDefaultSettings(): AppSettings {
-  const zones: Record<string, ZoneSettings> = {};
-  
-  TIMEZONE_CONFIGS.forEach((tz) => {
-    zones[tz.id] = {
-      workingStart: tz.defaultWorkingStart,
-      workingEnd: tz.defaultWorkingEnd,
-      workingDays: [...tz.defaultWorkingDays],
-      reasonableStart: tz.defaultReasonableStart,
-      reasonableEnd: tz.defaultReasonableEnd,
-      hidden: false,
-    };
-  });
-
   return {
+    version: 2,
     use24Hour: true,
     isDarkMode: window.matchMedia("(prefers-color-scheme: dark)").matches,
-    zones,
-    zoneOrder: getDefaultZoneOrder(),
+    // The IANA id doubles as the zone id for presets, so migrated and default zones match
+    zones: DEFAULT_TZS.map((tz) => createZone(tz, tz)),
     homeTz: null,
   };
+}
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export function migrate(raw: any): AppSettings {
+  const defaults = getDefaultSettings();
+  if (!raw || typeof raw !== "object") return defaults;
+  const { zoneOrder, zones: rawZones, ...rest } = raw;
+  let zones: Zone[];
+
+  if (raw.version === 2) {
+    zones = Array.isArray(rawZones)
+      ? rawZones
+          .filter((z) => z && typeof z.id === "string" && IANAZone.isValidZone(z.tz))
+          .map((z) => ({ ...createZone(z.tz, z.id), ...z }))
+      : defaults.zones;
+  } else {
+    // v1 stored per-zone hours keyed by IANA id plus a separate zoneOrder; city names lived in code
+    const old = rawZones && typeof rawZones === "object" ? rawZones : {};
+    const order: string[] = Array.isArray(zoneOrder) ? zoneOrder : DEFAULT_TZS;
+    zones = [...new Set([...order, ...Object.keys(old)])]
+      .filter((tz) => IANAZone.isValidZone(tz))
+      .map((tz) => {
+        const { hidden, ...hours } = old[tz] ?? {};
+        return { ...createZone(tz, tz), ...hours };
+      });
+  }
+
+  return { ...defaults, ...rest, version: 2, zones };
 }
 
 export function loadSettings(): AppSettings {
   try {
     const stored = localStorage.getItem(STORAGE_KEY);
-    if (stored) {
-      const parsed = JSON.parse(stored);
-      const defaults = getDefaultSettings();
-      
-      // Validate zoneOrder - ensure all zones are present
-      let zoneOrder = parsed.zoneOrder;
-      if (!Array.isArray(zoneOrder) || zoneOrder.length !== defaults.zoneOrder.length) {
-        zoneOrder = defaults.zoneOrder;
-      }
-      
-      // Merge with defaults to handle missing keys
-      return {
-        ...defaults,
-        ...parsed,
-        zones: {
-          ...defaults.zones,
-          ...parsed.zones,
-        },
-        zoneOrder,
-      };
-    }
+    if (stored) return migrate(JSON.parse(stored));
   } catch (e) {
     console.error("Failed to load settings:", e);
   }
