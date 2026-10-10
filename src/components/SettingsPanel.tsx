@@ -244,7 +244,7 @@ export function SettingsPanel({ zones, use24Hour, onUpdateZone, onRemoveZone, on
       <CollapsibleTrigger asChild>
         <Button
           variant="ghost"
-          className="w-full flex items-center justify-between p-0 h-auto hover:bg-transparent"
+          className="w-full flex items-center justify-between p-0 h-auto hover:bg-transparent hover:text-foreground"
         >
           <div className="flex items-center gap-2">
             <Settings2 size={20} className="text-primary" />
