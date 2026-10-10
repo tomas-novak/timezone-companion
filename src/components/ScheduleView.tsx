@@ -1,11 +1,10 @@
-import { useMemo, useRef, useEffect } from "react";
+import { useRef, useEffect } from "react";
 import { DateTime } from "luxon";
-import type { ZoneSettings } from "@/lib/storage";
-import { TIMEZONE_CONFIGS, getHomeDayHours } from "@/lib/timezones";
+import type { Zone } from "@/lib/storage";
+import { getHomeDayHours } from "@/lib/timezones";
 
 interface ScheduleViewProps {
-  zoneSettings: Record<string, ZoneSettings>;
-  zoneOrder: string[];
+  zones: Zone[];
   now: DateTime;
   use24Hour: boolean;
   homeTz: string;
@@ -33,19 +32,9 @@ function formatTimeWithMinutes(dt: DateTime, use24Hour: boolean): string {
   return dt.toFormat(use24Hour ? "HH:mm" : "h:mm a");
 }
 
-export function ScheduleView({ zoneSettings, zoneOrder, now, use24Hour, homeTz }: ScheduleViewProps) {
+export function ScheduleView({ zones, now, use24Hour, homeTz }: ScheduleViewProps) {
   const scrollRef = useRef<HTMLDivElement>(null);
   const currentTimeRef = useRef<HTMLDivElement>(null);
-
-  // Get zone configs in user-defined order
-  const zones = useMemo(
-    () =>
-      zoneOrder
-        .map((id) => TIMEZONE_CONFIGS.find((z) => z.id === id))
-        .filter((z): z is (typeof TIMEZONE_CONFIGS)[0] => z !== undefined)
-        .filter((zone) => !zoneSettings[zone.id]?.hidden),
-    [zoneOrder, zoneSettings]
-  );
 
   // Rows are real hours of the home day (23 or 25 on DST days), so the current row is found by elapsed time, not by wall-clock hour
   const homeHours = getHomeDayHours(now, homeTz);
@@ -68,11 +57,8 @@ export function ScheduleView({ zoneSettings, zoneOrder, now, use24Hour, homeTz }
   }, [homeTz]);
 
   // Determine styling for each cell based on working/reasonable hours
-  const getCellStyle = (zoneId: string, homeTime: DateTime): string => {
-    const settings = zoneSettings[zoneId];
-    if (!settings) return "";
-
-    const localTime = homeTime.setZone(zoneId);
+  const getCellStyle = (settings: Zone, homeTime: DateTime): string => {
+    const localTime = homeTime.setZone(settings.tz);
     const localHour = localTime.hour;
     const dayOfWeek = localTime.weekday;
 
@@ -90,8 +76,8 @@ export function ScheduleView({ zoneSettings, zoneOrder, now, use24Hour, homeTz }
   };
 
   // Check if a zone's local time crosses into a different day
-  const getDayLabel = (zoneId: string, homeTime: DateTime): string | null => {
-    const localTime = homeTime.setZone(zoneId);
+  const getDayLabel = (tz: string, homeTime: DateTime): string | null => {
+    const localTime = homeTime.setZone(tz);
 
     // Only show day label if it's different from home's day or if it's the first hour of that day
     if (localTime.day !== homeTime.day || localTime.hour === 0) {
@@ -122,9 +108,9 @@ export function ScheduleView({ zoneSettings, zoneOrder, now, use24Hour, homeTz }
 
                 {/* Zone columns */}
                 {zones.map((zone) => {
-                  const localTime = homeTime.setZone(zone.id);
-                  const dayLabel = getDayLabel(zone.id, homeTime);
-                  const cellStyle = getCellStyle(zone.id, homeTime);
+                  const localTime = homeTime.setZone(zone.tz);
+                  const dayLabel = getDayLabel(zone.tz, homeTime);
+                  const cellStyle = getCellStyle(zone, homeTime);
 
                   return (
                     <div
@@ -152,7 +138,7 @@ export function ScheduleView({ zoneSettings, zoneOrder, now, use24Hour, homeTz }
                   >
                     <div className="schedule-current-bar-times">
                       {zones.map((zone) => {
-                        const localNow = now.setZone(zone.id);
+                        const localNow = now.setZone(zone.tz);
                         return (
                           <div key={zone.id} className="schedule-current-time-cell">
                             <span className="schedule-current-day">

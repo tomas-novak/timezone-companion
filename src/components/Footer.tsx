@@ -1,5 +1,4 @@
 import { Globe, Clock, Users } from "lucide-react";
-import { TIMEZONE_CONFIGS } from "@/lib/timezones";
 
 export function Footer() {
   return (
@@ -17,8 +16,8 @@ export function Footer() {
               Time Zones
             </div>
             <p className="text-muted-foreground">
-              This app displays live clocks for{" "}
-              {TIMEZONE_CONFIGS.map((tz) => `${tz.city} (${tz.country})`).join(", ")}. The
+              This app displays live clocks for the cities you pick with "Add city", including
+              quick picks for the Ooredoo markets. The
               schedule and the hour difference on each card are relative to your timezone,
               detected from your browser and changeable under "My timezone" at the top of the page.
             </p>

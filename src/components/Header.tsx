@@ -1,9 +1,11 @@
+import { useMemo } from "react";
 import { Info, Moon, Sun } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import logo from "@/assets/logo.png";
-import { TIMEZONE_CONFIGS, resolveHomeTz } from "@/lib/timezones";
+import { resolveHomeTz, tzCity, worldTimeZones } from "@/lib/timezones";
+import type { Zone } from "@/lib/storage";
 
 interface HeaderProps {
   use24Hour: boolean;
@@ -12,10 +14,8 @@ interface HeaderProps {
   onToggleDarkMode: () => void;
   homeTz: string | null;
   onHomeTzChange: (homeTz: string | null) => void;
+  zones: Zone[];
 }
-
-const zoneLabel = (tz: string) =>
-  TIMEZONE_CONFIGS.find((zone) => zone.id === tz)?.city ?? tz.split("/").pop()!.replace(/_/g, " ");
 
 export function Header({
   use24Hour,
@@ -24,10 +24,16 @@ export function Header({
   onToggleDarkMode,
   homeTz,
   onHomeTzChange,
+  zones,
 }: HeaderProps) {
   const detectedTz = resolveHomeTz(null);
+  const zoneLabel = (tz: string) => zones.find((zone) => zone.tz === tz)?.city ?? tzCity(tz);
+  const zoneTzs = [...new Set(zones.map((zone) => zone.tz))];
+  const world = useMemo(worldTimeZones, []);
+  const otherTzs = world.filter((tz) => !zoneTzs.includes(tz));
+  // The detected zone can be missing from the world list (old browsers fall back to presets only)
   const extraZones = [...new Set([detectedTz, resolveHomeTz(homeTz)])].filter(
-    (tz) => !TIMEZONE_CONFIGS.some((zone) => zone.id === tz)
+    (tz) => !zoneTzs.includes(tz) && !otherTzs.includes(tz)
   );
 
   return (
@@ -55,11 +61,20 @@ export function Header({
                     {zoneLabel(tz)}
                   </option>
                 ))}
-                {TIMEZONE_CONFIGS.map((zone) => (
-                  <option key={zone.id} value={zone.id}>
-                    {zone.city}
-                  </option>
-                ))}
+                <optgroup label="Your cities">
+                  {zoneTzs.map((tz) => (
+                    <option key={tz} value={tz}>
+                      {zoneLabel(tz)}
+                    </option>
+                  ))}
+                </optgroup>
+                <optgroup label="All time zones">
+                  {otherTzs.map((tz) => (
+                    <option key={tz} value={tz}>
+                      {tz.replace(/_/g, " ")}
+                    </option>
+                  ))}
+                </optgroup>
               </select>
             </label>
             <Popover>

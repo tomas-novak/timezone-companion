@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
-import { AppSettings, loadSettings, debouncedSave, ZoneSettings } from "@/lib/storage";
+import { MAX_ZONES } from "@/lib/timezones";
+import { AppSettings, loadSettings, debouncedSave, createZone, type Zone } from "@/lib/storage";
 
 export function useSettings() {
   const [settings, setSettings] = useState<AppSettings>(loadSettings);
@@ -26,45 +27,39 @@ export function useSettings() {
     setSettings((prev) => ({ ...prev, isDarkMode: !prev.isDarkMode }));
   }, []);
 
-  const updateZoneSettings = useCallback(
-    (zoneId: string, updates: Partial<ZoneSettings>) => {
-      setSettings((prev) => ({
-        ...prev,
-        zones: {
-          ...prev.zones,
-          [zoneId]: {
-            ...prev.zones[zoneId],
-            ...updates,
-          },
-        },
-      }));
-    },
-    []
-  );
+  const updateZone = useCallback((zoneId: string, updates: Partial<Zone>) => {
+    setSettings((prev) => ({
+      ...prev,
+      zones: prev.zones.map((zone) => (zone.id === zoneId ? { ...zone, ...updates } : zone)),
+    }));
+  }, []);
+
+  const addZone = useCallback((tz: string) => {
+    setSettings((prev) =>
+      prev.zones.length >= MAX_ZONES ? prev : { ...prev, zones: [...prev.zones, createZone(tz)] }
+    );
+  }, []);
+
+  const removeZone = useCallback((zoneId: string) => {
+    setSettings((prev) => ({ ...prev, zones: prev.zones.filter((zone) => zone.id !== zoneId) }));
+  }, []);
 
   const setHomeTz = useCallback((homeTz: string | null) => {
     setSettings((prev) => ({ ...prev, homeTz }));
   }, []);
 
-  const updateZoneOrder = useCallback((newOrder: string[]) => {
-    setSettings((prev) => ({
-      ...prev,
-      zoneOrder: newOrder,
-    }));
-  }, []);
-
   const moveZone = useCallback((zoneId: string, direction: "up" | "down") => {
     setSettings((prev) => {
-      const currentIndex = prev.zoneOrder.indexOf(zoneId);
+      const currentIndex = prev.zones.findIndex((zone) => zone.id === zoneId);
       if (currentIndex === -1) return prev;
-      
+
       const newIndex = direction === "up" ? currentIndex - 1 : currentIndex + 1;
-      if (newIndex < 0 || newIndex >= prev.zoneOrder.length) return prev;
-      
-      const newOrder = [...prev.zoneOrder];
-      [newOrder[currentIndex], newOrder[newIndex]] = [newOrder[newIndex], newOrder[currentIndex]];
-      
-      return { ...prev, zoneOrder: newOrder };
+      if (newIndex < 0 || newIndex >= prev.zones.length) return prev;
+
+      const zones = [...prev.zones];
+      [zones[currentIndex], zones[newIndex]] = [zones[newIndex], zones[currentIndex]];
+
+      return { ...prev, zones };
     });
   }, []);
 
@@ -72,8 +67,9 @@ export function useSettings() {
     settings,
     toggle24Hour,
     toggleDarkMode,
-    updateZoneSettings,
-    updateZoneOrder,
+    updateZone,
+    addZone,
+    removeZone,
     moveZone,
     setHomeTz,
   };

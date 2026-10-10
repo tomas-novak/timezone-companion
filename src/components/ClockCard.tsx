@@ -1,12 +1,11 @@
 import { DateTime } from "luxon";
-import { formatOffsetDiff, type TimeZoneConfig } from "@/lib/timezones";
-import type { ZoneSettings } from "@/lib/storage";
+import { formatOffsetDiff } from "@/lib/timezones";
+import type { Zone } from "@/lib/storage";
 import { getWorkStatus, type WorkStatus } from "@/lib/workStatus";
 import { Clock, Briefcase, Coffee, Calendar, Sun } from "lucide-react";
 
 interface ClockCardProps {
-  config: TimeZoneConfig;
-  settings: ZoneSettings;
+  zone: Zone;
   now: DateTime;
   use24Hour: boolean;
   homeTz: string;
@@ -45,9 +44,9 @@ function WorkStatusBadge({ status }: { status: WorkStatus }) {
   }
 }
 
-export function ClockCard({ config, settings, now, use24Hour, homeTz }: ClockCardProps) {
-  const local = now.setZone(config.id);
-  const status = getWorkStatus(now, config.id, settings);
+export function ClockCard({ zone, now, use24Hour, homeTz }: ClockCardProps) {
+  const local = now.setZone(zone.tz);
+  const status = getWorkStatus(now, zone.tz, zone);
   const isActive = status === "working";
 
   // Format time
@@ -60,7 +59,7 @@ export function ClockCard({ config, settings, now, use24Hour, homeTz }: ClockCar
   // UTC offset
   const offset = local.toFormat("ZZZZ"); // e.g., "UTC+3"
   const abbr = local.toFormat("ZZZZZ"); // Full timezone name
-  const homeDiff = config.id === homeTz ? "You" : formatOffsetDiff(local.offset - now.setZone(homeTz).offset);
+  const homeDiff = zone.tz === homeTz ? "You" : formatOffsetDiff(local.offset - now.setZone(homeTz).offset);
 
   return (
     <div className={`clock-card min-w-0 ${isActive ? "clock-card-active" : ""}`}>
@@ -71,8 +70,8 @@ export function ClockCard({ config, settings, now, use24Hour, homeTz }: ClockCar
 
       {/* City & Country */}
       <div className="mb-4">
-        <h2 className="text-xl font-semibold text-foreground">{config.city}</h2>
-        <p className="text-sm text-muted-foreground">{config.country}</p>
+        <h2 className="text-xl font-semibold text-foreground">{zone.city}</h2>
+        <p className="text-sm text-muted-foreground">{zone.country}</p>
       </div>
 
       {/* Live Time */}

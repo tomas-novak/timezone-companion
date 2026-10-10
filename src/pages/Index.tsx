@@ -4,24 +4,19 @@ import { ClockCard } from "@/components/ClockCard";
 import { SettingsPanel } from "@/components/SettingsPanel";
 import { ScheduleView } from "@/components/ScheduleView";
 import { Footer } from "@/components/Footer";
+import { AddCityDialog } from "@/components/AddCityDialog";
 import { useLiveClock } from "@/hooks/useLiveClock";
 import { useSettings } from "@/hooks/useSettings";
-import { TIMEZONE_CONFIGS, resolveHomeTz } from "@/lib/timezones";
+import { MAX_ZONES, resolveHomeTz } from "@/lib/timezones";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Clock, CalendarDays } from "lucide-react";
 
 const Index = () => {
   const now = useLiveClock();
-  const { settings, toggle24Hour, toggleDarkMode, updateZoneSettings, moveZone, setHomeTz } = useSettings();
+  const { settings, toggle24Hour, toggleDarkMode, updateZone, addZone, removeZone, moveZone, setHomeTz } =
+    useSettings();
   const homeTz = resolveHomeTz(settings.homeTz);
   const [activeTab, setActiveTab] = useState("clocks");
-
-  // Get ordered timezone configs
-  const orderedConfigs = settings.zoneOrder
-    .map((id) => TIMEZONE_CONFIGS.find((z) => z.id === id))
-    .filter((z): z is (typeof TIMEZONE_CONFIGS)[0] => z !== undefined);
-
-  const visibleConfigs = orderedConfigs.filter((config) => !settings.zones[config.id]?.hidden);
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -32,6 +27,7 @@ const Index = () => {
         onToggleDarkMode={toggleDarkMode}
         homeTz={settings.homeTz}
         onHomeTzChange={setHomeTz}
+        zones={settings.zones}
       />
 
       <main className="flex-1 container py-6 space-y-6">
@@ -47,14 +43,29 @@ const Index = () => {
             </TabsTrigger>
           </TabsList>
 
+          <div className="mb-4 flex items-center justify-end gap-3">
+            {settings.zones.length === 0 && (
+              <p className="text-sm text-muted-foreground">No cities yet.</p>
+            )}
+            {settings.zones.length >= MAX_ZONES && (
+              <p className="text-sm text-muted-foreground">
+                Up to {MAX_ZONES} cities. Remove one in Settings to add another.
+              </p>
+            )}
+            <AddCityDialog
+              onAdd={addZone}
+              disabled={settings.zones.length >= MAX_ZONES}
+              homeTz={settings.zones.some((zone) => zone.tz === homeTz) ? null : homeTz}
+            />
+          </div>
+
           <TabsContent value="clocks" className="space-y-6">
             {/* Clock Grid */}
             <div className="grid gap-4 md:grid-cols-2">
-              {visibleConfigs.map((config) => (
+              {settings.zones.map((zone) => (
                 <ClockCard
-                  key={config.id}
-                  config={config}
-                  settings={settings.zones[config.id]}
+                  key={zone.id}
+                  zone={zone}
                   now={now}
                   use24Hour={settings.use24Hour}
                   homeTz={homeTz}
@@ -65,8 +76,7 @@ const Index = () => {
 
           <TabsContent value="schedule">
             <ScheduleView
-              zoneSettings={settings.zones}
-              zoneOrder={settings.zoneOrder}
+              zones={settings.zones}
               now={now}
               use24Hour={settings.use24Hour}
               homeTz={homeTz}
@@ -76,10 +86,10 @@ const Index = () => {
 
         {/* Settings */}
         <SettingsPanel
-          zoneSettings={settings.zones}
-          zoneOrder={settings.zoneOrder}
+          zones={settings.zones}
           use24Hour={settings.use24Hour}
-          onUpdateZone={updateZoneSettings}
+          onUpdateZone={updateZone}
+          onRemoveZone={removeZone}
           onMoveZone={moveZone}
         />
       </main>
