@@ -65,7 +65,9 @@ export function sanitize(raw: unknown, message: string, senderZone: string): Exp
     // sender_default items take the author's zone, so fixtures stored with null work for any author
     const zone = e.zoneReason === "sender_default" ? senderZone : e.sourceZone;
     const sourceZone = zone && IANAZone.isValidZone(zone) ? zone : null;
-    const convertible = !!sourceZone && !!e.localTime && (e.kind === "exact" || (e.kind === "range" && !!e.endLocalTime));
+    // Strict output only checks types, so an "exact" item can still carry an unclear flag; the flag wins
+    const flagOk = e.flag === null || e.flag === "ampm_assumed";
+    const convertible = flagOk && !!sourceZone && !!e.localTime && (e.kind === "exact" || (e.kind === "range" && !!e.endLocalTime));
     const kind = (e.kind === "exact" || e.kind === "range") && !convertible ? "ambiguous" : e.kind;
     // A downgrade with no flag would fall back to "no exact time" copy when the zone was the real problem
     const flag = kind !== e.kind && !sourceZone ? "zone_unclear" : e.flag;

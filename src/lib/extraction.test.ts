@@ -36,6 +36,12 @@ describe("sanitize", () => {
     expect(e.flag).toBe("zone_unclear");
   });
 
+  it("keeps an exact item with an unclear flag unconverted", () => {
+    for (const flag of ["ampm_unclear", "zone_unclear", "day_unclear", "not_specific"] as const)
+      expect(run([expr({ flag })])![0]).toMatchObject({ kind: "ambiguous", flag });
+    expect(run([expr({ flag: "ampm_assumed" })])![0].kind).toBe("exact");
+  });
+
   it("downgrades a range without an end", () => {
     expect(run([expr({ kind: "range" })])![0].kind).toBe("ambiguous");
   });

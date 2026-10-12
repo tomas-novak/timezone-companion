@@ -543,7 +543,8 @@ export function sanitize(raw: unknown, message: string, senderZone: string): Exp
     // sender_default items take the author's zone, so fixtures stored with null work for any author
     const zone = e.zoneReason === "sender_default" ? senderZone : e.sourceZone;
     const sourceZone = zone && IANAZone.isValidZone(zone) ? zone : null;
-    const convertible = !!sourceZone && !!e.localTime && (e.kind === "exact" || (e.kind === "range" && !!e.endLocalTime));
+    const flagOk = e.flag === null || e.flag === "ampm_assumed";
+    const convertible = flagOk && !!sourceZone && !!e.localTime && (e.kind === "exact" || (e.kind === "range" && !!e.endLocalTime));
     const kind = (e.kind === "exact" || e.kind === "range") && !convertible ? "ambiguous" : e.kind;
     // A downgrade with no flag would fall back to "no exact time" copy when the zone was the real problem
     const flag = kind !== e.kind && !sourceZone ? "zone_unclear" : e.flag;
@@ -637,9 +638,10 @@ export function chipFor(
   const t = DateTime.fromISO(e.utcInstant, { zone: "utc" });
   const src = t.setZone(e.sourceZone!);
   const local = t.setZone(reader.tz);
-  if (!opts.keepSameOffset && local.offset === src.offset) return null;
   const fmt = (d: DateTime) => formatTime(d, use24Hour);
   const end = e.endUtcInstant ? DateTime.fromISO(e.endUtcInstant, { zone: "utc" }).setZone(reader.tz) : null;
+  const sameEnd = !end || end.offset === end.setZone(e.sourceZone!).offset;
+  if (!opts.keepSameOffset && local.offset === src.offset && sameEnd) return null;
   const status = getWorkStatus(t, reader.tz, reader);
   const suffix = status === "working" ? "" : status === "reasonable" ? (isEarly(local, reader) ? "early" : "late") : status === "outside" ? "after hours" : "weekend";
   return { type: "time", time: end ? `${fmt(local)}–${fmt(end)}` : fmt(local), weekday: local.toISODate() === src.toISODate() ? null : local.toFormat("ccc", { locale: "en" }), status, suffix };

@@ -82,8 +82,10 @@ export function chipFor(
   const t = DateTime.fromISO(e.utcInstant, { zone: "utc" });
   const src = t.setZone(e.sourceZone!);
   const local = t.setZone(reader.tz);
-  if (!opts.keepSameOffset && local.offset === src.offset) return null;
   const end = e.endUtcInstant ? DateTime.fromISO(e.endUtcInstant, { zone: "utc" }).setZone(reader.tz) : null;
+  // A range can cross a clock change in only one of the two zones, so its end must match too
+  const sameEnd = !end || end.offset === end.setZone(e.sourceZone!).offset;
+  if (!opts.keepSameOffset && local.offset === src.offset && sameEnd) return null;
   // A range is as bad as its worst moment: its start or its last minute
   const moments = end ? [local, end.minus({ minutes: 1 })] : [local];
   const [worst, status] = moments
