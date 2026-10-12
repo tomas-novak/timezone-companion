@@ -106,7 +106,7 @@ export function ChatDemo({ zones, homeTz, use24Hour }: { zones: Zone[]; homeTz: 
               <Step n={2} title="Check it before sending">
                 {text.trim() ? "Before you press Send, see what the time means for each colleague." : "Pick a message above and the preview appears here."}
               </Step>
-              {text.trim() && <SenderPreview detection={draft} author={author} participants={participants} use24Hour={use24Hour} />}
+              {text.trim() && <SenderPreview text={text} detection={draft} author={author} participants={participants} use24Hour={use24Hour} />}
             </div>
           </div>
           <div className="space-y-3 rounded-xl border bg-card p-4 lg:col-span-7">

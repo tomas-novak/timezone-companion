@@ -1,5 +1,6 @@
 import type { Zone } from "@/lib/storage";
-import { chipFor, type DetectionResult, type Flag, type TimeChip } from "@/lib/timeDetect";
+import { YOUR_TIME, readerZone } from "@/lib/extraction";
+import { chipFor, teamZonesFor, type DetectionResult, type Flag, type TimeChip } from "@/lib/timeDetect";
 import { Pill } from "./TimeChip";
 
 const NOT_CONVERTED: Record<Flag, string> = {
@@ -11,17 +12,26 @@ const NOT_CONVERTED: Record<Flag, string> = {
   clock_change: "pick a time outside the clock change",
 };
 
-export function SenderPreview({
-  detection,
-  author,
-  participants,
-  use24Hour,
-}: {
-  detection: DetectionResult | null;
-  author: Zone;
-  participants: Zone[];
-  use24Hour: boolean;
-}) {
+type Props = { text: string; detection: DetectionResult | null; author: Zone; participants: Zone[]; use24Hour: boolean };
+
+export function SenderPreview(props: Props) {
+  const { text, detection, author, participants } = props;
+  // Same rule the server applies, shown while typing so the sender can fix it before Send
+  const yourTime =
+    detection && detection.status !== "no-candidate" && YOUR_TIME.test(text) && !readerZone(teamZonesFor(participants), author.tz);
+  return (
+    <>
+      {yourTime && (
+        <p role="status" className="mb-2 rounded-lg border border-amber-400 bg-amber-400/10 p-3 text-sm">
+          "Your time" is a different time for each reader, so it won't be converted. Name a city instead, like "3pm Doha time".
+        </p>
+      )}
+      <Preview {...props} />
+    </>
+  );
+}
+
+function Preview({ detection, author, participants, use24Hour }: Props) {
   if (!detection) return null;
   if (detection.status === "ready")
     return <p className="text-sm text-muted-foreground">Time found. The AI reads it when you press Send.</p>;

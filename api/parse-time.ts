@@ -31,7 +31,7 @@ export async function extract(input: ParseTimeRequest) {
   });
   // A refusal or cut-off JSON parses to null, which sanitize rejects
   const raw = res.status === "completed" ? parseJson(res.output_text) : null;
-  return { expressions: sanitize(raw, message, senderZone), usage: res.usage };
+  return { expressions: sanitize(raw, message, senderZone, teamZones), usage: res.usage };
 }
 
 export async function POST(req: Request): Promise<Response> {

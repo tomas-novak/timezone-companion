@@ -52,13 +52,31 @@ export const ParseTimeRequest = z.object({
 }).strict();
 export type ParseTimeRequest = z.infer<typeof ParseTimeRequest>;
 
+export const YOUR_TIME = /\byour\s+(?:local\s+)?time(?:\s?zone)?\b|بتوقيتك/i;
+
+// "Your time" is the reader's zone, and only a team with exactly one other zone has a single reader zone
+export function readerZone(teamZones: Record<string, string>, senderZone: string): string | null {
+  const others = new Set(Object.values(teamZones).filter((z) => z !== senderZone));
+  return others.size === 1 ? [...others][0] : null;
+}
+
 const HHMM = /^([01]\d|2[0-3]):[0-5]\d$/;
 const YMD = /^\d{4}-\d{2}-\d{2}$/;
 
-export function sanitize(raw: unknown, message: string, senderZone: string): Expr[] | null {
+export function sanitize(raw: unknown, message: string, senderZone: string, teamZones?: Record<string, string>): Expr[] | null {
   const parsed = Extraction.safeParse(raw);
   if (!parsed.success) return null;
-  return parsed.data.expressions.slice(0, 10).flatMap((e) => {
+  return parsed.data.expressions.slice(0, 10).flatMap((item) => {
+    // The model often reads "your time" as the sender's zone or a random team zone, so code decides it
+    const yours = teamZones && YOUR_TIME.test(item.text) ? readerZone(teamZones, senderZone) : undefined;
+    const e: Expr =
+      yours === undefined
+        ? item
+        : yours === null
+          ? { ...item, sourceZone: null, zoneReason: "unknown" }
+          : item.flag === "zone_unclear"
+            ? { ...item, sourceZone: yours, zoneReason: "explicit", flag: null, kind: item.endLocalTime ? "range" : "exact" }
+            : { ...item, sourceZone: yours, zoneReason: "explicit" };
     if (!e.text || !message.includes(e.text)) return [];
     if ([e.localTime, e.endLocalTime].some((t) => t !== null && !HHMM.test(t))) return [];
     if (e.localDate !== null && !(YMD.test(e.localDate) && DateTime.fromISO(e.localDate).isValid)) return [];

@@ -49,6 +49,13 @@ describe("ChatDemo reader after live sends", () => {
     expect(reader()).toBe("Vienna");
   });
 
+  it("warns about \"your time\" while typing, without calling the AI", () => {
+    const pending = liveCalls();
+    fireEvent.change(screen.getByLabelText(/Sending as/), { target: { value: "sync at 3pm your time" } });
+    expect(screen.getByText(/"Your time" is a different time for each reader/)).toBeTruthy();
+    expect(pending).toHaveLength(0);
+  });
+
   it("leaves a reader the user picked while waiting", async () => {
     const pending = liveCalls();
     send("call at 3pm");
