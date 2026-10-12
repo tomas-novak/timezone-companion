@@ -1,73 +1,56 @@
-# Welcome to your Lovable project
+# OFTI offices time
 
-## Project info
+Multi-timezone clock and schedule planner. The `/concept` page ("Feature concept" in the header) shows how times in chat messages would be converted for each reader's city. The spec is [docs/PRD.md](docs/PRD.md).
 
-**URL**: https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID
+## Local development
 
-## How can I edit this code?
-
-There are several ways of editing your application.
-
-**Use Lovable**
-
-Simply visit the [Lovable Project](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and start prompting.
-
-Changes made via Lovable will be committed automatically to this repo.
-
-**Use your preferred IDE**
-
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
-
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
-
-Follow these steps:
+Requires Node.js 22 or later and npm.
 
 ```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
-
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
-
-# Step 3: Install the necessary dependencies.
 npm i
-
-# Step 4: Start the development server with auto-reloading and an instant preview.
 npm run dev
 ```
 
-**Edit a file directly in GitHub**
+The app runs on http://localhost:8080. The six presets on `/concept` work offline. Custom messages need an OpenAI key in `.env.local` (git ignores it):
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+```sh
+OPENAI_API_KEY=sk-...
+# Optional
+OPENAI_MODEL=              # default gpt-6-luna
+OPENAI_BASE_URL=           # Azure OpenAI or Vercel AI Gateway
+OPENAI_REASONING_EFFORT=   # default none
+```
 
-**Use GitHub Codespaces**
+`npm run dev` serves `/api/parse-time` from `.env.local` without the Vercel CLI. Restart it after changing the file.
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+## Tests
 
-## What technologies are used for this project?
+```sh
+npm test
+npm run lint
+```
 
-This project is built with:
+The live eval calls the model with 27 messages and is skipped by default. It needs the key in the shell, not only in `.env.local`. In PowerShell:
+
+```powershell
+$env:OPENAI_API_KEY="sk-..."; $env:RUN_EVAL="1"; npx vitest run src/lib/parseTime.eval.test.ts
+```
+
+It passes with at least 24 of 27 rows right and no critical errors (an unclear time shown as exact).
+
+## Deploy on Vercel
+
+1. Import the repo with the Vite preset (`npm run build`, output `dist`), Node.js 22 or 24. `vercel.json` rewrites everything except `/api/` to the SPA.
+2. Set `OPENAI_API_KEY` (Sensitive) and the optional variables above for Production and Preview, then redeploy.
+3. Use a dedicated OpenAI project with a hard monthly spend limit.
+4. Add a Firewall rate-limit rule: path `/api/parse-time`, 20 requests per IP per minute, action 429.
+
+## Technologies
 
 - Vite
 - TypeScript
 - React
 - shadcn-ui
 - Tailwind CSS
-
-## How can I deploy this project?
-
-Simply open [Lovable](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and click on Share -> Publish.
-
-## Can I connect a custom domain to my Lovable project?
-
-Yes, you can!
-
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
-
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/features/custom-domain#custom-domain)
+- luxon, zod
+- OpenAI Responses API (`gpt-6-luna`) in a Vercel function

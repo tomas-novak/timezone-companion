@@ -1,5 +1,6 @@
 import { useMemo } from "react";
-import { Info, Moon, Sun } from "lucide-react";
+import { Link, useMatch } from "react-router-dom";
+import { ArrowLeft, Info, Moon, Sparkles, Sun } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -26,6 +27,7 @@ export function Header({
   onHomeTzChange,
   zones,
 }: HeaderProps) {
+  const onConcept = !!useMatch("/concept");
   const detectedTz = resolveHomeTz(null);
   const zoneLabel = (tz: string) => zones.find((zone) => zone.tz === tz)?.city ?? tzCity(tz);
   const zoneTzs = [...new Set(zones.map((zone) => zone.tz))];
@@ -47,9 +49,20 @@ export function Header({
 
         {/* Controls */}
         <div className="ml-auto flex flex-wrap items-center justify-end gap-x-3 gap-y-2">
+          <Button asChild variant="outline" size="sm">
+            {onConcept ? (
+              <Link to="/">
+                <ArrowLeft size={16} aria-hidden /> Back to clocks
+              </Link>
+            ) : (
+              <Link to="/concept">
+                <Sparkles size={16} aria-hidden /> Feature concept
+              </Link>
+            )}
+          </Button>
           <div className="flex items-center gap-1">
             <label className="flex items-center gap-2 text-sm text-muted-foreground">
-              My timezone
+              My time zone
               <select
                 value={homeTz ?? ""}
                 onChange={(e) => onHomeTzChange(e.target.value || null)}
@@ -79,12 +92,12 @@ export function Header({
             </label>
             <Popover>
               <PopoverTrigger asChild>
-                <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground" aria-label="What is My timezone?">
+                <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground" aria-label="What is My time zone?">
                   <Info size={16} />
                 </Button>
               </PopoverTrigger>
               <PopoverContent align="end" className="text-sm">
-                Pick the timezone you are in. The Schedule View is laid out in your hours and each clock
+                Pick the time zone you are in. The Schedule View is laid out in your hours and each clock
                 shows how far ahead or behind you it is (e.g. +2 h); your own city is marked "You". Auto
                 follows your browser, so it updates when you travel; pick a city to keep it fixed.
               </PopoverContent>
