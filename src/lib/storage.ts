@@ -27,7 +27,7 @@ export interface AppSettings {
 const STORAGE_KEY = "4zone-clock-settings";
 
 // randomUUID is missing in older browsers and on plain-http hosts other than localhost
-const newId = () => crypto.randomUUID?.() ?? `${Date.now().toString(36)}-${Math.random().toString(36).slice(2)}`;
+export const newId = () => crypto.randomUUID?.() ?? `${Date.now().toString(36)}-${Math.random().toString(36).slice(2)}`;
 
 export function createZone(tz: string, id: string = newId()): Zone {
   const preset = CITY_PRESETS[tz];
@@ -81,6 +81,8 @@ export function migrate(raw: any): AppSettings {
 }
 
 export function loadSettings(): AppSettings {
+  // A page mounts and reads before the previous page unmounts, so write its pending save first
+  flushSave();
   try {
     const stored = localStorage.getItem(STORAGE_KEY);
     if (stored) return migrate(JSON.parse(stored));
@@ -100,12 +102,17 @@ export function saveSettings(settings: AppSettings): void {
 
 // Debounced save function
 let saveTimeout: ReturnType<typeof setTimeout> | null = null;
+let pending: AppSettings | null = null;
+
+export function flushSave(): void {
+  if (saveTimeout) clearTimeout(saveTimeout);
+  saveTimeout = null;
+  if (pending) saveSettings(pending);
+  pending = null;
+}
 
 export function debouncedSave(settings: AppSettings, delay = 500): void {
-  if (saveTimeout) {
-    clearTimeout(saveTimeout);
-  }
-  saveTimeout = setTimeout(() => {
-    saveSettings(settings);
-  }, delay);
+  if (saveTimeout) clearTimeout(saveTimeout);
+  pending = settings;
+  saveTimeout = setTimeout(flushSave, delay);
 }

@@ -1,7 +1,7 @@
 import { DateTime } from "luxon";
 import type { ZoneSettings } from "@/lib/storage";
 
-function parseTimeToMinutes(time: string): number {
+export function parseTimeToMinutes(time: string): number {
   const [hours, minutes] = time.split(":").map(Number);
   return hours * 60 + minutes;
 }

@@ -18,8 +18,8 @@ export function Footer() {
             <p className="text-muted-foreground">
               This app displays live clocks for the cities you pick with "Add city", including
               quick picks for the Ooredoo markets. The
-              schedule and the hour difference on each card are relative to your timezone,
-              detected from your browser and changeable under "My timezone" at the top of the page.
+              schedule and the hour difference on each card are relative to your time zone,
+              detected from your browser and changeable under "My time zone" at the top of the page.
             </p>
           </div>
 

@@ -1,0 +1,8 @@
+{
+  "exact": { "expressions": [{ "text": "Thursday at 3pm", "localDate": "2026-10-15", "localTime": "15:00", "endLocalTime": null, "sourceZone": null, "zoneReason": "sender_default", "flag": null, "kind": "exact" }] },
+  "doha-sunday": { "expressions": [{ "text": "Sunday at 10am", "localDate": "2026-10-18", "localTime": "10:00", "endLocalTime": null, "sourceZone": null, "zoneReason": "sender_default", "flag": null, "kind": "exact" }] },
+  "arabic": { "expressions": [{ "text": "يوم الأحد الساعة ١٠ صباحًا", "localDate": "2026-10-18", "localTime": "10:00", "endLocalTime": null, "sourceZone": null, "zoneReason": "sender_default", "flag": null, "kind": "exact" }] },
+  "doha-time": { "expressions": [{ "text": "tomorrow 1pm Doha time", "localDate": "2026-10-14", "localTime": "13:00", "endLocalTime": null, "sourceZone": "Asia/Qatar", "zoneReason": "explicit", "flag": null, "kind": "exact" }] },
+  "unclear": { "expressions": [{ "text": "3pm your time", "localDate": null, "localTime": "15:00", "endLocalTime": null, "sourceZone": null, "zoneReason": "unknown", "flag": "zone_unclear", "kind": "ambiguous" }] },
+  "not-time": { "expressions": [] }
+}

@@ -15,7 +15,7 @@ import { CITY_PRESETS, OOREDOO_TZS, tzCity, worldTimeZones } from "@/lib/timezon
 interface AddCityDialogProps {
   onAdd: (tz: string) => void;
   disabled?: boolean;
-  // Offered on top so people can add their own city right after picking it under "My timezone"
+  // Offered on top so people can add their own city right after picking it under "My time zone"
   homeTz?: string | null;
 }
 
@@ -40,8 +40,8 @@ export function AddCityDialog({ onAdd, disabled, homeTz }: AddCityDialogProps) {
         <CommandList>
           <CommandEmpty>No time zone found.</CommandEmpty>
           {homeTz && (
-            <CommandGroup heading="My timezone">
-              <CommandItem value={`my timezone ${homeTz.replace(/_/g, " ")}`} onSelect={() => pick(homeTz)}>
+            <CommandGroup heading="My time zone">
+              <CommandItem value={`my time zone ${homeTz.replace(/_/g, " ")}`} onSelect={() => pick(homeTz)}>
                 {CITY_PRESETS[homeTz]?.city ?? tzCity(homeTz)}
                 <span className="ml-auto text-xs opacity-70">{homeTz}</span>
               </CommandItem>

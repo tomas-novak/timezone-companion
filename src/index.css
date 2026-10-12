@@ -29,8 +29,8 @@
     --muted: 210 40% 96%;
     --muted-foreground: 215 16% 47%;
 
-    --accent: 2 93% 47%;
-    --accent-foreground: 0 0% 100%;
+    --accent: 169 97% 48%;
+    --accent-foreground: 205 68% 8%;
 
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 100%;
@@ -43,9 +43,9 @@
 
     /* Custom tokens */
     --clock-glow: 169 97% 48%;
-    --working-badge: 169 97% 48%;
+    --working-badge: 169 90% 25%;
     --reasonable-badge: 45 93% 47%;
-    --outside-badge: 215 16% 47%;
+    --outside-badge: 215 16% 40%;
     --weekend-badge: 2 93% 47%;
   }
 
@@ -68,8 +68,8 @@
     --muted: 205 50% 15%;
     --muted-foreground: 215 20% 65%;
 
-    --accent: 2 93% 47%;
-    --accent-foreground: 0 0% 100%;
+    --accent: 169 97% 48%;
+    --accent-foreground: 205 68% 8%;
 
     --destructive: 0 63% 31%;
     --destructive-foreground: 210 40% 98%;
