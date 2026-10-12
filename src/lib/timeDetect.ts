@@ -48,7 +48,7 @@ export async function callParseTime(body: ParseTimeRequest): Promise<Expr[]> {
       body: JSON.stringify(body),
       signal: ctrl.signal,
     });
-    const expressions = res.ok ? sanitize(await res.json(), body.message, body.senderZone) : null;
+    const expressions = res.ok ? sanitize(await res.json(), body.message, body.senderZone, body.teamZones) : null;
     if (!expressions) throw new Error(`parse-time ${res.status}`);
     return expressions;
   } finally {
@@ -86,8 +86,7 @@ export function chipFor(
   // A range can cross a clock change in only one of the two zones, so its end must match too
   const sameEnd = !end || end.offset === end.setZone(e.sourceZone!).offset;
   if (!opts.keepSameOffset && local.offset === src.offset && sameEnd) return null;
-  // A range is as bad as its worst moment: its start or its last minute
-  const moments = end ? [local, end.minus({ minutes: 1 })] : [local];
+  const moments = end ? rangeMoments(local, end.minus({ minutes: 1 }), reader) : [local];
   const [worst, status] = moments
     .map((m) => [m, getWorkStatus(m, reader.tz, reader)] as const)
     .reduce((a, b) => (SEVERITY.indexOf(b[1]) > SEVERITY.indexOf(a[1]) ? b : a));
@@ -100,6 +99,19 @@ export function chipFor(
     status,
     suffix,
   };
+}
+
+// A range is as bad as its worst moment. Status only changes at a working or reasonable boundary or at
+// midnight, so those boundaries inside the range plus both ends are enough
+function rangeMoments(start: DateTime, last: DateTime, reader: Zone) {
+  const marks = [reader.workingStart, reader.workingEnd, reader.reasonableStart, reader.reasonableEnd, "00:00"].map(parseTimeToMinutes);
+  const moments = [start, last];
+  for (let day = start.startOf("day"); day <= last; day = day.plus({ days: 1 }))
+    for (const m of marks) {
+      const t = day.set({ hour: Math.floor(m / 60), minute: m % 60 });
+      if (t > start && t < last) moments.push(t);
+    }
+  return moments;
 }
 
 const SEVERITY: WorkStatus[] = ["working", "reasonable", "outside", "weekend"];

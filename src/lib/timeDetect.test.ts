@@ -89,6 +89,11 @@ describe("chipFor", () => {
     expect(chipFor(e, tunis, PRAGUE, true)).toMatchObject({ time: "23:00–03:00" });
   });
 
+  it("judges an overnight range by the night inside it, not only by its working-hours ends", () => {
+    const e = one(exact("2026-10-15", "16:00", PRAGUE, { kind: "range", endLocalTime: "10:00" }));
+    expect(chipFor(e, prague, PRAGUE, true, { keepSameOffset: true })).toMatchObject({ status: "outside", suffix: "after hours" });
+  });
+
   it("keeps same-offset readers for sender pills", () => {
     const e = one(exact("2026-10-26", "15:00"));
     expect(chipFor(e, tunis, PRAGUE, true, { keepSameOffset: true })).toMatchObject({ time: "15:00" });

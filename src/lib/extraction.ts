@@ -81,7 +81,8 @@ export function sanitize(raw: unknown, message: string, senderZone: string, team
     if ([e.localTime, e.endLocalTime].some((t) => t !== null && !HHMM.test(t))) return [];
     if (e.localDate !== null && !(YMD.test(e.localDate) && DateTime.fromISO(e.localDate).isValid)) return [];
     // sender_default items take the author's zone, so fixtures stored with null work for any author
-    const zone = e.zoneReason === "sender_default" ? senderZone : e.sourceZone;
+    // "unknown" means the model could not tell the zone, so a zone it returned anyway is a guess
+    const zone = e.zoneReason === "sender_default" ? senderZone : e.zoneReason === "unknown" ? null : e.sourceZone;
     const sourceZone = zone && IANAZone.isValidZone(zone) ? zone : null;
     // Strict output only checks types, so an "exact" item can still carry an unclear flag; the flag wins
     const flagOk = e.flag === null || e.flag === "ampm_assumed";

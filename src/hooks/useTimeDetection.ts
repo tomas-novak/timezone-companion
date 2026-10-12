@@ -27,7 +27,7 @@ export function useTimeDetection(participants: Zone[], you: Zone, demoClock: boo
       const preset = demoClock && PRESETS.find((p) => p.text === text && presetAuthor(p, participants, you)?.id === author.id);
       if (!preset) return { ...empty, status: "ready", request };
       const response = fixtureFor(preset.id);
-      const exprs = sanitize(response, text, author.tz);
+      const exprs = sanitize(response, text, author.tz, request.teamZones);
       if (!exprs) return { ...empty, status: "error", source: "cache", request, response };
       return { status: "done", source: "cache", request, response, expressions: toExpressions(exprs, text, now) };
     },

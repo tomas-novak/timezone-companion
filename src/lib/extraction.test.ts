@@ -55,6 +55,10 @@ describe("sanitize", () => {
     expect(sanitize({ expressions: [expr({ text: "٣ بتوقيتك", zoneReason: "explicit", sourceZone: "Asia/Qatar" })] }, "الساعة ٣ بتوقيتك", "Europe/Prague", many)![0].kind).toBe("ambiguous");
   });
 
+  it("drops a zone the model returned with zoneReason unknown", () => {
+    expect(run([expr({ zoneReason: "unknown", sourceZone: "America/Chicago" })])![0]).toMatchObject({ kind: "ambiguous", sourceZone: null, flag: "zone_unclear" });
+  });
+
   it("downgrades a range without an end", () => {
     expect(run([expr({ kind: "range" })])![0].kind).toBe("ambiguous");
   });
