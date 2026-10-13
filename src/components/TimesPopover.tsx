@@ -100,7 +100,7 @@ export function TimesPopover({ e, children, ...who }: Who & { e: TimeExpression;
         onPointerEnter={hover(true)}
         onPointerLeave={hover(false)}
         onOpenAutoFocus={(ev) => ev.preventDefault()}
-        // Focus handed back after a hover counts as keyboard focus, which pulls a covered card on /concept to the front
+        // Focus handed back after a hover counts as keyboard focus, which scrolls /concept back to a covered card
         onCloseAutoFocus={(ev) => returnFocus.current || ev.preventDefault()}
       >
         <Times e={e} {...who} />

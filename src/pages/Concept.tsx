@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, type FocusEvent } from "react";
 import { useLocation } from "react-router-dom";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
@@ -8,6 +8,17 @@ import { TryIt } from "@/components/TryIt";
 import { Ask, Build, Hero, Today, Trust } from "@/components/PitchSections";
 import { useSettings } from "@/hooks/useSettings";
 import { EXAMPLES, youFor, type Example } from "@/lib/demoPresets";
+
+// Keyboard focus can land in a pinned card the next one covers; scroll back to where it sits in the flow
+function revealCoveredCard(e: FocusEvent<HTMLDivElement>) {
+  const card = (e.target as Element).closest<HTMLElement>(".card-stack > section");
+  const next = card?.nextElementSibling;
+  if (!card || !next || next.getBoundingClientRect().top >= card.getBoundingClientRect().bottom) return;
+  if (!(e.target as Element).matches(":focus-visible")) return;
+  card.style.position = "static";
+  card.scrollIntoView();
+  card.style.position = "";
+}
 
 const Concept = () => {
   const { settings, toggle24Hour, toggleDarkMode, setHomeTz } = useSettings();
@@ -35,7 +46,7 @@ const Concept = () => {
       <main className="container max-w-6xl flex-1 space-y-16 py-10 sm:space-y-20">
         <Hero />
         <Today />
-        <div className="card-stack">
+        <div className="card-stack" onFocus={revealCoveredCard}>
           <MomentWrite
             example={example}
             onExampleChange={setExampleId}
