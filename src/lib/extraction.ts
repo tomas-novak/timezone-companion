@@ -69,14 +69,20 @@ export function sanitize(raw: unknown, message: string, senderZone: string, team
   return parsed.data.expressions.slice(0, 10).flatMap((item) => {
     // The model often reads "your time" as the sender's zone or a random team zone, so code decides it
     const yours = teamZones && YOUR_TIME.test(item.text) ? readerZone(teamZones, senderZone) : undefined;
+    // Whatever kind and flag the model chose, the zone is the only open question for a clock time here
+    const clock = !!item.localTime && item.kind !== "vague";
+    const zoneOnly = item.flag === null || item.flag === "zone_unclear" || item.flag === "ampm_assumed";
     const e: Expr =
       yours === undefined
         ? item
         : yours === null
-          ? { ...item, sourceZone: null, zoneReason: "unknown" }
-          : item.flag === "zone_unclear"
-            ? { ...item, sourceZone: yours, zoneReason: "explicit", flag: null, kind: item.endLocalTime ? "range" : "exact" }
-            : { ...item, sourceZone: yours, zoneReason: "explicit" };
+          ? { ...item, sourceZone: null, zoneReason: "unknown", ...(clock && { kind: "ambiguous", flag: "zone_unclear" }) }
+          : {
+              ...item,
+              sourceZone: yours,
+              zoneReason: "explicit",
+              ...(clock && zoneOnly && { kind: item.endLocalTime ? "range" : "exact", flag: item.flag === "zone_unclear" ? null : item.flag }),
+            };
     if (!e.text || !message.includes(e.text)) return [];
     if ([e.localTime, e.endLocalTime].some((t) => t !== null && !HHMM.test(t))) return [];
     if (e.localDate !== null && !(YMD.test(e.localDate) && DateTime.fromISO(e.localDate).isValid)) return [];

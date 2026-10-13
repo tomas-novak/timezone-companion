@@ -4,7 +4,7 @@ import { DateTime, Settings } from "luxon";
 import { createZone } from "./storage";
 import { sanitize, type Expr } from "./extraction";
 import { callParseTime, chipFor, firstReaderWithChip, sameOffsetEverywhere, teamZonesFor, toExpressions } from "./timeDetect";
-import { DEMO_NOW, PRESETS, fixtureFor } from "./demoPresets";
+import { DEMO_NOW, EXAMPLES, UNCLEAR_EXAMPLE } from "./demoPresets";
 
 const PRAGUE = "Europe/Prague";
 const prague = createZone(PRAGUE);
@@ -154,17 +154,19 @@ describe("sameOffsetEverywhere", () => {
     expect(sameOffsetEverywhere([PRAGUE, "Africa/Tunis"], at(DEMO_NOW))).toBe(false);
     expect(sameOffsetEverywhere([PRAGUE, "Africa/Tunis"], at("2026-11-01T10:00:00Z"))).toBe(false);
   });
+  it("is false for London and Algiers, equal today and in half a year but not in winter", () => {
+    expect(sameOffsetEverywhere(["Europe/London", "Africa/Algiers"], at(DEMO_NOW))).toBe(false);
+  });
+  it("checks the day an unclear time names", () => {
+    const moscowDoha = ["Europe/Moscow", "Asia/Qatar"];
+    expect(sameOffsetEverywhere(moscowDoha, at(DEMO_NOW))).toBe(true);
+    expect(sameOffsetEverywhere(moscowDoha, at(DEMO_NOW), [at("2010-07-01T12:00:00Z")])).toBe(false);
+  });
 });
 
-describe("demo fixtures", () => {
-  it.each(PRESETS)("$id passes sanitize", (p) => {
-    const authorTz = p.authorTz ?? PRAGUE;
-    const exprs = sanitize(fixtureFor(p.id), p.text, authorTz);
-    expect(exprs).not.toBeNull();
-    if (p.id === "not-time") expect(exprs).toEqual([]);
-    else if (p.id === "unclear") expect(exprs![0].kind).toBe("ambiguous");
-    else expect(exprs!.map((e) => e.kind)).toEqual(["exact"]);
-  });
+describe("demo examples", () => {
+  it.each(EXAMPLES)("$id converts offline", (x) => expect(x.expressions.map((e) => e.kind)).toEqual(["exact"]));
+  it("unclear stays ambiguous", () => expect(UNCLEAR_EXAMPLE.expressions[0].kind).toBe("ambiguous"));
 });
 
 describe("callParseTime", () => {

@@ -13,7 +13,7 @@ INPUT is JSON:
 OUTPUT: {"expressions": [...]}, one item per distinct time, in order of appearance. If nothing qualifies, {"expressions": []}.
 
 WHAT COUNTS
-Extract only expressions with a clock time or a part of day: "3pm", "15:30", "noon", "tomorrow morning", "tonight", "3-4pm". End-of-day deadlines ("EOD", "EOB", "COB", "end of day", "end of business") are not times: return no item for them.
+Extract only expressions with a clock time or a part of day: "3pm", "15:30", "half past three", "noon", "tomorrow morning", "tonight", "3-4pm". End-of-day deadlines ("EOD", "EOB", "COB", "end of day", "end of business") are not times: return no item for them.
 Never extract: date-only mentions ("Thursday", "tomorrow" alone), durations ("2h", "30 min"), relative offsets ("in 2 hours"), versions ("v2.5", "1.10"), prices and amounts ("3 QAR", "10.30 TND"), counts ("2-3 people"), scores, ratios ("16:9"), IDs, room or phone numbers.
 Never invent a time that is not in the message.
 
@@ -30,6 +30,7 @@ TIME RULES
 - "3pm", "3 p.m.", "3PM" -> 15:00. "12am" -> 00:00. "12pm", noon, الظهر -> 12:00.
 - midnight, منتصف الليل -> 00:00 on the date after the referenced day (after today if no day is stated); set localDate to that date. Exception: midnight as the END of a range follows the range rule below.
 - 24-hour forms are taken as written: hour 0 or 13-23, or a leading zero ("09:30").
+- Hours in words count like digits: "three" = 3, "three o'clock" = 3:00, "half past three" = 3:30, "quarter past ten" = 10:15, "quarter to ten" = 9:45. Then apply the am/pm rules, so "at half past three" -> 15:30 with flag "ampm_assumed". text keeps the words as written.
 - Arabic: convert Arabic-Indic digits (٠-٩, ۰-۹) to ASCII. صباحًا/صباحا = am. مساءً/مساء/عصرًا = pm. "الساعة ٣:٣٠ مساءً" -> 15:30.
 - Hour 1-12 with no am/pm and no part of day ("at 3", "3:30", "الساعة ٣"): 9, 10, 11, 12 -> as written (12 is noon). 1-6 -> pm (add 12) with flag "ampm_assumed". 7 or 8 -> kind "ambiguous", flag "ampm_unclear", localTime null.
 - Ranges ("3-4pm", "11-1pm", "من ٢ إلى ٤ مساءً") are one item with kind "range". A trailing am/pm applies to both ends unless the start would then be after the end ("11-1pm" -> 11:00 to 13:00). Keep an end that is earlier than the start as written ("11pm-1am" -> 23:00, 01:00); code adds the day. A range ending at midnight keeps the start's date and ends at "00:00" ("10pm-midnight today" -> today, 22:00, 00:00).
