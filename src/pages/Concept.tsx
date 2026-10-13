@@ -35,17 +35,19 @@ const Concept = () => {
       <main className="container max-w-6xl flex-1 space-y-16 py-10 sm:space-y-20">
         <Hero />
         <Today />
-        <MomentWrite
-          example={example}
-          onExampleChange={setExampleId}
-          onSent={() => {
-            document.getElementById("read")?.scrollIntoView();
-            document.getElementById("read-title")?.focus({ preventScroll: true });
-          }}
-          use24Hour={settings.use24Hour}
-        />
-        <MomentRead example={example} onExampleChange={setExampleId} you={you} inDemo={inDemo} use24Hour={settings.use24Hour} />
-        <TryIt you={you} cities={cities} use24Hour={settings.use24Hour} />
+        <div className="card-stack">
+          <MomentWrite
+            example={example}
+            onExampleChange={setExampleId}
+            onSent={() => {
+              document.getElementById("read")?.scrollIntoView();
+              document.getElementById("read-title")?.focus({ preventScroll: true });
+            }}
+            use24Hour={settings.use24Hour}
+          />
+          <MomentRead example={example} onExampleChange={setExampleId} you={you} inDemo={inDemo} use24Hour={settings.use24Hour} />
+          <TryIt you={you} cities={cities} use24Hour={settings.use24Hour} />
+        </div>
         <Trust use24Hour={settings.use24Hour} />
         <Build />
         <Ask />

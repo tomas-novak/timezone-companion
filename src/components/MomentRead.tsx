@@ -14,8 +14,8 @@ export function MomentRead({ example, onExampleChange, you, inDemo, use24Hour }:
   const viewer = (pick?.key === key && DEMO_CITIES.find((z) => z.id === pick.id)) || fallback;
 
   return (
-    <section id="read" className="scroll-mt-20 grid items-center gap-6 py-10 lg:grid-cols-[2fr_3fr] lg:gap-10">
-      <div className="space-y-4">
+    <section id="read" className="grid items-center gap-6 rounded-2xl border bg-card p-6 shadow-sm sm:p-10">
+      <div className="space-y-4 text-center">
         <h2 id="read-title" tabIndex={-1} className="outline-none text-2xl font-semibold tracking-tight sm:text-3xl">Every reader sees their own time</h2>
         <p className="text-muted-foreground">Switch who is reading. The words stay as written; each reader gets their own time.</p>
         <ExampleSwitch example={example} onExampleChange={onExampleChange} />

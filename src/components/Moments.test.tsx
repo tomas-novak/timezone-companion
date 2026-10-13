@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { cleanup, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
+import { act, cleanup, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { DEMO_CITIES, EXAMPLES, type Example } from "@/lib/demoPresets";
 import { createZone, type Zone } from "@/lib/storage";
@@ -18,6 +18,12 @@ const renderRead = (example: Example, you: Zone, inDemo = true) =>
       <MomentRead example={example} onExampleChange={() => {}} you={you} inDemo={inDemo} use24Hour />
     </TooltipProvider>,
   );
+// jsdom has no PointerEvent, and React derives onPointerEnter/Leave from pointerover/pointerout
+const mouse = (type: "pointerover" | "pointerout", relatedTarget: Element | null) => {
+  const e = new MouseEvent(type, { bubbles: true, relatedTarget });
+  Object.defineProperty(e, "pointerType", { value: "mouse" });
+  return e;
+};
 const fetchSpy = vi.fn(() => {
   throw new Error("no network in the story sections");
 });
@@ -60,6 +66,42 @@ describe("Moments", () => {
     expect(time).toHaveAttribute("aria-expanded", "false");
   });
 
+  it("closes the popup when the page scrolls", () => {
+    render(
+      <TooltipProvider>
+        <MomentWrite example={thursday} onExampleChange={() => {}} onSent={() => {}} use24Hour />
+      </TooltipProvider>,
+    );
+    const time = screen.getByRole("button", { name: /Thursday at 3pm/ });
+    fireEvent.click(time);
+    expect(time).toHaveAttribute("aria-expanded", "true");
+    fireEvent.scroll(window);
+    expect(time).toHaveAttribute("aria-expanded", "false");
+  });
+
+  it("a hover popup does not hand focus to the time when it closes", () => {
+    vi.useFakeTimers();
+    try {
+      render(
+        <TooltipProvider>
+          <MomentWrite example={thursday} onExampleChange={() => {}} onSent={() => {}} use24Hour />
+        </TooltipProvider>,
+      );
+      const time = screen.getByRole("button", { name: /Thursday at 3pm/ });
+      fireEvent(time, mouse("pointerover", null));
+      act(() => vi.advanceTimersByTime(100));
+      expect(time).toHaveAttribute("aria-expanded", "true");
+      fireEvent(time, mouse("pointerout", document.body));
+      act(() => vi.advanceTimersByTime(300));
+      // Radix hands focus back in a timeout after the close renders
+      act(() => vi.runAllTimers());
+      expect(time).toHaveAttribute("aria-expanded", "false");
+      expect(time).not.toHaveFocus();
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
   it("returns focus to Send after Edit", async () => {
     render(
       <TooltipProvider>
@@ -86,5 +128,15 @@ describe("Moments", () => {
     expect(screen.getByRole("log")).toHaveTextContent("→ 16:00 your time");
     fireEvent.click(screen.getByRole("radio", { name: "Muscat" }));
     expect(screen.getByRole("log")).toHaveTextContent("→ 17:00 your time");
+  });
+
+  it("colours the reader's chip by their hours, without naming the status", () => {
+    renderRead(thursday, doha);
+    const chip = () => within(screen.getByRole("log")).getByText(/your time/);
+    expect(chip()).toHaveClass("badge-working");
+    fireEvent.click(screen.getByRole("radio", { name: "New Delhi" }));
+    expect(chip()).toHaveTextContent("→ 18:30 your time");
+    expect(chip()).toHaveClass("bg-amber-400/25");
+    expect(chip()).not.toHaveTextContent("Late");
   });
 });

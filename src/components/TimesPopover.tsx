@@ -47,12 +47,24 @@ export function TimesPopover({ e, children, ...who }: Who & { e: TimeExpression;
   const [open, setOpen] = useState(false);
   const timer = useRef<number>();
   const byHover = useRef(false);
+  const returnFocus = useRef(false);
   useEffect(() => () => clearTimeout(timer.current), []);
+  // The popover is portalled above everything, so in a pinned card it would float over the next card sliding in
+  useEffect(() => {
+    if (!open) return;
+    const close = () => {
+      byHover.current = false;
+      setOpen(false);
+    };
+    window.addEventListener("scroll", close, { passive: true });
+    return () => window.removeEventListener("scroll", close);
+  }, [open]);
   const hover = (next: boolean) => (ev: PointerEvent) => {
     if (ev.pointerType !== "mouse") return;
     clearTimeout(timer.current);
     timer.current = window.setTimeout(() => {
       byHover.current = next;
+      if (next) returnFocus.current = false;
       setOpen(next);
     }, next ? 80 : 200);
   };
@@ -73,7 +85,9 @@ export function TimesPopover({ e, children, ...who }: Who & { e: TimeExpression;
           // A click after a hover must not toggle it shut again; a tap or Enter toggles
           onClick={(ev) => {
             ev.preventDefault();
-            if (!byHover.current) setOpen((o) => !o);
+            if (byHover.current) return;
+            returnFocus.current = true;
+            setOpen((o) => !o);
           }}
           className={`rounded px-0.5 text-foreground underline decoration-dotted underline-offset-4 ${unclear ? "bg-muted" : "bg-primary/20 hover:bg-primary/30"}`}
         >
@@ -86,6 +100,8 @@ export function TimesPopover({ e, children, ...who }: Who & { e: TimeExpression;
         onPointerEnter={hover(true)}
         onPointerLeave={hover(false)}
         onOpenAutoFocus={(ev) => ev.preventDefault()}
+        // Focus handed back after a hover counts as keyboard focus, which pulls a covered card on /concept to the front
+        onCloseAutoFocus={(ev) => returnFocus.current || ev.preventDefault()}
       >
         <Times e={e} {...who} />
       </PopoverContent>
