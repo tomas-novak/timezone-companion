@@ -1,5 +1,5 @@
 // @vitest-environment node
-// Live eval against the real model. Run: RUN_EVAL=1 npx vitest run src/lib/parseTime.eval.test.ts (three runs for the pass bar)
+// Live eval against the real model, outside npm test. Run: npm run eval (three runs for the pass bar)
 import { describe, expect, it } from "vitest";
 import type { Expr } from "./extraction";
 
@@ -68,28 +68,38 @@ const ROWS: [string, string, string, Want[]][] = [
     "2026-10-13T11:00:00+03:00",
     [w("exact", "2026-10-14", "11:00", "Europe/London", "explicit"), w("exact", "2026-10-15", "16:00", "Europe/London", "explicit")],
   ],
+  ["Can we meet at half past three?", "Europe/Prague", "2026-10-13T10:00:00+02:00", [w("exact", null, "15:30", "Europe/Prague", "sender_default", "ampm_assumed")]],
+  ["Call at quarter to ten tomorrow", "Europe/London", "2026-10-13T09:00:00+01:00", [w("exact", "2026-10-14", "09:45", "Europe/London", "sender_default")]],
+  ["Let's sync at three o'clock Doha time", "Europe/Prague", "2026-10-13T10:00:00+02:00", [w("exact", null, "15:00", "Asia/Qatar", "explicit", "ampm_assumed")]],
 ];
+
+// 90% of the rows, the same share as the original 24 of 27
+const BAR = Math.ceil(ROWS.length * 0.9);
 
 const fieldsMatch = (got: Expr, want: Want, message: string) =>
   message.includes(got.text) &&
   (Array.isArray(want.sourceZone) ? want.sourceZone.includes(got.sourceZone ?? "") : got.sourceZone === want.sourceZone) &&
   (["kind", "localDate", "localTime", "endLocalTime", "zoneReason", "flag"] as const).every((k) => got[k] === want[k]);
 
-describe.skipIf(!process.env.RUN_EVAL)("parse-time eval (live model)", () => {
-  it("passes the bar: 0 critical errors, at least 24 of 27 rows right", async () => {
+describe("parse-time eval (live model)", () => {
+  it(`passes the bar: 0 critical errors, at least ${BAR} of ${ROWS.length} rows right`, async () => {
     const { extract } = await import("../../api/parse-time");
     const results = await Promise.all(
       ROWS.map(async ([message, senderZone, now, want]) => {
+        const t0 = performance.now();
         const got = (await extract({ message, senderZone, now, teamZones: TEAM })).expressions ?? [];
+        const ms = performance.now() - t0;
         const ok = got.length === want.length && want.every((x, i) => fieldsMatch(got[i], x, message));
         const critical = want.every((x) => x.kind !== "exact" && x.kind !== "range") && got.some((g) => g.kind === "exact" || g.kind === "range");
-        return { message, ok, critical, got };
+        return { message, ok, critical, got, ms };
       }),
     );
     for (const r of results.filter((r) => !r.ok)) console.log(r.critical ? "CRITICAL" : "wrong", r.message, JSON.stringify(r.got));
     const right = results.filter((r) => r.ok).length;
-    console.log(`eval: ${right}/27 right, ${results.filter((r) => r.critical).length} critical`);
+    const ms = results.map((r) => r.ms).sort((a, b) => a - b);
+    // 27 calls run in parallel, so these are latencies under a burst, not one call at a time
+    console.log(`eval: ${right}/${ROWS.length} right, ${results.filter((r) => r.critical).length} critical, median ${Math.round(ms[Math.floor(ms.length / 2)])} ms, max ${Math.round(ms[ms.length - 1])} ms`);
     expect(results.filter((r) => r.critical)).toHaveLength(0);
-    expect(right).toBeGreaterThanOrEqual(24);
+    expect(right).toBeGreaterThanOrEqual(BAR);
   }, 120_000);
 });

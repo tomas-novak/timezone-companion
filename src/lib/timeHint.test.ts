@@ -1,8 +1,9 @@
 import { describe, expect, it } from "vitest";
 import { TIME_HINT } from "./timeHint";
-import { PRESETS } from "./demoPresets";
+import { EXAMPLES, UNCLEAR_EXAMPLE } from "./demoPresets";
 
 const POSITIVE = [
+  "Call at half past three",
   "Call at 3pm?",
   "ok 15:30 works",
   "see you tonight",
@@ -14,6 +15,9 @@ const POSITIVE = [
   "Thursday works for me",
   "meet at 7?",
   "see you at ٣",
+  "Meet at three",
+  "Can you call by eleven?",
+  "نلتقي غدًا",
 ];
 
 const NEGATIVE = [
@@ -27,6 +31,7 @@ const NEGATIVE = [
   "Monthly report attached",
   "Saturn looks sunny",
   "مرحبا من بغداد",
+  "Do it at once",
   // End-of-day deadlines are left as written
   "send it by EOD",
   // English and Arabic only: French and durations stop at the filter
@@ -63,13 +68,20 @@ const EVAL_MESSAGES = [
   "Use the 16:10 aspect ratio for slides",
   "Standup 9:30 Prague, then client call at 2pm Doha",
   "Options: Wed 11am or Thu 4pm (London time for both)",
+  "Can we meet at half past three?",
+  "Call at quarter to ten tomorrow",
+  "Let's sync at three o'clock Doha time",
 ];
 
 describe("TIME_HINT", () => {
   it.each(POSITIVE)("matches %s", (s) => expect(TIME_HINT.test(s)).toBe(true));
   it.each(NEGATIVE)("does not match %s", (s) => expect(TIME_HINT.test(s)).toBe(false));
   it.each(EVAL_MESSAGES)("matches eval message %s", (s) => expect(TIME_HINT.test(s)).toBe(true));
-  it.each(PRESETS.map((p) => p.text))("matches preset %s", (s) => expect(TIME_HINT.test(s)).toBe(true));
+  it.each([...EXAMPLES, UNCLEAR_EXAMPLE].map((p) => p.text))("matches example %s", (s) => expect(TIME_HINT.test(s)).toBe(true));
+
+  it("uses no lookbehind, which Safari before 16.4 cannot parse", () => {
+    expect(TIME_HINT.source).not.toMatch(/\(\?<[=!]/);
+  });
 
   it("leaves small talk alone", () => {
     expect(TIME_HINT.test("thanks, looks good")).toBe(false);

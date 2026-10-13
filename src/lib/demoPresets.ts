@@ -1,22 +1,42 @@
 import fixtures from "./demoFixtures.json";
+import { createZone, type Zone } from "./storage";
+import { canonicalTz, resolveHomeTz } from "./timezones";
+import { sanitize } from "./extraction";
+import { teamZonesFor, toExpressions, type TimeExpression } from "./timeDetect";
 
 export const DEMO_NOW = "2026-10-13T08:00:00.000Z";
 
-export interface Preset {
+// The concept page never reads the cities on the main page, so the story's numbers never move
+export const DEMO_CITIES: Zone[] = ["Africa/Tunis", "Europe/Prague", "Asia/Muscat", "Asia/Qatar", "Asia/Kolkata"].map((tz) => createZone(tz, tz));
+
+export interface Example {
   id: keyof typeof fixtures;
   label: string;
-  blurb: string;
-  authorTz: string | null;
+  subject: string;
+  author: Zone;
   text: string;
+  expressions: TimeExpression[];
 }
 
-export const PRESETS: Preset[] = [
-  { id: "exact", label: "Exact time", blurb: "You propose Thursday 3pm. See who it lands late for.", authorTz: null, text: "Can we meet Thursday at 3pm?" },
-  { id: "doha-sunday", label: "Doha: Sunday review", blurb: "Sunday is a workday in Doha, but the weekend in Europe.", authorTz: "Asia/Qatar", text: "Can we do the review Sunday at 10am?" },
-  { id: "arabic", label: "Doha in Arabic", blurb: "The same Sunday message, written in Arabic.", authorTz: "Asia/Qatar", text: "هل نعقد المراجعة يوم الأحد الساعة ١٠ صباحًا؟" },
-  { id: "doha-time", label: "Doha time", blurb: "You name Doha's time. Everyone else gets it in theirs.", authorTz: null, text: "Lunch tomorrow 1pm Doha time" },
-  { id: "unclear", label: "Unclear", blurb: "\"Your time\" could mean anyone's. Flagged, not guessed.", authorTz: null, text: "3pm your time?" },
-  { id: "not-time", label: "Not a time", blurb: "A version number and a duration. Nothing to convert.", authorTz: null, text: "v2.50 is live, the build took 2h" },
+const city = (tz: string) => DEMO_CITIES.find((z) => z.tz === tz)!;
+
+function example(id: Example["id"], label: string, subject: string, author: Zone, text: string): Example {
+  const exprs = sanitize(fixtures[id], text, author.tz, teamZonesFor(DEMO_CITIES)) ?? [];
+  return { id, label, subject, author, text, expressions: toExpressions(exprs, text, DEMO_NOW) };
+}
+
+export const EXAMPLES: Example[] = [
+  example("exact", "Thursday 3pm, from Prague", "Meeting", city("Europe/Prague"), "Can we meet Thursday at 3pm?"),
+  example("arabic", "Sunday 10am, in Arabic, from Doha", "Review", city("Asia/Qatar"), "هل نعقد المراجعة يوم الأحد الساعة ١٠ صباحًا؟"),
 ];
 
-export const fixtureFor = (id: Preset["id"]): unknown => fixtures[id];
+export const UNCLEAR_EXAMPLE = example("unclear", "Unclear", "Call", city("Europe/Prague"), "3pm your time?");
+
+// "You" is one of the five cities, or a sixth one that only the try-it section adds
+export function youFor(homeTz: string | null): { you: Zone; cities: Zone[]; inDemo: boolean } {
+  const home = canonicalTz(resolveHomeTz(homeTz));
+  const found = DEMO_CITIES.find((z) => canonicalTz(z.tz) === home);
+  if (found) return { you: found, cities: DEMO_CITIES, inDemo: true };
+  const you = createZone(home, "you");
+  return { you, cities: [...DEMO_CITIES, you], inDemo: false };
+}

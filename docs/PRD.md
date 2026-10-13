@@ -7,20 +7,20 @@ Owner: Tomas Novak · exported 11 Oct 2026 from https://claude.ai/code/artifact/
 We enter the Ooredoo BuildAI Challenge (submission Thursday 15 October 2026: demo video and supporting information) with Timezone Companion: a working web tool today, plus a live AI concept that shows every chat participant a mentioned time in their own time zone.
 
 - **Today, the web workaround:** live clocks, a schedule view and a home zone taken from the browser are shipped. Custom cities with Ooredoo market presets are merged and live at ofti-offices.vercel.app. The team sharing link (A4) is out of scope for the submission.
-- **Tomorrow, inside Teams and Outlook:** a Feature concept page simulates a group chat. AI finds time expressions in a message, each reader sees the time converted to their zone, and the sender sees how it lands for everyone before sending.
+- **Tomorrow, inside Teams and Outlook:** a Feature concept page tells the story in two moments: the sender sees how a time lands for everyone before sending, and each reader sees it in their own zone. AI finds the time; code converts it.
 - **Who reads what:** the sections from "Web workaround" to "Acceptance criteria" are the build spec for an AI coding agent, with the day plan and cut line at the end of "Acceptance criteria"; "Teams and Outlook", "Research" and "Demo, deck and video kit" feed the deck and the video.
 
 | Decision | Choice |
 | --- | --- |
-| How a converted time is shown | Variant B: original text stays, a chip follows it ("→ 16:00 your time"). Working status (early, late, after hours, weekend) shows only on the sender's pills: readers know their own hours |
-| Sender side | Preview strip before sending, warns when a time falls outside someone's hours |
+| How a converted time is shown | Variant B: original text stays, a chip follows it ("→ 16:00 your time"). Working status (Working, Early, Late, After hours, Weekend) shows only to the sender and in the popup for other cities: readers know their own hours |
+| Sender side | A headline (worst first) and a popup per time before sending; in Outlook the check runs on Send, in Teams it is one button before sending |
 | What the AI does | Only extracts time expressions and their source zone; conversion is deterministic code |
-| When the AI runs | Once per message, on the sender side, after a local pre-filter finds a candidate |
+| When the AI runs | Once per typed message text, on the sender side, after a local pre-filter finds a candidate; the examples use offline fixtures |
 | Model | OpenAI model behind a serverless function, key never in the browser |
 | Data sent to AI | Message text as written, sender zone, current date and the team's city list; the app adds no names or calendars and never says who is reading (a name the sender types in the message does reach the AI) |
 | Teams and Outlook | Shown as a concept with honest limitations, no tenant integration |
 | Primary competition category | Functional prototype where AI solves a real problem |
-| Languages | English and Arabic only: the local filter, the prompt and the presets |
+| Languages | English and Arabic only: the local filter, the prompt and the examples |
 
 ## Problem and users
 
@@ -121,180 +121,110 @@ export const SharedTeam = z.object({
 
 ## Feature concept page
 
-`/concept` shows, with a working demo, how times inside a team chat would be converted: AI finds the time once on the sender's side, each reader's conversion is plain code, and the demo runs offline so the video is repeatable. All numbers below use the app's default team (Prague as home, Tunis, Muscat, Doha, New Delhi) and the demo clock. "You" is the home zone from "My time zone" in the header, which starts from the browser's zone, and the page says so; a judge in Doha sees Doha as You, so the numbers differ from these tables. Record the video with "My time zone" set to Prague.
+`/concept` is a short pitch a busy, non-technical judge understands in 10 seconds and clicks through in a minute. The story: proposing a time across countries costs extra messages today; Timezone Companion fixes the two moments of every such message, writing it (see how it lands before you send) and reading it (each reader sees their own time). Each section has one thing to do. City names only, never people's names. The examples run offline, so the video is repeatable; a typed message makes one AI call.
 
-### User stories
+### Fixed cities
 
-**B1. Open the concept.** As a judge, I want the concept one click from the tool so that I see both together.
+The page always uses Tunis, Prague, Muscat, Doha and New Delhi (`DEMO_CITIES`) and ignores the cities on the main page, so the story's numbers never move. "My time zone" in the header only sets who is "You": the default reader in section 4 and the sender in section 5. A home zone outside the five is added as a sixth city in section 5 only, and the default reader in section 4 becomes Doha (`youFor`).
 
-- Given `/`, when I click "Feature concept", then `/concept` opens, where the button reads "Back to clocks".
-- Given `/concept#demo`, then the demo scrolls into view below the sticky header.
-- Given I added "Jakarta" on `/`, then Jakarta is a participant and a "Viewing as" option.
+### Examples
 
-**B2. Check before sending.** As a sender, I want to see what my time means for each colleague so that I don't book someone on their weekend.
+Both examples use the fixed demo date Tue 13 Oct 2026, 10:00 Prague (`DEMO_NOW`) and offline fixtures; typed text uses the real current date.
 
-- Given demo clock on, when I pick "Exact time" or type its sentence, then the pills show at once: Tunis 14:00, Muscat 17:00 · late, Doha 16:00, New Delhi 18:30 · late.
-- Given custom text with a candidate, then step 2 says "Time found. The AI reads it when you press Send." Drafts never call the API.
-- Given text with no English or Arabic time (Czech, French, ...), then step 2 says "No time found. Write in English or Arabic and include a time, like "3pm", "15:00" or "الساعة ٣"." and nothing is sent.
-- Given "thanks, looks good", then no API call.
-- Given a team that shares one offset (Doha and Riyadh), "Call at 3pm London time" is still read and converted: there is no same-offset shortcut, because a time can name a zone outside the team.
-- Given a participant after hours or on a non-working day, then the header is amber: "1 person after hours or on their weekend". "Early" and "late" pills alone keep it neutral.
-
-**B3. Read in my own time.** As a reader, I want my time after each time in a message so that I never convert in my head.
-
-- Given "Exact time" viewed as Doha, then "Thursday at 3pm" is followed by "→ 16:00 your time", tooltip "Sent as 15:00 Prague time (Thu 15 Oct)". Viewed as Prague (author): no chip.
-- Given "Doha: Sunday review": Prague sees "→ 09:00 your time", Muscat "→ 11:00 your time". Reader chips have one style and no early, late, after-hours or weekend note: the reader knows their own hours, and the sender saw those notes before sending.
-- After Send, "Viewing as" switches to the first reader who gets a chip, because the author never sees one.
-- Given a local date different from the source, then a bold weekday leads: "→ Fri 03:30 your time".
-- Switching readers sends no request.
-
-**B4. No guessing about zones.** As a reader, I want unclear times flagged, not converted, so that a guess doesn't put me on the wrong call.
-
-- Given "3pm your time?", then others see dashed "time unclear" and the sender strip says "Not converted: say which time zone".
-- Given "your time" in a team with more than one other zone, then while typing, before Send and without an AI call, an amber note says: "\"Your time\" is a different time for each reader, so it won't be converted. Name a city instead, like \"3pm Doha time\"." The server enforces the same rule in `sanitize` whatever the model returns (12 Oct: the model resolved "your time" to the sender's or a random zone in 50 to 85% of repeated calls). With exactly one other zone, "your time" is that zone.
-- Given "tomorrow morning", then dashed "time unclear" with the vague tooltip.
-- Given "send it by EOD", then no chip and no AI call: end-of-day deadlines are not about the hour, so everyone reads "EOD" as written.
-- Given "meet at 3", then it converts as 15:00 and the tooltip adds "Read as 15:00." (am/pm assumed, shown openly).
-- Given "v2.50 is live, the build took 2h", then step 1 finds a candidate, the AI returns 0 expressions, no chip.
-
-**B5. Repeatable, visible demo.** As the presenter, I want presets to work offline and every step shown so that the video matches the live demo and judges see what the AI gets.
-
-- Given demo mode on (default) and no network, when I use any preset, then results come from `src/lib/demoFixtures.json`; no request.
-- Given typed text that exactly matches a preset's text and author, then that preset's fixture is used, so typing it on camera stays offline.
-- Given demo mode on and other custom text, then the API gets `now` = `2026-10-13T10:00:00.000+02:00` (sender's offset).
-- Given API failure or 8 s, then the inline error shows and the message keeps its text without chips; no toast.
-- Given any draft or message, then "What just happened" shows three steps in words and the request JSON (for presets, the request the live path would send, under "What would be sent to the AI"), which holds no people's names.
-
-### UI spec
-
-| # | Section (id) | Desktop ≥1024 | Mobile 375 (and < 1024) |
+| Example | Author | Text | Expected |
 | --- | --- | --- | --- |
-| 1 | Hero (`top`) | H1, problem sentence, two label pills in a row | Stacked, pills wrap |
-| 2 | Demo (`demo`, `scroll-mt-20`) | Three numbered steps in a 5/7 grid. Left card: 1 presets and composer, 2 preview strip. Right card: 3 "Viewing as", thread 480 px, scrolls. Below both: one line about the fixed demo clock | Left card, then right; switcher scrolls sideways; thread max 60vh |
-| 3 | What just happened (`how`) | 3 steps in a row, collapsibles below, demo clock switch | Stacked |
-| 4 | Teams and Outlook (`in-teams`) | Two frames side by side | Stacked |
-| 5 | Roadmap (`roadmap`) | 3 columns | Stacked |
+| Thursday 3pm, from Prague | Prague | Can we meet Thursday at 3pm? | Tunis 14:00, Muscat 17:00 Late, Doha 16:00, New Delhi 18:30 Late |
+| Sunday 10am, in Arabic, from Doha | Doha | هل نعقد المراجعة يوم الأحد الساعة ١٠ صباحًا؟ | Weekend for Tunis, Prague and New Delhi; Muscat 11:00 |
+| Unclear (section 6 only) | Prague | 3pm your time? | Dashed "time unclear" for Doha; not converted |
 
-`container max-w-6xl`, `space-y-16`. `Header` renders here too. Components: `src/pages/Concept.tsx`, and under `src/components/`: `ChatDemo`, `ChatComposer`, `SenderPreview`, `ChatThread`, `TimeChip`, `UnderTheHood`, `IntegrationPreview` (see the file plan).
+### Sections
 
-**Participants:** team zones in order (at most 8). "You" = the first zone whose `canonicalTz(tz)` equals the home zone; if none, prepend `createZone(homeTz, "home")`. Messages live in `ChatDemo` state only. Bubbles use `dir="auto"` so Arabic reads right to left.
+`container max-w-6xl`, `space-y-16` (`sm:space-y-20`); every section has an id and `scroll-mt-20` for the header, which is sticky from `sm` up (on phones it scrolls away). One `h1`, one `h2` per section. Light and dark mode through the existing tokens.
 
-**Presets:** cards with a label and a one-line blurb. "Exact time" comes first with a "Start here" badge; the rest sit under "More cases". A click loads text, author and fixture into the composer so the strip shows; Send posts, resets the author to You and switches "Viewing as" to the first reader with a chip. When a preset sets another author, an amber note says "This preset is written by your colleague in {city}, not by you." Editing the text makes it custom (live path) unless it matches a preset's text and author exactly. Disabled when demo mode is off or the author city is missing.
+| # | Section (id) | Content |
+| --- | --- | --- |
+| 1 | Hero (`top`) | H1, one paragraph, a facts line, an "Imagine" box with the five cities, two buttons that scroll smoothly (instant with `prefers-reduced-motion`). At 1366×768 the hero and the start of section 2 fit one screen |
+| 2 | Today (`today`) | A static three-message chat, city label above each bubble, no avatars, then one caption |
+| 3 | Write (`write`) | Example switch, neutral email frame, highlighted time with a popup on hover or tap; Send opens the check with the headline |
+| 4 | Read (`read`) | Neutral chat frame with a "Viewing as" switch; the reader's chip after each time |
+| 5 | Try it (`try`) | Composer and one button; one AI call per message text shows both moments at once: the sender's result on the left, the chat with "Viewing as" on the right |
+| 6 | Trust (`trust`) | Three points, the offline unclear example, a collapsed "What the AI receives" |
+| 7 | Build (`build`) | Plain list, bold label then text; 2 columns on lg |
+| 8 | Ask (`ask`) | Closing block on `bg-primary/10` and a link to `/` |
 
-**Author and reader** follow You: when "My time zone" changes, the composer and "Viewing as" move with it, and a message whose author is no longer a participant shows as You.
-
-| id | Card | Blurb | Author | Text | Check (default team, demo clock) |
-| --- | --- | --- | --- | --- | --- |
-| exact | Exact time (Start here) | You propose Thursday 3pm. See who it lands late for. | You | Can we meet Thursday at 3pm? | Strip: Doha green 16:00, Muscat and New Delhi amber "late", neutral header; Doha reads "→ 16:00 your time" |
-| doha-sunday | Doha: Sunday review | Sunday is a workday in Doha, but the weekend in Europe. | Doha | Can we do the review Sunday at 10am? | Strip: Prague, Tunis and New Delhi gray "weekend", Muscat green 11:00, header "3 people after hours or on their weekend" |
-| arabic | Doha in Arabic | The same Sunday message, written in Arabic. | Doha | هل نعقد المراجعة يوم الأحد الساعة ١٠ صباحًا؟ | Same as "Doha: Sunday review"; an Arabic speaker checks the sentence |
-| doha-time | Doha time | You name Doha's time. Everyone else gets it in theirs. | You | Lunch tomorrow 1pm Doha time | Prague reads "→ 12:00 your time"; Doha no chip |
-| unclear | Unclear | "Your time" could mean anyone's. Flagged, not guessed. | You | 3pm your time? | Dashed "time unclear" for everyone else; strip "Not converted: say which time zone" |
-| not-time | Not a time | A version number and a duration. Nothing to convert. | You | v2.50 is live, the build took 2h | Filter hit, AI returns nothing, no chip |
-
-**Pipeline (custom text):**
-
-| Step | Rule |
-| --- | --- |
-| 1 | As you type, test `TIME_HINT` (English and Arabic); no hit: `no-candidate`, stop. There is no same-offset step 0: a team on one offset still needs "3pm London time" converted |
-| 2 | A preset, or its exact text and author, uses the fixture. Other text stops at `ready` ("Time found. The AI reads it when you press Send.") and calls nothing. On Send: one `POST /api/parse-time`, 8 s timeout; the message posts at once with `detection.status: "pending"` (the bubble shows "Detecting time...") and updates when the promise settles; a timeout or non-200 gives `error`. Drafts never call the API, so there is no debounce, cache or abort |
-| 3 | `sanitize()` (fills sender zones), `locate()`, then luxon builds UTC instants; anything not convertible becomes "time unclear" |
-
-**Chip rule (`chipFor`):** none if `t.setZone(reader.tz).offset === t.setZone(sourceZone).offset`. Status from the existing `getWorkStatus(t, reader.tz, reader)` (a `Zone` carries its hours). Bold weekday when local dates differ; 12/24h follows the setting. Times and weekdays are English with ASCII digits whatever the browser locale (`formatTime`), so a Czech browser never shows "pá" and an Arabic one never breaks the early/late comparison. Reader chips in the thread: one style (`.badge-working`), no suffix; unclear chips use a dashed muted border. Sender pills: working `.badge-working`; reasonable amber tint with `text-foreground`; outside and weekend `.badge-outside`, not the red `.badge-weekend`. A range's status is its worst moment: the start, the last minute and every working, reasonable or midnight boundary inside it, so 16:00–10:00 next day reads "after hours". Suffix (pills only): reasonable "early" when `workingStart` is nearer ahead than `workingEnd` is behind, counted round the clock like `getWorkStatus` (a 22:00–06:00 shift reads 07:00 as "late"), else "late"; outside "after hours"; non-working day "weekend". The thread renders expressions sorted by position and skips one that overlaps an earlier one.
-
-**Sender pills:** for each convertible expression, one pill per participant except the author, built with `chipFor(..., { keepSameOffset: true })`, which skips the same-offset return. Header N = distinct participants whose status is `outside` or `weekend` for any expression. A legend under the strip heading explains the colours. "What just happened" follows the draft while the composer has text, else the newest message.
-
-| Element | Copy |
+| Section | Copy |
 | --- | --- |
 | Header button | Feature concept (on `/`) / Back to clocks (on `/concept`) |
-| H1 | Times in team chat, converted for every reader |
-| Problem | Across time zones and two work weeks, every "3pm" in chat leaves someone doing the maths or reading it on their day off. |
-| Label pills | Today: web tool (to `/`) / Next: inside Teams and Outlook (to `#in-teams`) |
-| Demo | Try it / Three steps, about a minute. You are a team member in {city}; your colleagues are in the cities below. Your city follows "My time zone" at the top, which starts from your browser's time zone. |
-| Steps | 1 Pick a message, or write your own / 2 Check it before sending: "Pick a message above and the preview appears here." or "Before you press Send, see what the time means for each colleague." / 3 Read it as someone else: "Send a message, then switch who is reading." or "Now reading as {city}. Switch readers: each one sees the time in their own zone. See what the AI received" (links to `#how`) |
-| Preset cards | {label} plus blurb (see the presets table); "Start here" on the first; group heading "More cases" |
-| Composer | Sending as {city} (you); "Back to you"; amber note "This preset is written by your colleague in {city}, not by you."; placeholder "Type a message with a time, like: Can we meet Thursday at 3pm?"; "English or Arabic · {n}/500"; "Send" |
-| Loading | Detecting time... |
-| Preview | How others will see it / You're in {city}. Each pill is that colleague's local time: green is working hours, amber is early or late, gray is after hours or their weekend. / {N} people after hours or on their weekend ("1 person" when N = 1) / Not converted: say which time zone / Not converted: say which day / Not converted: add am or pm / Not converted: give an exact time / No times to convert. / Time found. The AI reads it when you press Send. / No time found. Write in English or Arabic and include a time, like "3pm", "15:00" or "الساعة ٣". |
-| API error | Couldn't reach the AI. Presets still work offline. |
-| Demo clock | Under the demo: "The demo runs on a fixed clock (Tue 13 Oct, 10:00 Prague), so the results match the video."; when off: "Demo clock is off: custom messages use the real time and presets are paused." Switch in "What just happened": "Demo clock (Tue 13 Oct, 10:00 Prague)". Preset hint when off: "Presets run on the demo clock." The city and time follow You |
-| Preset author missing | Add {city} on the main page to use this preset. |
-| Switcher | Viewing as |
-| Chip (reader) | → {time} your time / → {Fri} {time} your time |
-| Pill (sender) | {city} {time} / {city} {Fri} {time}, plus · early / · late / · after hours / · weekend |
-| Chip tooltip | Sent as {time} {city} time ({Thu 15 Oct}); with `ampm_assumed` add " Read as {15:00}." |
-| Unclear tooltips | From `flag`, see AI design |
-| Empty thread | No messages yet. Type one or pick a preset. |
-| One participant | Everyone here is in one time zone. Add a city on the main page to see conversions. |
-| What just happened | Heading "What just happened" / "The steps behind the last message, and exactly what the AI gets." Steps: 1 Local filter: candidate found / no time found (English or Arabic only) . 2 AI: extracted {N} expressions / not called / called once you send / cached response (demo mode): {N} expressions / Couldn't reach the AI. 3 Conversion: {N} readers, no AI |
-| Collapsibles | What was sent to the AI (live) or What would be sent to the AI (presets) / What came back |
-| Privacy note | The AI sees the message as you wrote it, the sender's time zone, the current date and the team's city list. The app adds no names or calendars, and the AI never learns who is reading: each reader's time is computed in this browser. |
-| Section 4 | How it would work in Teams and Outlook |
-| Roadmap | Now: web tool and this demo. / Next: a Teams compose action, piloted with one cross-country team. / Later: a send-time check in Outlook and a reader pane. |
+| 1 H1 | You write your time. Everyone reads theirs. |
+| 1 Text | When someone proposes a time, or I propose one, I open a world clock and do the maths. So does everyone else in the chat. Timezone Companion does it for all of us, in Teams and Outlook. |
+| 1 Facts | Ooredoo works across 9 markets, from UTC+1 to UTC+7, with Sunday–Thursday and Monday–Friday weeks. |
+| 1 Imagine | Box above the buttons: Imagine you are writing an email, or chatting in Teams, with colleagues in **Tunis, Prague, Muscat, Doha, and New Delhi** (from `DEMO_CITIES`). / Every example on this page uses these five cities. |
+| 1 Buttons | See how it works (to `#write`, primary) / Try your own message (to `#try`, outline) |
+| 2 Chat | H2 "Today". Prague: "Can we meet Thursday at 3pm?" / Doha: "Your time or mine?" / New Delhi: "That's 18:30 for me. Can we do earlier?" |
+| 2 Caption | Three extra messages to agree on one time. Every week, in every cross-country team. |
+| 3 H2 | Before you send, see how your time lands |
+| 3 Switch | Thursday 3pm, from Prague / Sunday 10am, in Arabic, from Doha |
+| 3 Headline (in the Send check) | One line per problem, worst first: Weekend → After hours → Late in the day → Early in the day, each with its cities; none: "Working hours for every city" ("every other city" in a reader's popup, which leaves the reader out) |
+| 3 Send | Shows the check "Before you send" with the headline, "Send anyway" (scrolls to section 4 and moves focus to its heading; nothing is posted) and "Edit" |
+| 3 Note | In Outlook this check runs when you press Send. In Teams it is one button before you send. |
+| 4 H2 | Every reader sees their own time |
+| 4 Chip | → 16:00 your time (Thursday example, viewed as Doha) |
+| 5 H2 | Try your own message |
+| 5 Button | Check how it lands (the only button; there is no separate Send) |
+| 5 Chat placeholder | Check a message to read it as another city. |
+| 5 Headings | Before you send (left, the sender's result) / What your colleagues read (right, the chat) |
+| 5 Check box | Shown only when a city is After hours or on its Weekend: an amber box with all headline lines (Late and Early lines included) and Only you see this check. Your colleagues just see the time in their own zone. |
+| 5 Result | AI read it as Thu 15 Oct, 15:00 Prague time (1.8 s) |
+| 5 No time | No time found. Try a time like "3pm", "15:00" or "half past three". |
+| 5 Failure | The AI didn't answer. + "Try again" / The examples above keep working without it. |
+| 5 Note | Demo: don't paste real company messages. Typed text goes to OpenAI to read the time. The app keeps no copy; OpenAI may keep it for up to 30 days for abuse monitoring. |
+| 6 H2 | Why you can trust it |
+| 6 Points | The AI only reads the time in the sentence. Calendar maths does the conversion. / If a time is unclear, like "3pm your time" in a group, it is flagged, not guessed. (next to it the unclear example from Prague, viewed as Doha) / Tested on 30 English and Arabic messages, 3 runs, 0 unclear times shown as exact. Median answer about 1.5 s. About $0.10–0.34 per 1,000 messages. |
+| 6 Collapsed | "What the AI receives": the message, the sender's zone, the date and the team's cities. The app adds no names and no calendars, and the AI never learns who is reading. Plus the pretty-printed request the live path would send for the Thursday example (`now` 2026-10-13T10:00:00.000+02:00, `teamZones` from `teamZonesFor(DEMO_CITIES)`) |
+| 7 H2 | Can Ooredoo build it? |
+| 7 List | **Teams:** a compose button checks the time and posts a card that shows each reader their own time. / **Outlook:** a check on Send, and a side pane that shows the times in an email you read. / **Who is where:** time zones and working hours come from each person's Outlook settings, not from reading calendars or messages. / **Data:** in production the AI runs on Ooredoo's own Azure OpenAI, so no message leaves the company. / **What we need:** a Teams app registration, an Outlook add-in deployed by IT, and a security review of one small data flow. / **Effort:** a pilot in about 4–6 weeks for one or two developers (our estimate). / **Limit:** third-party apps cannot rewrite every typed message. The check runs on the sender's action or on Send. |
+| 8 Ask | A 90-day pilot with one cross-country team. We count late and weekend times caught before sending. / The world clock tool works today → (to `/`) |
 
-### Section 4 content: Teams and Outlook frames
+### Behaviour
 
-Both frames are static mock-ups built from the same chip and pill components, with neutral styling and no Microsoft logos, icons or exact UI.
+- **Popup (sections 3–5):** each time in a message is highlighted; hover opens a popup (a click after a hover keeps it open); a tap, Enter or Space opens or closes a popup listing each city's date, time and status word (Working / Early / Late / After hours / Weekend); Esc or a click outside closes it. The sender view leaves the author out. In the reader view the reader's row reads "You" without a status (readers know their own hours) and the author's row reads the time as written in its source zone: "Sent as 15:00", or "Sent as 13:00 Doha time" when the author named another city's time.
+- **Reader chips (section 4):** one style, no status; the author sees none; a different local date adds a bold weekday ("→ Fri 03:30 your time"). Bubbles use `dir="auto"`, so Arabic reads right to left.
+- **Default reader (section 4):** You; when You is the example's author, the first other city that gets a chip (`firstReaderWithChip`). A reader picked by hand stays until the example changes.
+- **Example switch:** shared by sections 3 and 4; switching examples or readers never calls the AI.
+- **Try it:** one AI call per message text: "Check how it lands" makes it and shows both moments from that one answer: on the left the text with its popup, the headline and "AI read it as …"; on the right the message in the chat, read as the first city that gets a chip, with "Viewing as" to switch. The chat keeps the last message that converted while the visitor edits the next one. Clicks while a check runs are ignored. Results are kept per sender zone and text, so a new "My time zone" checks again. Text without a `TIME_HINT` match shows the no-time copy and calls nothing. Typed text uses the real current date and "You" as sender. "Your time" in a group is flagged while typing, without an AI call. Unclear items use copy from `flag`, never model text.
 
-| Frame | Shows | Caption |
-| --- | --- | --- |
-| `ChatAppFrame` "Team chat" | A small dialog "Timezone Companion: how others will see it" with the pills, then the sent card: original text plus "Thu 15 Oct, 16:00 (your time)" | Concept: sent with the Timezone Companion action, each reader's Teams shows the time on their own device. If the Teams test card fails, use: "The card lists the time in every team city." |
-| `MailAppFrame` "Email" | A send-time dialog: "Late in the day for 2 people: Muscat 17:00, New Delhi 18:30" with "Send anyway" and "Don't send" | Concept: checked when you press Send. Readers see conversions in a side pane. |
+### Removed
 
-Limitation line under both frames: "Concept only. In Teams, conversion applies to messages sent through the action, not every typed message. The Outlook check runs on web and desktop, not mobile."
-
-### Data model
-
-Request, response and `TimeExpression` are defined once in AI design (`extraction.ts`, `timeDetect.ts`). The demo adds:
-
-```ts
-// src/lib/timeDetect.ts
-export interface DetectionResult {
-  status: "no-candidate" | "ready" | "pending" | "done" | "error";
-  source: "live" | "cache" | null;  // cache = demo fixture
-  request: ParseTimeRequest | null; // live: sent; cache: what the live path would send
-  response: unknown;                // shown in "What came back"
-  expressions: TimeExpression[];
-}
-export interface ChatMessage {
-  id: string;           // newId()
-  authorZoneId: string; // Zone.id or "home"
-  text: string;         // ≤ 500 chars
-  createdAt: string;    // ISO UTC; DEMO_NOW in demo mode
-  detection: DetectionResult;
-}
-```
-
-The model returns wall time and luxon turns it into UTC instants, so DST maths never depends on the model.
+The presets wall (and the doha-sunday, doha-time and not-time presets), the demo-clock switch, "What just happened", the Teams and Outlook frames section, the roadmap and the hero pills.
 
 ### Accessibility
 
-- Switcher: `ToggleGroup type="single"`, `aria-label="Viewing as"`; arrows move, Space or Enter selects; ignore an empty value.
-- Chips: `<button type="button">` in a `Tooltip` that opens on focus and hover, Esc closes; `aria-label` is the full sentence ("16:00 your time. Sent as 15:00 Prague time, Thu 15 Oct."); icons `aria-hidden`.
-- Status is always in words (pill suffix, step text), never colour alone; reader chips carry no status, so they use a single colour.
-- Steps are `h3` headings with a visually hidden "Step {n}:" prefix; Enter does not send while an IME is composing.
-- Thread `role="log"`; loading and API error `role="status"`; steps are an `<ol>` with `aria-current="step"`.
-- Textarea: visible label, counter via `aria-describedby`; Enter sends, Shift+Enter adds a line.
-- Disabled presets: `aria-disabled` plus visible hint. `prefers-reduced-motion`: no step animation.
+- Popup trigger is a `<button>`: mouse hover, tap, Enter or Space opens it, Esc closes; the trigger has a visually hidden "(show everyone's time)".
+- "Viewing as": `ToggleGroup type="single"` with `aria-labelledby` on the visible "Viewing as" label; arrows move, Space or Enter selects; an empty value is ignored.
+- Status is always in words, never colour alone. Chat thread `role="log"`; loading and errors `role="status"`.
+- Section 6 request `<pre>` scrolls inside itself (`overflow-x-auto`, `max-w-full`).
 
 ### Edge cases
 
 | Case | Behaviour |
 | --- | --- |
-| EU DST, Sun 25 Oct 2026 | "Monday 26 Oct 15:00" from Prague: Doha sees 17:00, not 16:00; Tunis gets no chip (same offset). Unit test in `timeDetect.test.ts`. |
-| Same offset, different work week | Algiers author, Tunis reader, Sunday, in a team that also has another offset: Tunis gets no chip; the strip shows Tunis "weekend". If all participants share one offset, the strip still shows, because the message may name another zone. |
-| Team empty or one participant | Participants = You; one-participant note |
-| Two participants, one `tz` | Two switcher buttons, same chips |
-| Fixture dates | Assume the author's date at `DEMO_NOW` is Tue 13 Oct: true for UTC−8 to UTC+14 |
-| Bad AI JSON or schema failure | Treated as error |
-| Message over 500 chars | `maxLength={500}`; API rejects longer text |
-| Text in another language (Czech, French, ...) | The filter stops it; step 2 explains that times are read in English and Arabic |
-| City renamed (to a person's name, an empty or long label) | The AI never gets the label: `teamZonesFor` sends the preset city name or the IANA city ("Alice" for Prague is sent as "Prague"); a custom label like "HQ time" is not mapped |
-| Local time skipped or repeated by a clock change (Prague 29 Mar 02:30, 25 Oct 02:30) | Not converted: kind `ambiguous`, client-side flag `clock_change`; sender "Not converted: pick a time outside the clock change", reader tooltip "… falls in an hour a clock change skips or repeats, so it wasn't converted." |
-| Live message: the first reader shares the author's offset | When a live result arrives, "Viewing as" re-picks the first reader with a chip, but only for the newest sent message and only if the user has not picked a reader since |
-| A range runs past working hours (16:00–20:00 for 09:00–17:00, reasonable to 19:00) | The pill takes the worst status inside the range, boundaries included: "after hours", and the strip header counts that person |
-| "My time zone" changes | Author and reader follow You; old messages from a former participant show as You |
+| EU DST, Sun 25 Oct 2026 | Typed "Monday 26 Oct 15:00" from Prague: Doha reads 17:00, not 16:00. Unit test in `timeDetect.test.ts`. |
+| Home zone outside the five cities | Added as a sixth city in section 5; section 4 defaults to Doha as reader |
+| Same offset as the author | No chip for that reader; the sender popup still lists the city with its status |
+| Local time skipped or repeated by a clock change (Prague 29 Mar 02:30, 25 Oct 02:30) | Not converted: kind `ambiguous`, client-side flag `clock_change`, "Not converted: pick a time outside the clock change" |
+| A range runs past working hours | The status is the worst moment inside the range, boundaries included |
+| Bad AI JSON, timeout (8 s) or non-200 | The failure copy with "Try again"; the examples keep working |
+| Message over 500 chars | `maxLength={500}`; the API rejects longer text |
 | `/concept` chunk fails to load (stale tab after a redeploy) | An error boundary shows "This page couldn't load." with Reload instead of a blank app |
+
+### Done when
+
+- [ ] A first-time visitor understands the page without instructions
+- [ ] At 1366×768, sections 3, 4 and 5 each fit one screen
+- [ ] At 375 px nothing scrolls sideways and popups open on tap
+- [ ] The examples work offline; a typed message makes one AI call; hovering, tapping and switching readers never call it
+- [ ] The popup works with mouse, touch and keyboard
+- [ ] Status is in words, never colour alone
 
 ## AI design
 
@@ -351,13 +281,13 @@ Sent as-is in `text.format.schema`. It uses no `pattern`, `format`, `min`, `max`
 - `flag`: why an item is not a plain time; UI copy comes from this field, never from model text.
 - `kind`: `exact` and `range` are converted; `vague` and `ambiguous` show "time unclear".
 
-| flag | kind | Sender strip | Reader chip tooltip |
+| flag | kind | Popup | Reader chip |
 | --- | --- | --- | --- |
-| `zone_unclear` | ambiguous | Not converted: say which time zone | "{text}" could mean several time zones in this chat, so it wasn't converted. (`sanitize` also sets it when it downgrades an item because the zone is invalid) |
-| `not_specific` | vague | Not converted: give an exact time | "{text}" has no exact time, so it wasn't converted. |
-| `day_unclear` | ambiguous | Not converted: say which day | "{text}" could mean more than one day, so it wasn't converted. |
-| `ampm_unclear` | ambiguous | Not converted: add am or pm | "{text}" could be morning or evening, so it wasn't converted. |
-| `ampm_assumed` | exact or range | Normal pills | Normal tooltip plus " Read as {15:00}." |
+| `zone_unclear` | ambiguous | Not converted: say which time zone. (`sanitize` also sets it when it downgrades an item because the zone is invalid) | time unclear |
+| `not_specific` | vague | Not converted: give an exact time. | time unclear |
+| `day_unclear` | ambiguous | Not converted: say which day. | time unclear |
+| `ampm_unclear` | ambiguous | Not converted: add am or pm. | time unclear |
+| `ampm_assumed` | exact or range | Converted like any time, no note | Normal chip |
 
 ### System prompt (`src/lib/prompt.ts`, `SYSTEM_PROMPT`)
 
@@ -374,7 +304,7 @@ INPUT is JSON:
 OUTPUT: {"expressions": [...]}, one item per distinct time, in order of appearance. If nothing qualifies, {"expressions": []}.
 
 WHAT COUNTS
-Extract only expressions with a clock time or a part of day: "3pm", "15:30", "noon", "tomorrow morning", "tonight", "3-4pm". End-of-day deadlines ("EOD", "EOB", "COB", "end of day", "end of business") are not times: return no item for them.
+Extract only expressions with a clock time or a part of day: "3pm", "15:30", "half past three", "noon", "tomorrow morning", "tonight", "3-4pm". End-of-day deadlines ("EOD", "EOB", "COB", "end of day", "end of business") are not times: return no item for them.
 Never extract: date-only mentions ("Thursday", "tomorrow" alone), durations ("2h", "30 min"), relative offsets ("in 2 hours"), versions ("v2.5", "1.10"), prices and amounts ("3 QAR", "10.30 TND"), counts ("2-3 people"), scores, ratios ("16:9"), IDs, room or phone numbers.
 Never invent a time that is not in the message.
 
@@ -391,6 +321,7 @@ TIME RULES
 - "3pm", "3 p.m.", "3PM" -> 15:00. "12am" -> 00:00. "12pm", noon, الظهر -> 12:00.
 - midnight, منتصف الليل -> 00:00 on the date after the referenced day (after today if no day is stated); set localDate to that date. Exception: midnight as the END of a range follows the range rule below.
 - 24-hour forms are taken as written: hour 0 or 13-23, or a leading zero ("09:30").
+- Hours in words count like digits: "three" = 3, "three o'clock" = 3:00, "half past three" = 3:30, "quarter past ten" = 10:15, "quarter to ten" = 9:45. Then apply the am/pm rules, so "at half past three" -> 15:30 with flag "ampm_assumed". text keeps the words as written.
 - Arabic: convert Arabic-Indic digits (٠-٩, ۰-۹) to ASCII. صباحًا/صباحا = am. مساءً/مساء/عصرًا = pm. "الساعة ٣:٣٠ مساءً" -> 15:30.
 - Hour 1-12 with no am/pm and no part of day ("at 3", "3:30", "الساعة ٣"): 9, 10, 11, 12 -> as written (12 is noon). 1-6 -> pm (add 12) with flag "ampm_assumed". 7 or 8 -> kind "ambiguous", flag "ampm_unclear", localTime null.
 - Ranges ("3-4pm", "11-1pm", "من ٢ إلى ٤ مساءً") are one item with kind "range". A trailing am/pm applies to both ends unless the start would then be after the end ("11-1pm" -> 11:00 to 13:00). Keep an end that is earlier than the start as written ("11pm-1am" -> 23:00, 01:00); code adds the day. A range ending at midnight keeps the start's date and ends at "00:00" ("10pm-midnight today" -> today, 22:00, 00:00).
@@ -466,18 +397,19 @@ export function buildCalendar(nowIso: string, zone: string): string[] {
 
 ### Local pre-filter (`src/lib/timeHint.ts`)
 
-English and Arabic only, and permissive on purpose: deciding what is really a time is the AI's job. French forms ("15h", "à 3", "demain", "jeudi") and bare durations ("2h") no longer pass. The lookbehind before the Arabic stem for "tomorrow" keeps Baghdad (بغداد) out; Arabic weekdays need the ال prefix so September (سبتمبر) does not match.
+English and Arabic only, and permissive on purpose: deciding what is really a time is the AI's job. "half past" and "quarter past/to" pass, so "half past three" (the example in the no-time copy) reaches the AI, and so does an hour in words after "at", "by" and the like ("Meet at three"), matching the prompt's hours-in-words rule. French forms ("15h", "à 3", "demain", "jeudi") and bare durations ("2h") no longer pass. The Arabic stem for "tomorrow" must start the text or follow a non-Arabic character, which keeps Baghdad (بغداد) out; this is written without a lookbehind, because Safari before 16.4 rejects one while parsing and the whole page would fail; Arabic weekdays need the ال prefix so September (سبتمبر) does not match.
 
 ```ts
 const D = String.raw`[0-9\u0660-\u0669\u06F0-\u06F9]`;
+const WORD_HOUR = "one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve";
 
 export const TIME_HINT = new RegExp([
   String.raw`${D}{1,2}\s?[:.]\s?${D}{2}`,
   String.raw`${D}{1,2}\s?[ap]\.?m\b`,
-  String.raw`\b(?:at|by|around|from|until|till|before|after)\s+${D}{1,2}(?!${D})`,
-  String.raw`\b(?:noon|midnight|midday|o['’]?clock|today|tonight|tomorrow|tmrw?|morning|afternoon|evening)\b`,
+  String.raw`\b(?:at|by|around|from|until|till|before|after)\s+(?:${D}{1,2}(?!${D})|(?:${WORD_HOUR})\b)`,
+  String.raw`\b(?:half past|quarter (?:past|to)|noon|midnight|midday|o['’]?clock|today|tonight|tomorrow|tmrw?|morning|afternoon|evening)\b`,
   String.raw`\b(?:mon|tue|tues|wed|thu|thur|thurs|fri|sat|sun)(?:day|nesday|sday|rsday|urday)?\b`,
-  String.raw`ساع|صباح|مساء|ظهر|الليلة|اليوم|(?<![\u0600-\u06FF])غد|الغد|بكر[ةه]`,
+  String.raw`ساع|صباح|مساء|ظهر|الليلة|اليوم|(?:^|[^\u0600-\u06FF])غد|الغد|بكر[ةه]`,
   String.raw`الأحد|الاحد|الاثنين|الإثنين|الثلاثاء|الأربعاء|الاربعاء|الخميس|الجمعة|السبت`,
 ].join("|"), "i");
 ```
@@ -568,9 +500,9 @@ export function locate(message: string, exprs: Expr[]) {
 
 1. **Validate and fill zones:** `sanitize(raw, message, author.tz)` on every live response and every fixture; `sender_default` items take the author's zone; `null` means status `error`.
 2. **Locate:** `locate()` adds `start` and `end`; the UI skips a highlight that overlaps an earlier one.
-3. **Convert exact and range items:** `date = localDate ?? today in sourceZone at now` (demo clock aware); start and end built with luxon in the source zone, end moved a day forward if not after the start; stored as UTC ISO.
+3. **Convert exact and range items:** `date = localDate ?? today in sourceZone at now` (`DEMO_NOW` for the examples, the real time for typed text); start and end built with luxon in the source zone, end moved a day forward if not after the start; stored as UTC ISO.
 4. **Unclear items:** no instant; copy from `flag`.
-5. **Chips** per reader with `chipFor`; sender pills pass `{ keepSameOffset: true }`.
+5. **Chips** per reader with `chipFor`; the popup rows (`landingRows` in `landing.ts`) pass `{ keepSameOffset: true }`.
 
 ```ts
 import { DateTime } from "luxon";
@@ -634,8 +566,11 @@ export function chipFor(
   use24Hour: boolean,
   opts: { keepSameOffset?: boolean } = {},
 ): Chip | null {
-  // Unclear items have no instant, so "same zone" means the same offset now and in half a year
-  if (!e.utcInstant) return sameOffsetEverywhere([reader.tz, authorTz], DateTime.now()) ? null : { type: "unclear", flag: e.flag };
+  // Unclear items have no instant, so "same zone" means the same offset all year and on the day named
+  if (!e.utcInstant) {
+    const day = e.localDate ? [DateTime.fromISO(`${e.localDate}T12:00`, { zone: authorTz })] : [];
+    return sameOffsetEverywhere([reader.tz, authorTz], DateTime.now(), day) ? null : { type: "unclear", flag: e.flag };
+  }
   const t = DateTime.fromISO(e.utcInstant, { zone: "utc" });
   const src = t.setZone(e.sourceZone!);
   const local = t.setZone(reader.tz);
@@ -649,24 +584,23 @@ export function chipFor(
 }
 
 // isEarly (round the clock) and firstReaderWithChip (the reader "Viewing as" jumps to) live here too
-export function sameOffsetEverywhere(zones: string[], now: DateTime): boolean {
+// Weekly for a year: two zones can share an offset on any two dates and still differ for weeks in between
+// (London and Algiers match in October and April, not in winter)
+export function sameOffsetEverywhere(zones: string[], now: DateTime, alsoOn: DateTime[] = []): boolean {
   const one = (t: DateTime) => new Set(zones.map((z) => t.setZone(z).offset)).size <= 1;
-  return one(now) && one(now.plus({ days: 182 }));
+  return [...Array.from({ length: 53 }, (_, i) => now.plus({ weeks: i })), ...alsoOn].every(one);
 }
 ```
 
 ### Demo fixtures (`src/lib/demoFixtures.json`)
 
-Each entry is an `Extraction` body keyed by preset id; the loader runs `sanitize(fixture, preset.text, author.tz)`. Copy each `text` out of the preset string itself, never retype it (the Arabic one above all).
+Each entry is an `Extraction` body keyed by example id; the loader in `demoPresets.ts` runs `sanitize(fixture, example.text, author.tz, teamZonesFor(DEMO_CITIES))`. Copy each `text` out of the example string itself, never retype it (the Arabic one above all).
 
 ```json
 {
-  "exact":       { "expressions": [{ "text": "Thursday at 3pm", "localDate": "2026-10-15", "localTime": "15:00", "endLocalTime": null, "sourceZone": null, "zoneReason": "sender_default", "flag": null, "kind": "exact" }] },
-  "doha-sunday": { "expressions": [{ "text": "Sunday at 10am", "localDate": "2026-10-18", "localTime": "10:00", "endLocalTime": null, "sourceZone": null, "zoneReason": "sender_default", "flag": null, "kind": "exact" }] },
-  "arabic":      { "expressions": [{ "text": "يوم الأحد الساعة ١٠ صباحًا", "localDate": "2026-10-18", "localTime": "10:00", "endLocalTime": null, "sourceZone": null, "zoneReason": "sender_default", "flag": null, "kind": "exact" }] },
-  "doha-time":   { "expressions": [{ "text": "tomorrow 1pm Doha time", "localDate": "2026-10-14", "localTime": "13:00", "endLocalTime": null, "sourceZone": "Asia/Qatar", "zoneReason": "explicit", "flag": null, "kind": "exact" }] },
-  "unclear":     { "expressions": [{ "text": "3pm your time", "localDate": null, "localTime": "15:00", "endLocalTime": null, "sourceZone": null, "zoneReason": "unknown", "flag": "zone_unclear", "kind": "ambiguous" }] },
-  "not-time":    { "expressions": [] }
+  "exact":   { "expressions": [{ "text": "Thursday at 3pm", "localDate": "2026-10-15", "localTime": "15:00", "endLocalTime": null, "sourceZone": null, "zoneReason": "sender_default", "flag": null, "kind": "exact" }] },
+  "arabic":  { "expressions": [{ "text": "يوم الأحد الساعة ١٠ صباحًا", "localDate": "2026-10-18", "localTime": "10:00", "endLocalTime": null, "sourceZone": null, "zoneReason": "sender_default", "flag": null, "kind": "exact" }] },
+  "unclear": { "expressions": [{ "text": "3pm your time", "localDate": null, "localTime": "15:00", "endLocalTime": null, "sourceZone": null, "zoneReason": "unknown", "flag": "zone_unclear", "kind": "ambiguous" }] }
 }
 ```
 
@@ -703,10 +637,15 @@ Setup: an eval team of Prague, London, Tunis, Doha, Muscat, Baghdad and New Delh
 | 25 | Build takes about 2h on CI | Europe/Prague | 2026-10-13T10:00:00+02:00 | \[\] (now stopped locally by `TIME_HINT`; the eval calls the API directly) |
 | 26 | Standup 9:30 Prague, then client call at 2pm Doha | Europe/Prague | 2026-10-13T10:00:00+02:00 | exact · ∅ · 09:30 · Europe/Prague · explicit; exact · ∅ · 14:00 · Asia/Qatar · explicit |
 | 27 | Options: Wed 11am or Thu 4pm (London time for both) | Asia/Baghdad | 2026-10-13T11:00:00+03:00 | exact · 2026-10-14 · 11:00 · Europe/London · explicit; exact · 2026-10-15 · 16:00 · Europe/London · explicit |
+| 28 | Can we meet at half past three? | Europe/Prague | 2026-10-13T10:00:00+02:00 | exact · ∅ · 15:30 · Europe/Prague · sender_default · ampm_assumed |
+| 29 | Call at quarter to ten tomorrow | Europe/London | 2026-10-13T09:00:00+01:00 | exact · 2026-10-14 · 09:45 · Europe/London · sender_default |
+| 30 | Let's sync at three o'clock Doha time | Europe/Prague | 2026-10-13T10:00:00+02:00 | exact · ∅ · 15:00 · Asia/Qatar · explicit · ampm_assumed |
 
-Mix: 10 exact, 3 ranges, 4 ambiguous, 3 vague, 5 false positives, 2 multi-time; 3 Arabic rows, the rest English (the 3 French rows were dropped with French support). Every row passes `TIME_HINT` except "Build takes about 2h on CI", which the filter now stops; the eval sends it to the API directly anyway.
+Mix: 13 exact (3 with hours in words, added 13 Oct with the prompt rule), 3 ranges, 4 ambiguous, 3 vague, 5 false positives, 2 multi-time; 3 Arabic rows, the rest English (the 3 French rows were dropped with French support). Every row passes `TIME_HINT` except "Build takes about 2h on CI", which the filter now stops; the eval sends it to the API directly anyway.
 
-**Scoring:** `text` must be a substring containing the time token; every other field must match. A critical error is any row expected ambiguous, vague or `[]` that comes back as a converted `exact` or `range`. **Pass bar:** 3 runs, each with 0 critical errors and at least 24 of 27 rows fully correct. **Run:** the eval file starts with `// @vitest-environment node`, loads keys with `try { process.loadEnvFile(".env.local") } catch {}` and imports `api/parse-time` directly. Bash: `RUN_EVAL=1 npx vitest run src/lib/parseTime.eval.test.ts`; PowerShell: `$env:RUN_EVAL=1; npx vitest run src/lib/parseTime.eval.test.ts`. Three runs cost under $0.03.
+**Scoring:** `text` must be a substring containing the time token; every other field must match. A critical error is any row expected ambiguous, vague or `[]` that comes back as a converted `exact` or `range`. **Pass bar:** 3 runs, each with 0 critical errors and at least 90% of rows fully correct (27 of 30; it was 24 of 27 before the hours-in-words rows). **Run:** the eval file starts with `// @vitest-environment node`, loads keys with `try { process.loadEnvFile(".env.local") } catch {}` and imports `api/parse-time` directly. It is not part of `npm test`: `vitest.config.ts` includes `*.eval.test.ts` only in `--mode eval`, so run `npm run eval` (once per run). Three runs cost under $0.03.
+
+**Results, 13 Oct 2026** (`gpt-6-luna`, effort `none`). First, 27 rows on the old prompt: 25, 26 and 26 right, 0 critical; spelled-out hours were not covered ("half past three" came back as 15:30 in 2 of 4 live calls and empty in 2, "three o'clock" empty). Then the prompt got the hours-in-words rule and rows 28–30: 29/30 in all three runs, 0 critical errors, so the bar passes; the three new rows were right every time. The one miss in every run is "Ping me at 9pm IST" (London sender, team with London): the model flags the zone unclear instead of reading New Delhi, a safe miss. Median latency per run 2.3 s, 1.5 s and 1.5 s (max 3.2 s, 2.8 s, 2.3 s), measured with all 30 calls in parallel.
 
 ### Cost and latency
 
@@ -717,7 +656,7 @@ Mix: 10 exact, 3 ranges, 4 ambiguous, 3 vague, 5 false positives, 2 multi-time; 
 | `gpt-6-luna`, warm cache | \~$0.10 per 1,000 messages |
 | `gpt-6-luna`, no cache | \~$0.29–0.34 per 1,000 messages |
 | `gpt-5.6-luna` fallback | \~$0.21–0.59 per 1,000 messages |
-| Latency (effort `none`) | p50 about 1.5–2 s, p95 about 3–4 s (estimated from Artificial Analysis; `low` adds \~2 s, `medium` \~5 s) |
+| Latency (effort `none`) | Measured 13 Oct in the eval (30 parallel calls): median 1.5–2.3 s per run, max 2.3–3.2 s. Earlier estimate from Artificial Analysis: p50 1.5–2 s, p95 3–4 s; `low` adds \~2 s, `medium` \~5 s |
 
 Token counts are estimates; only messages that pass steps 0 and 1 cost anything.
 
@@ -736,7 +675,7 @@ Token counts are estimates; only messages that pass steps 0 and 1 cost anything.
 
 1. Azure structured outputs with `gpt-6-luna`: listed in the Azure models table, but the structured-outputs page stops at GPT-5.1. One smoke call.
 2. Whether Vercel AI Gateway passes through `reasoning.effort: "none"` and a strict `json_schema`.
-3. Latency figures come from a third party; measure our own p50 and p95 from the logs.
+3. Latency: measured in the eval on 13 Oct (see Eval set); p50 and p95 from production logs are still to read.
 4. Token counts are estimates; read `usage` from the first live calls.
 5. Verified on 12 Oct: openai 7.32.0 types accept `reasoning.effort: "none"` (`api/parse-time.ts` type-checks in strict mode).
 6. Whether Vercel ESM functions need `.js` extensions on relative imports; the code uses `.js`, which Vite and Vitest map to `.ts` (checked locally on 12 Oct, Vercel still to confirm).
@@ -756,8 +695,8 @@ Only the AI call leaves the browser; each reader's time is computed locally.
 
 ```mermaid
 flowchart LR
-  C["Composer (AI on Send only)"] --> F{"Local filter (TIME_HINT)"}
-  F -- preset --> FX["Demo fixtures (offline)"]
+  C["Try it (one AI call per text)"] --> F{"Local filter (TIME_HINT)"}
+  EX["Examples"] --> FX["Demo fixtures (offline)"]
   F -- custom text --> API["/api/parse-time (Vercel)"]
   API <--> OAI["OpenAI gpt-6-luna"]
   API -- validated time expressions --> CV["Convert (sanitize, luxon)"]
@@ -765,7 +704,7 @@ flowchart LR
   CV --> CH["Chips per reader (no network)"]
 ```
 
-Presets read cached fixtures and never reach the server; custom text makes one call that returns validated expressions; conversion and chips run in the browser for every reader.
+Examples read cached fixtures and never reach the server; typed text makes one call that returns validated expressions; conversion and chips run in the browser for every reader.
 
 ### File plan
 
@@ -779,16 +718,18 @@ WW = web workaround, CP = concept page, AI = AI feature, Infra = build and deplo
 | `src/pages/Index.tsx` | out of scope | WW | Share banner; "Share team" next to "Add city" |
 | `src/components/Header.tsx`, `AddCityDialog.tsx` | changed | WW, CP | "My time zone" copy; "Feature concept" and "Back to clocks" button |
 | `src/App.tsx` | changed | CP | `/concept` route via `React.lazy`, inside an error boundary with Reload |
-| `src/pages/Concept.tsx` | new | CP | Hero, sections, `#demo` scroll |
-| `ChatDemo`, `ChatComposer`, `SenderPreview`, `ChatThread`, `TimeChip`, `UnderTheHood`, `IntegrationPreview` (`src/components/*.tsx`) | new | CP | As in the concept page section |
-| `src/hooks/useTimeDetection.ts` | new | CP | Steps 1–3 (no same-offset shortcut); drafts stop at `ready`; Send makes the one API call and returns a pending result plus its promise |
+| `src/pages/Concept.tsx` | new | CP | The 8 sections, shared example state, hash scroll |
+| `src/components/PitchSections.tsx` | new | CP | Static sections 1, 2, 6, 7, 8 (Hero, Today, Trust, Build, Ask) |
+| `MomentWrite`, `MomentRead`, `ChatFrame`, `TryIt`, `TimesPopover`, `TimeChip` (`src/components/*.tsx`) | new | CP | Sections 3–5, the chat frame, the per-time popup (`MessageText`, `Headline`) and the reader chip |
+| `src/lib/landing.ts` | new | CP | `landingRows` (popup rows with status words), `headline` (worst first), `NOT_CONVERTED` |
+| `ChatDemo`, `ChatComposer`, `SenderPreview`, `ChatThread`, `UnderTheHood`, `IntegrationPreview`, `src/hooks/useTimeDetection.ts` and their tests | deleted | CP | Replaced by the rebuilt page |
 | `src/lib/timeDetect.ts` | new | CP, AI | `callParseTime`, `toExpressions`, `chipFor`, `sameOffsetEverywhere`, `formatTime`, `teamZonesFor`, types |
-| `src/lib/demoPresets.ts`, `src/lib/demoFixtures.json` | new | CP | `DEMO_NOW`, 6 presets with blurbs, `Extraction` fixtures |
+| `src/lib/demoPresets.ts`, `src/lib/demoFixtures.json` | new | CP | `DEMO_NOW`, `DEMO_CITIES`, `EXAMPLES`, `UNCLEAR_EXAMPLE`, `youFor`; fixtures `exact`, `arabic`, `unclear` |
 | `src/lib/extraction.ts` | new | AI | Schemas, `EXTRACTION_JSON_SCHEMA`, `ParseTimeRequest`, `sanitize`, `locate`; relative imports only |
 | `src/lib/timeHint.ts` | new | AI | `TIME_HINT` (English and Arabic) |
 | `src/lib/prompt.ts` | new | AI | `SYSTEM_PROMPT`, `buildCalendar`; only `api/` imports it, so the prompt never ships to the browser |
 | `api/parse-time.ts` | new | AI | Web-standard `POST`, `extract()` |
-| `src/lib/*.test.ts` (8 new files), `src/components/ChatDemo.test.tsx`, `src/lib/parseTime.eval.test.ts` | new | all | See the test plan; files that use `fetch`, `AbortSignal` or the API start with `// @vitest-environment node` |
+| `src/lib/*.test.ts`, `src/components/Moments.test.tsx`, `src/components/TryIt.test.tsx`, `src/lib/parseTime.eval.test.ts` | new | all | See the test plan; files that use `fetch`, `AbortSignal` or the API start with `// @vitest-environment node` |
 | `src/test/setup.ts` | changed | Infra | Skip the `matchMedia` stub when there is no `window`, so `node`-environment files run |
 | `src/index.css` | changed | WW, CP | Teal `--accent`; darker light-mode badge text |
 | `src/components/ui/command.tsx`, `ui/textarea.tsx`, `tailwind.config.ts` | changed | Infra | Fix the three lint errors that already failed `npm run lint` on `main` |
@@ -805,7 +746,7 @@ WW = web workaround, CP = concept page, AI = AI feature, Infra = build and deplo
 | --- | --- | --- |
 | `message` | string | 1–500 chars |
 | `senderZone` | string | IANA id of the author |
-| `now` | string | ISO with offset; with the demo clock on, `DEMO_NOW` in the sender's offset, e.g. `2026-10-13T10:00:00.000+02:00` |
+| `now` | string | ISO with offset; the real current time in the sender's offset (the examples' would-be request uses `DEMO_NOW`, `2026-10-13T10:00:00.000+02:00`) |
 | `teamZones` | `Record<cityLabel, IANA>` | ≤ 30 entries (in practice the team: at most 8 cities plus a prepended home zone), labels 1–40 chars, built by `teamZonesFor` from the zone (never the typed label) |
 
 | Status | When | Body |
@@ -879,7 +820,6 @@ export async function POST(req: Request): Promise<Response> {
 | `OPENAI_MODEL` | no, default `gpt-6-luna` | `gpt-5.6-luna`, an Azure deployment name, or `openai/gpt-6-luna` on the Gateway |
 | `OPENAI_BASE_URL` | no | Unset for OpenAI; the Azure or Gateway URL otherwise |
 | `OPENAI_REASONING_EFFORT` | no, default `none` | `none`, `minimal`, `low`, `medium`, `high`, `xhigh` or `max`; an unknown value falls back to `none`. Above `none`, reasoning tokens count toward `max_output_tokens` and the 6 s timeout, so re-run the eval before changing it |
-| `RUN_EVAL` | no, shell only | `1` runs the live eval test |
 
 Add `openai@^7.32.0` (latest on npm on 10 Oct 2026, needs Node ≥ 22 locally and on Vercel). Keep `zod` 3.25 and `luxon` 3.7; validation uses zod's main entry.
 
@@ -928,33 +868,34 @@ function apiDev(mode: string): Plugin {
 2. Import the repo with the Vite preset (`npm run build`, output `dist`); set Node.js 22.x or 24.x.
 3. Add `OPENAI_API_KEY` (Sensitive) and `OPENAI_MODEL=gpt-6-luna` for Production and Preview; `OPENAI_BASE_URL` only for Azure or the Gateway. Redeploy after any change.
 4. In OpenAI, create a dedicated project and key; set a $10 monthly hard spend limit with alerts at 50% and 90%.
-5. Add one Firewall rate-limit rule: path `/api/parse-time`, fixed window 60 s, 20 requests per IP, action 429. Smoke test: `/concept#demo` loads directly, presets work offline, one custom message returns chips, function logs show metrics only.
+5. Add one Firewall rate-limit rule: path `/api/parse-time`, fixed window 60 s, 20 requests per IP, action 429. Smoke test: `/concept#try` loads directly, the examples work offline, one typed message returns chips, function logs show metrics only.
 
 No in-function rate counters: they are unreliable on serverless. The client already limits itself through the filter and exactly one call per sent message; drafts never call the API. Until the WAF rule and the spend cap are in place, the endpoint is open to scripted calls (curl sends no `sec-fetch-site`), so the key goes to Vercel only together with both.
 
 ## Acceptance criteria and test plan
 
-Done means all six presets work offline under the demo clock, the live path makes exactly one call per sent message, and every rule above has a unit test.
+Done means both examples work offline, a typed message makes exactly one AI call, and every rule above has a unit test.
 
 ### Definition of done
 
 - [x] Branch `tomas-novak/custom-cities-ooredoo-markets` merged into `main` (the A4 share link is out of scope)
-- [ ] `/concept` opens from the header, and `/concept#demo` deep-links on Vercel
-- [ ] All six presets show the chips in the QA table with the network off; typing a preset's exact text also stays offline
-- [ ] Custom text: step 1 (the filter); drafts send nothing; exactly one `POST /api/parse-time` per sent message, posted as a pending message that fills in; switching "Viewing as" sends nothing
+- [ ] `/concept` opens from the header, and `/concept#try` deep-links on Vercel
+- [ ] Both examples show the numbers in the QA table with the network off
+- [ ] Typed text: the filter first; exactly one `POST /api/parse-time` per message text (Check; the chat on the right reuses that answer); hovering, tapping and switching "Viewing as" send nothing
+- [ ] The "Done when" checks in the concept page section pass
 - [ ] `api/parse-time.ts` returns 400, 403, 413 and 502 as specified and sends `gpt-6-luna` with effort `none` and `store: false`
 - [ ] The client runs `sanitize()` on every response and fixture; unclear items show copy from `flag`, never model text
-- [ ] The privacy note uses the canonical statement; "What just happened" shows the request JSON, live or would-be
+- [ ] "What the AI receives" in section 6 shows the would-be request JSON for the Thursday example
 - [ ] Function logs contain no message text or model output (checked on Vercel)
 - [ ] `dist/` contains neither the key nor the prompt: `grep -r "You extract time-of-day" dist` finds nothing
-- [ ] The eval passes 3 runs (0 critical errors, ≥ 24/27 each), results pasted in the PR
+- [x] The eval passes 3 runs (0 critical errors, ≥ 90% each): 29/30 three times on 13 Oct; paste into the PR
 - [ ] `npm test` and `npm run lint` pass; `npm run dev` serves `/api/parse-time` from `.env.local` without the Vercel CLI
 - [ ] Vercel env vars set, OpenAI hard spend limit on, WAF rule returns 429 after 20 requests in a minute
 - [ ] `bun.lockb` removed and `package-lock.json` includes `openai`
 - [ ] Teams test card sent to two accounts in different zones and both screenshots saved, by Mon 12 Oct
 - [ ] Performance and accessibility checks below pass
 
-**Build order and cut line:** Sun 11 Oct: build the concept page with all presets offline. Mon 12: API, eval, Vercel deploy, Teams test card. Tue 13: record around 10:00 Prague, so live clocks match the demo clock. Wed 14: edit the video and the deck. Thu 15: submit. The A4 share link was cut on 12 Oct; if late, cut next: Lighthouse and screen-reader passes, the eval's third run.
+**Build order and cut line:** Sun 11 Oct: build the concept page with the examples offline. Mon 12: API, eval, Vercel deploy, Teams test card. Tue 13: record around 10:00 Prague, so live clocks match the demo date. Wed 14: edit the video and the deck. Thu 15: submit. The A4 share link was cut on 12 Oct; if late, cut next: Lighthouse and screen-reader passes, the eval's third run.
 
 ### Unit tests
 
@@ -963,41 +904,37 @@ Files that use `fetch`, `AbortSignal` or the API start with `// @vitest-environm
 | File | Cases |
 | --- | --- |
 | `src/lib/shareTeam.test.ts` (out of scope) | Round trip with "Malé"; hash over 8,192 chars invalid; 9 cities invalid; unknown zone; extra key; `<script>` city decodes as a plain string; imports get new ids |
-| `src/lib/timeHint.test.ts` | 10 positive and 10 negative English and Arabic strings; French sentences and "Build takes about 2h on CI" do not match; the 26 other eval messages match; all six preset texts (Arabic included) match; "thanks, looks good" does not |
+| `src/lib/timeHint.test.ts` | 10 positive and 10 negative English and Arabic strings; French sentences and "Build takes about 2h on CI" do not match; the 26 other eval messages match; the three example texts (Arabic included) and "Call at half past three" match; "thanks, looks good" does not |
 | `src/lib/storage.test.ts` | `loadSettings` sees a save that is still debounced |
 | `src/lib/extraction.test.ts` | `text` not in the message dropped; "24:00" and "2026-02-30" dropped; `sender_default` items take `senderZone`; a bad explicit zone becomes null, exact becomes ambiguous and the flag becomes `zone_unclear`; range without end becomes ambiguous; 12 items capped to 10; non-object returns null; JSON-schema keys equal zod keys; `locate` on "3pm or 3pm" gives two ranges; Arabic offsets slice back to the same text; `ParseTimeRequest` rejects 501 chars, 31 zones, a bad zone and an extra key; "your time" with several other zones is always zone_unclear, with one other zone it is that zone, also in Arabic (بتوقيتك); `zoneReason` "unknown" with a zone drops the zone and reads zone_unclear |
-| `src/hooks/useTimeDetection.test.ts` | A preset "3pm your time?" in a two-zone team converts to the other zone, like the live path |
+| `src/lib/landing.test.ts` | Story numbers for both examples; the reader and the author carry no status; the unclear example stays unconverted; headline worst first, "Working hours for every city" and "every other city" for a reader; the author row keeps the zone the time was written in ("13:00 Doha time"); `youFor` adds a sixth city when home is not one of the five |
 | `src/lib/prompt.test.ts` | `buildCalendar` at `DEMO_NOW` for Prague: 14 lines, "2026-10-13 Tue (this week)", "2026-10-19 Mon (next week)", "2026-10-26 Mon (later)"; a New Delhi sender at 2026-10-13T20:00Z starts at "2026-10-14 Wed"; labels correct across 2027 |
-| `src/lib/timeDetect.test.ts` | Null date resolves to today in the source zone; "23:00–01:00" ends the next day; Prague Mon 26 Oct 15:00 shows Doha "17:00 · late" and no chip for Tunis; Prague Thu 23:00 shows Doha "Fri 00:00 · weekend" and New Delhi "Fri 02:30 · after hours"; Prague 07:30 shows Doha "08:30 · early"; Muscat 17:00 on a working day is "late"; `keepSameOffset` returns a pill for a same-offset reader; unclear chip for readers, none for the author or a reader on the author's offset (Riyadh for a Doha author); a 16:00–20:00 range reads "after hours" for 09:00–17:00 hours; 12h "4:00 PM"; English "Fri 12:00 AM" in a `cs` browser locale and "early" in an `ar-QA` one; `teamZonesFor` keeps labels 1–40 chars and does not merge different zones; `sameOffsetEverywhere` true for Doha and Baghdad, false for Prague and Tunis at `DEMO_NOW` and at 2026-11-01; every fixture passes `sanitize(fixture, preset.text, author.tz)` and the four time presets come out `exact`; `callParseTime` (no signal argument: nothing aborts a sent message) aborts at 8 s with fake timers and throws on 502 |
+| `src/lib/timeDetect.test.ts` | Null date resolves to today in the source zone; "23:00–01:00" ends the next day; Prague Mon 26 Oct 15:00 shows Doha "17:00 · late" and no chip for Tunis; Prague Thu 23:00 shows Doha "Fri 00:00 · weekend" and New Delhi "Fri 02:30 · after hours"; Prague 07:30 shows Doha "08:30 · early"; Muscat 17:00 on a working day is "late"; `keepSameOffset` returns a chip for a same-offset reader; unclear chip for readers, none for the author or a reader on the author's offset (Riyadh for a Doha author); a 16:00–20:00 range reads "after hours" for 09:00–17:00 hours; 12h "4:00 PM"; English "Fri 12:00 AM" in a `cs` browser locale and "early" in an `ar-QA` one; `teamZonesFor` keeps labels 1–40 chars and does not merge different zones; `sameOffsetEverywhere` true for Doha and Baghdad, false for Prague and Tunis at `DEMO_NOW` and at 2026-11-01; both examples come out `exact` and the unclear one `ambiguous`; `callParseTime` (no signal argument: nothing aborts a sent message) aborts at 8 s with fake timers and throws on 502 |
 | `src/lib/timezones.test.ts` (from the branch) | Still passes |
 | `src/lib/parseTime.test.ts` | The real `POST` handler with the OpenAI client mocked: 403 cross-site, 413 over 8,192 chars, 400 for bad JSON, an extra key or 501 chars, all without a model call; 200 with sanitized expressions, `Cache-Control: no-store`, `gpt-6-luna`, effort `none`, `store: false`; 502 for unusable output, an incomplete response or a failed call; the log holds no message text |
 | `src/lib/apiDev.test.ts` | Starts the Vite dev server from `vite.config.ts` and posts with `sec-fetch-site: cross-site`: 403 through the dev middleware too; `OPENAI_API_KEY` is blanked so a broken guard can never make a paid call |
-| `src/components/ChatDemo.test.tsx` | Two live sends whose results arrive in either order end on the first reader with a chip for the newest message; a reader picked while waiting stays |
-| `src/lib/parseTime.eval.test.ts` | 27-row eval against the real API (one run per invocation, prints the score); skipped unless `RUN_EVAL=1` |
+| `src/components/Moments.test.tsx`, `src/components/TryIt.test.tsx` | Sections 3–5 as specified in the concept page section (owned with those components) |
+| `src/lib/parseTime.eval.test.ts` | 30-row eval against the real API (one run per invocation, prints the score and median latency); only in `npm run eval`, never in `npm test` |
 
 ### Manual QA script for the video
 
-Demo clock on, the app's default team (Tunis, Prague, Muscat, Doha, New Delhi) with "My time zone" set to Prague, demo mode on. Reader chips show only the converted time; early, late, after hours and weekend appear on the sender's pills.
+"My time zone" set to Prague. The page always uses Tunis, Prague, Muscat, Doha and New Delhi. Readers see only their converted time; status words appear for the sender and in the popup for other cities.
 
-| Preset or input | Viewing as | Expected |
+| Section and input | Viewing as | Expected |
 | --- | --- | --- |
-| Exact time | Prague (author) | No chip. Strip: Tunis 14:00, Muscat 17:00 · late, Doha 16:00, New Delhi 18:30 · late; neutral header; step 2 "cached response (demo mode): 1 expression" |
-| Exact time | Doha | "→ 16:00 your time"; tooltip "Sent as 15:00 Prague time (Thu 15 Oct)" |
-| Exact time | New Delhi | "→ 18:30 your time" (the "late" note is on Prague's pill) |
-| Typed "Can we meet Thursday at 3pm?" | Doha | Same as the Exact preset; no request in the Network tab |
-| Doha: Sunday review | Prague | "→ 09:00 your time" |
-| Doha: Sunday review | Muscat | "→ 11:00 your time"; Doha's strip header "3 people after hours or on their weekend" |
-| Doha in Arabic | Prague / Muscat | Same chips as the English Sunday preset; the bubble reads right to left |
-| Doha time | Prague | "→ 12:00 your time"; Doha no chip |
-| Unclear | Doha | Dashed "time unclear" with the zone tooltip; author strip "Not converted: say which time zone" |
-| Not a time | any | Step 1 "candidate found", step 2 "cached response (demo mode): 0 expressions", no chip, "No times to convert." |
-| Any preset, then Send | — | "Viewing as" jumps to the first reader with a chip; step 3 says "Now reading as {city}" |
-| Custom "thanks, looks good" | any | Step 1 "no time found (English or Arabic only)"; no request in the Network tab |
-| Custom Czech or French text, e.g. "On se voit jeudi à 15h ?" | any | Step 2 "No time found. Write in English or Arabic …"; no request |
-| Custom "call at 3pm" before Send | — | Step 2 "Time found. The AI reads it when you press Send."; no request until Send |
-| Custom "Monday 26 Oct 15:00" (live) | Doha / Tunis | One request on Send; "→ 17:00 your time" / no chip |
-| Custom "call at 3pm", network off | Prague | "Couldn't reach the AI. Presets still work offline."; the message keeps its text without chips |
-| Switch through all 5 participants | each | Chips update instantly; no requests |
+| 3, Thursday 3pm, from Prague, hover or tap the time | — | Popup: Tunis 14:00 Working, Muscat 17:00 Late, Doha 16:00 Working, New Delhi 18:30 Late; headline "Late in the day for 2 cities: Muscat, New Delhi" |
+| 3, Send | — | The check "Before you send" with the same headline, "Send anyway" and "Edit"; "Send anyway" scrolls to section 4 and focuses its heading, nothing is posted |
+| 4, Thursday 3pm | Doha | "→ 16:00 your time"; popup row "You" without status, Prague "Sent as 15:00" |
+| 4, Thursday 3pm | New Delhi | "→ 18:30 your time", no status |
+| 3, Sunday 10am, in Arabic, from Doha | — | Weekend for Tunis, Prague and New Delhi; Muscat 11:00 Working; the bubble reads right to left |
+| 4, Sunday example | Muscat | "→ 11:00 your time" |
+| 4, switch through all readers | each | Chips update at once; no requests in the Network tab |
+| 5, typed "thanks, looks good" | — | No time found. Try a time like "3pm", "15:00" or "half past three". No request |
+| 5, typed "call at 3pm", Check | — | One request; "AI read it as …" with the seconds on the left, the message in the chat on the right; switching "Viewing as" makes no request |
+| 5, typed "Monday 26 Oct 15:00" (live) | Doha | "→ 17:00 your time" |
+| 5, network off | — | "The AI didn't answer." with "Try again"; sections 3 and 4 still work |
+| 6, unclear example | Doha | Dashed "time unclear"; "What the AI receives" opens the request JSON |
+| 375 px wide | — | No sideways scroll; popups open on tap |
 
 ### Performance and accessibility
 
@@ -1007,7 +944,7 @@ Demo clock on, the app's default team (Tunis, Prague, Muscat, Doha, New Delhi) w
 | Live latency over 20 custom messages (function log `ms`) | p50 ≤ 2,000 ms, p95 ≤ 4,000 ms |
 | Bundle | `/concept` lazy-loaded; `shareTeam.ts` and zod load with `import()`; main chunk grows ≤ 10 KB gzip (`shareTeam.ts` only if A4 returns); no `openai` SDK code or prompt text in `dist/` |
 | Lighthouse mobile on `/` and `/concept` | Performance ≥ 90 |
-| Keyboard only | Presets, composer, Send, "Viewing as" (arrows) and chips (focus opens tooltip, Esc closes) all reachable |
+| Keyboard only | Example switch, Send check, "Viewing as" (arrows), composer and every highlighted time (Enter or Space opens the popup, Esc closes) all reachable |
 | Screen reader (NVDA, VoiceOver) | Chips read the full sentence; new messages announced via `role="log"` |
 | axe DevTools, light and dark | 0 critical or serious issues; amber chip text ≥ 4.5:1 |
 | Reflow | 320 px wide and 200% zoom without page-level horizontal scroll |
@@ -1018,7 +955,7 @@ The concept is buildable on documented Microsoft APIs, but only for messages the
 
 | Surface | How it would work | Limitation to state |
 | --- | --- | --- |
-| Teams, sender | A compose action ([message extension](https://learn.microsoft.com/en-us/microsoftteams/platform/messaging-extensions/how-to/action-commands/respond-to-task-module-submit)) opens a dialog with the preview strip, then inserts a card into the compose box | Plain typed messages are not converted; extensions cannot read the draft or hook send |
+| Teams, sender | A compose action ([message extension](https://learn.microsoft.com/en-us/microsoftteams/platform/messaging-extensions/how-to/action-commands/respond-to-task-module-submit)) opens a dialog with the check, then inserts a card into the compose box | Plain typed messages are not converted; extensions cannot read the draft or hook send |
 | Teams, readers | The card holds the original text plus `{{TIME(2026-10-15T13:00:00Z)}}` and `{{DATE(…, SHORT)}}`, which [render on each reader's device](https://learn.microsoft.com/en-us/adaptive-cards/authoring-cards/text-features) | A [2023 report](https://learn.microsoft.com/en-us/answers/questions/1185730/why-does-ms-teams-date-and-time-functions-on-adapt) shows Teams desktop rendering UTC; validate before claiming |
 | Teams, every message | A bot with [per-chat consent](https://learn.microsoft.com/en-us/microsoftteams/platform/agents-in-teams/enable-receive-all-chat-messages) (`ChatMessage.Read.Chat`) replies with conversions after a message is sent | Chat owner must consent; privacy review at scale; bot can only reply, not edit |
 | Outlook, sender | [Smart Alerts](https://learn.microsoft.com/en-us/office/dev/add-ins/outlook/onmessagesend-onappointmentsend-events) on send read the body and show "Late in the day for 2 people: Muscat 17:00, New Delhi 18:30" with Send anyway / Don't send | Runs on web, new and classic Windows, Mac; not mobile; no event while typing; needs admin deployment |
@@ -1076,28 +1013,28 @@ The demo wins on one moment: the same message flipping across four readers, each
 | # | Moment | How to stage it (5–10 s) |
 | --- | --- | --- |
 | 1 | "Viewing as" switcher | Click Doha, Muscat, Tunis, New Delhi, 2 s each. Stop talking and let the chip change. |
-| 2 | Warning before sending | Pick "Exact time" (or type its sentence) and the pills appear at once: "Before I hit send, I see that Muscat and Delhi are at the end of their day." |
-| 3 | Doha writes in Arabic, Sunday lands as a weekend | Pick "Doha in Arabic": Doha's strip shows Prague, Tunis and Delhi on their weekend and Muscat on a working day. |
-| 4 | A judge's city joins the chat (live only) | Ask a judge's city beforehand, add it on the main page, and they appear with their own chip. |
-| 5 | The AI refuses to guess a zone | Send "3pm your time?": the chip says "time unclear" instead of a time. |
-| 6 | Exactly what goes to the AI | Zoom on the payload: the sentence, a date and city names. Nothing added: no names, no calendar, no readers. |
+| 2 | Warning before sending | Section 3, "Thursday 3pm, from Prague": hover or tap the time for the popup, then press Send and the check shows the headline: "Before I hit send, I see that Muscat and Delhi are at the end of their day." |
+| 3 | Doha writes in Arabic, Sunday lands as a weekend | Section 3, "Sunday 10am, in Arabic, from Doha": Prague, Tunis and Delhi on their weekend, Muscat on a working day. |
+| 4 | A judge's city joins the chat (live only) | Set "My time zone" to the judge's city; in section 5 it joins as a sixth city and their message gets a real AI read. |
+| 5 | The AI refuses to guess a zone | Section 6: "3pm your time?" shows "time unclear" instead of a time. |
+| 6 | Exactly what goes to the AI | Section 6, open "What the AI receives": the sentence, a date and city names. Nothing added: no names, no calendars, no readers. |
 | 7 | Clocks change, the tool does not care (live Q&A) | Type "Monday 26 Oct at 15:00": Doha shows 17:00, not 16:00. This is a live call, so keep a backup take. |
 
-### Video script (2:00, recorded on the demo clock)
+### Video script (2:00, examples on the fixed demo date)
 
 | Time | On screen | Voiceover | On-screen text |
 | --- | --- | --- | --- |
-| 0:00–0:12 | Chat with 5 avatars, message appears | "Someone in Prague writes: can we meet Thursday at 3pm? Simple. But the four people reading it are in Tunis, Muscat, Doha and Delhi." | Thursday at 3pm. Whose 3pm? |
-| 0:12–0:22 | City labels under each avatar | "Doha reads it one way, Tunis another, and for Delhi it is the end of the day. Someone always does the maths." | 5 cities, 2 work weeks |
+| 0:00–0:12 | Concept page hero, then section 2 "Today" | "Someone in Prague writes: can we meet Thursday at 3pm? Simple. But the four people reading it are in Tunis, Muscat, Doha and Delhi." | Thursday at 3pm. Whose 3pm? |
+| 0:12–0:22 | The three "Today" messages from Prague, Doha, New Delhi | "Doha reads it one way, Tunis another, and for Delhi it is the end of the day. Someone always does the maths." | 5 cities, 2 work weeks |
 | 0:22–0:37 | Web tool: clocks, status colours, 24 h grid | "This is Timezone Companion, and it works today. Live clocks for every team city. Green means working hours. It knows Doha works Sunday to Thursday and Prague Monday to Friday." | Working today |
-| 0:37–0:52 | Concept page: picking "Exact time", the step 2 preview strip | "Now the AI part. I type the same message. Before I send it, I see what my 3pm means for everyone. Muscat and Delhi are at the end of their day. I can fix that now." | Check before you send |
-| 0:52–1:05 | Switcher: Doha, Muscat, Tunis, New Delhi | "The same chat, seen by each person. My words stay as I wrote them. Each reader gets a small tag with their own time." | Same message. Your own time. |
-| 1:05–1:15 | "3pm your time?" flagged; "v2.50" untouched | "If the time zone is unclear, it says so instead of guessing. And a version number is not a time." | Unclear zone? It asks. |
-| 1:15–1:30 | "What just happened", zoom on the payload | "The AI gets the sentence, my time zone, the date and our city list. It only says: this is a day, this is a time. The conversion is plain calendar maths. The app adds nothing else: no calendars, no list of who reads it." | AI reads words. Code does times. |
-| 1:30–1:45 | Teams and Outlook frames | "Next, as a concept: a Teams action where each reader sees their own time, and a check in Outlook before a late invite goes out." | Concept: Teams · Outlook |
-| 1:45–2:00 | "Doha in Arabic" preset: strip, then switcher Muscat and Prague; end card | "Doha asks, in Arabic, for a Sunday review. Before sending, Doha sees it is a working day in Muscat but the weekend in Prague, Tunis and Delhi. You write your time. Everyone reads theirs." | You write your time. Everyone reads theirs. |
+| 0:37–0:52 | Section 3: "Thursday 3pm, from Prague", popup and headline, then Send | "Now the AI part. Here is the same message, from Prague. Before I send it, I see what my 3pm means for everyone. Muscat and Delhi are at the end of their day. I can fix that now." | Check before you send |
+| 0:52–1:05 | Section 4 "Viewing as": Doha, Muscat, Tunis, New Delhi | "The same chat, seen by each person. My words stay as I wrote them. Each reader gets a small tag with their own time." | Same message. Your own time. |
+| 1:05–1:15 | Section 6: "3pm your time?" flagged | "If the time zone is unclear, it says so instead of guessing." | Unclear zone? It asks. |
+| 1:15–1:30 | Section 6 "What the AI receives", zoom on the payload | "The AI gets the sentence, my time zone, the date and our city list. It only says: this is a day, this is a time. The conversion is plain calendar maths. The app adds nothing else: no calendars, no list of who reads it." | AI reads words. Code does times. |
+| 1:30–1:45 | Section 7 "Can Ooredoo build it?" | "Next, as a concept: a Teams action where each reader sees their own time, and a check in Outlook before a late invite goes out." | Concept: Teams · Outlook |
+| 1:45–2:00 | Section 3 "Sunday 10am, in Arabic, from Doha", then section 4 as Muscat and Prague; section 8 as end card | "Doha asks, in Arabic, for a Sunday review. Before sending, Doha sees it is a working day in Muscat but the weekend in Prague, Tunis and Delhi. You write your time. Everyone reads theirs." | You write your time. Everyone reads theirs. |
 
-If the Teams test card has not worked by Mon 12 Oct, use this line at 1:30 instead: "Next, as a concept: a Teams action that previews a time for everyone, and an Outlook check before a late invite goes out." An Arabic speaker checks the Arabic preset before recording. If a colleague has a true story about a late invite, use it in the hook.
+If the Teams test card has not worked by Mon 12 Oct, use this line at 1:30 instead: "Next, as a concept: a Teams action that previews a time for everyone, and an Outlook check before a late invite goes out." An Arabic speaker checks the Arabic example before recording. If a colleague has a true story about a late invite, use it in the hook.
 
 ### Deck for the shortlist demo
 
@@ -1105,17 +1042,17 @@ If the Teams test card has not worked by Mon 12 Oct, use this line at 1:30 inste
 2. **Our markets share about two working hours a day:** UTC+1 to UTC+7, Sunday–Thursday versus Monday–Friday.
 3. **The web tool works today:** live clocks, statuses, grid.
 4. **Check before you send, read in your own time:** live warning before send, then the switcher and the Arabic Sunday message.
-5. **The AI reads, code converts:** filter, AI JSON, deterministic conversion; unclear zones flagged, assumed am/pm shown.
+5. **The AI reads, code converts:** filter, AI JSON, deterministic conversion; unclear zones flagged.
 6. **It belongs where people already write:** Teams action, Outlook send check, honest limits.
-7. **A 90-day Teams pilot proves it:** one cross-country team, AI Hub support, a Teams app registration. We count after-hours and weekend times caught before sending, week by week. AI cost is about $0.10–0.34 per 1,000 messages, capped at $10 a month.
+7. **A 90-day Teams pilot proves it:** one cross-country team, AI Hub support, a Teams app registration. We count late and weekend times caught before sending, week by week. AI cost is about $0.10–0.34 per 1,000 messages, capped at $10 a month.
 8. **You write your time. Everyone reads theirs.** Closing line and a QR code to the app.
 
 ### Recording checklist
 
 - [ ] 1920×1080, 30 fps, clean browser profile, full screen, zoom 125–150%
-- [ ] Demo clock on; the default team (Tunis, Prague, Muscat, Doha, New Delhi) with "My time zone" set to Prague; record around 10:00 Prague on Tue 13 Oct
+- [ ] "My time zone" set to Prague; record around 10:00 Prague on Tue 13 Oct, so live clocks match the examples' demo date
 - [ ] Hide dev tools, bookmarks, taskbar, API key, real names; Do Not Disturb on
-- [ ] Large cursor and click highlight; zoom in on chips, strip and payload in the edit
+- [ ] Large cursor and click highlight; zoom in on chips, popup, headline and payload in the edit
 - [ ] Burned-in captions (Clipchamp auto captions), voice on a headset in a quiet room
 - [ ] Watch once muted and once on a phone
 
@@ -1123,8 +1060,8 @@ If the Teams test card has not worked by Mon 12 Oct, use this line at 1:30 inste
 
 | Risk | Mitigation |
 | --- | --- |
-| Network or AI outage | Demo mode is the default; local backup video on the laptop |
-| Demo after 25 Oct | Demo clock keeps the scripted numbers; live clocks will show winter offsets, so rehearse at the real slot |
+| Network or AI outage | Sections 3, 4 and 6 run offline; local backup video on the laptop |
+| Demo after 25 Oct | The examples keep the scripted numbers; live clocks will show winter offsets, so rehearse at the real slot |
 | Laptop time zone | Pin the home zone in the header, do not rely on Windows settings |
 | Key or budget | Check the key and the spending cap on the morning; one warm-up call |
 | Projector | Test 1280×720 and 1080p; status words, not colour alone |
@@ -1142,7 +1079,7 @@ Five questions are still open (four were answered by 11 Oct); each has a default
 | Submission spec: maximum video length, file format and size, where supporting info goes, and whether a public vercel.app link opens on the Ooredoo network | 2:00 MP4 at 1080p, deck as PDF, app link plus backup video |
 | Product name and logo: the header says "OFTI time zones" with the walletii logo and the tab says "OFTI offices time". Keep, or rename to "Timezone Companion"? | Timezone Companion, group-wide framing |
 | Two or three quotes from colleagues in the Gulf or Tunisia about converting times, by Mon 12 Oct? | The video works without them; quotes make the problem slide stronger |
-| Who checks the Arabic preset sentence? | Without a check, the video closes on the English Sunday preset |
+| Who checks the Arabic example sentence? | Without a check, the video closes on the Thursday example |
 | Which languages does the demo read? | Answered on 11 Oct: English and Arabic only; the French preset, filter patterns and eval rows were removed |
 
 **Out of scope for 15 October:** meeting slot planner, public holidays and Ramadan hours, people names on zones, smart time links, login or database, a real Teams or Outlook integration, team fairness scoring (roadmap slide only).

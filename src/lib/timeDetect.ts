@@ -10,22 +10,6 @@ export type TimeExpression = Omit<Expr, "flag"> & { flag?: Flag | null; start: n
 export type TimeChip = { type: "time"; time: string; weekday: string | null; status: WorkStatus; suffix: "" | "early" | "late" | "after hours" | "weekend" };
 export type Chip = TimeChip | { type: "unclear"; flag: Flag | null };
 
-export interface DetectionResult {
-  status: "no-candidate" | "ready" | "pending" | "done" | "error";
-  source: "live" | "cache" | null;
-  request: ParseTimeRequest | null;
-  response: unknown;
-  expressions: TimeExpression[];
-}
-
-export interface ChatMessage {
-  id: string;
-  authorZoneId: string;
-  text: string;
-  createdAt: string;
-  detection: DetectionResult;
-}
-
 // English and ASCII digits whatever the browser locale, to match the English copy
 export const formatTime = (d: DateTime, use24Hour: boolean) => d.toFormat(use24Hour ? "HH:mm" : "h:mm a", { locale: "en" });
 
@@ -77,8 +61,11 @@ export function chipFor(
   use24Hour: boolean,
   opts: { keepSameOffset?: boolean } = {},
 ): Chip | null {
-  // Unclear items have no instant, so "same zone" means the same offset now and in half a year
-  if (!e.utcInstant) return sameOffsetEverywhere([reader.tz, authorTz], DateTime.now()) ? null : { type: "unclear", flag: e.flag };
+  // Unclear items have no instant, so "same zone" means the same offset all year and on the day named
+  if (!e.utcInstant) {
+    const day = e.localDate ? [DateTime.fromISO(`${e.localDate}T12:00`, { zone: authorTz })] : [];
+    return sameOffsetEverywhere([reader.tz, authorTz], DateTime.now(), day) ? null : { type: "unclear", flag: e.flag };
+  }
   const t = DateTime.fromISO(e.utcInstant, { zone: "utc" });
   const src = t.setZone(e.sourceZone!);
   const local = t.setZone(reader.tz);
@@ -129,7 +116,8 @@ export function firstReaderWithChip(exprs: TimeExpression[], author: Zone, parti
   return others.find((z) => exprs.some((e) => chipFor(e, z, author.tz, use24Hour))) ?? others[0];
 }
 
-export function sameOffsetEverywhere(zones: string[], now: DateTime): boolean {
+// Weekly for a year: two zones can share an offset on any two dates and still differ for weeks in between
+export function sameOffsetEverywhere(zones: string[], now: DateTime, alsoOn: DateTime[] = []): boolean {
   const one = (t: DateTime) => new Set(zones.map((z) => t.setZone(z).offset)).size <= 1;
-  return one(now) && one(now.plus({ days: 182 }));
+  return [...Array.from({ length: 53 }, (_, i) => now.plus({ weeks: i })), ...alsoOn].every(one);
 }

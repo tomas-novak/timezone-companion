@@ -39,12 +39,16 @@ export function Header({
   );
 
   return (
-    <header className="border-b bg-card/50 backdrop-blur-sm sticky top-0 z-50">
+    <header className="border-b bg-card/50 backdrop-blur-sm sm:sticky sm:top-0 z-50">
       <div className="container flex min-h-16 flex-wrap items-center justify-between gap-y-2 py-2">
         {/* Logo / Title */}
         <div className="flex items-center gap-3">
           <img src={logo} alt="OFTI logo" className="h-9 w-9 rounded-lg object-cover" />
-          <h1 className="text-lg font-semibold">OFTI time zones</h1>
+          {onConcept ? (
+            <p className="text-lg font-semibold">OFTI time zones</p>
+          ) : (
+            <h1 className="text-lg font-semibold">OFTI time zones</h1>
+          )}
         </div>
 
         {/* Controls */}

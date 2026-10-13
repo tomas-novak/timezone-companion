@@ -11,7 +11,7 @@ npm i
 npm run dev
 ```
 
-The app runs on http://localhost:8080. The six presets on `/concept` work offline. Custom messages need an OpenAI key in `.env.local` (git ignores it):
+The app runs on http://localhost:8080. The examples on `/concept` work offline. Typed messages ("Try your own message") need an OpenAI key in `.env.local` (git ignores it):
 
 ```sh
 OPENAI_API_KEY=sk-...
@@ -30,13 +30,13 @@ npm test
 npm run lint
 ```
 
-The live eval calls the model with 27 messages and is skipped by default. It needs the key in the shell, not only in `.env.local`. In PowerShell:
+The live eval calls the model with 30 messages. It is not part of `npm test`; run it on its own (it reads the key from `.env.local`):
 
-```powershell
-$env:OPENAI_API_KEY="sk-..."; $env:RUN_EVAL="1"; npx vitest run src/lib/parseTime.eval.test.ts
+```
+npm run eval
 ```
 
-It passes with at least 24 of 27 rows right and no critical errors (an unclear time shown as exact).
+It passes with at least 27 of 30 rows right and no critical errors (an unclear time shown as exact).
 
 ## Deploy on Vercel
 

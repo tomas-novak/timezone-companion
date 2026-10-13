@@ -55,6 +55,16 @@ describe("sanitize", () => {
     expect(sanitize({ expressions: [expr({ text: "٣ بتوقيتك", zoneReason: "explicit", sourceZone: "Asia/Qatar" })] }, "الساعة ٣ بتوقيتك", "Europe/Prague", many)![0].kind).toBe("ambiguous");
   });
 
+  it("sets the whole \"your time\" state even when the model says ambiguous with no flag", () => {
+    const msg = "sync at 3pm your time";
+    const yours = (over: Partial<Expr>, team: Record<string, string>) =>
+      sanitize({ expressions: [expr({ text: "3pm your time", ...over })] }, msg, "Europe/Prague", team)![0];
+    const bare = { kind: "ambiguous", flag: null, sourceZone: null, zoneReason: "unknown" } as const;
+    expect(yours(bare, { Prague: "Europe/Prague", Doha: "Asia/Qatar", "New Delhi": "Asia/Kolkata" })).toMatchObject({ kind: "ambiguous", flag: "zone_unclear" });
+    expect(yours(bare, { Prague: "Europe/Prague", Doha: "Asia/Qatar" })).toMatchObject({ kind: "exact", sourceZone: "Asia/Qatar", flag: null });
+    expect(yours({ ...bare, flag: "ampm_unclear", localTime: null }, { Prague: "Europe/Prague", Doha: "Asia/Qatar" })).toMatchObject({ kind: "ambiguous", flag: "ampm_unclear" });
+  });
+
   it("drops a zone the model returned with zoneReason unknown", () => {
     expect(run([expr({ zoneReason: "unknown", sourceZone: "America/Chicago" })])![0]).toMatchObject({ kind: "ambiguous", sourceZone: null, flag: "zone_unclear" });
   });
