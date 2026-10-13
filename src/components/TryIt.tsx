@@ -69,8 +69,16 @@ export function TryIt({ you, cities, use24Hour }: { you: Zone; cities: Zone[]; u
   const current = outcomes[cacheKey(key)] ?? null;
   const yourTimeNote = YOUR_TIME.test(text) && readerZone(teamZonesFor(cities), you.tz) === null;
 
+  const showRead = (r: Outcome) => {
+    if (r.kind !== "done" || !r.expressions.length) return;
+    setRead({ author: you, text: r.text, expressions: r.expressions });
+    setViewerId(firstReaderWithChip(r.expressions, you, cities, use24Hour).id);
+  };
+
   const check = async () => {
-    if (running.current || !key || current?.kind === "done") return;
+    if (running.current || !key) return;
+    // A cached answer still has to come back to the chat, which may show a later message
+    if (current?.kind === "done") return showRead(current);
     let r: Outcome = { text: key, kind: "none" };
     if (TIME_HINT.test(key)) {
       running.current = true;
@@ -80,10 +88,7 @@ export function TryIt({ you, cities, use24Hour }: { you: Zone; cities: Zone[]; u
       setChecking(false);
     }
     setOutcomes((o) => ({ ...o, [cacheKey(r.text)]: r }));
-    if (r.kind === "done" && r.expressions.length) {
-      setRead({ author: you, text: r.text, expressions: r.expressions });
-      setViewerId(firstReaderWithChip(r.expressions, you, cities, use24Hour).id);
-    }
+    showRead(r);
   };
 
   return (

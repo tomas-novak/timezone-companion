@@ -62,10 +62,12 @@ describe("TryIt", () => {
     type("call at 3pm today");
     await click("Check how it lands");
     expect(fetch).toHaveBeenCalledTimes(2);
+    expect(screen.getByRole("log").textContent).toContain("today");
     type("call at 3pm");
     await click("Check how it lands");
     expect(fetch).toHaveBeenCalledTimes(2);
     expect(status()).toMatch(/AI read it as/);
+    expect(screen.getByRole("log").textContent).not.toContain("today");
   });
 
   it("shows the proof line for a sixth home city", async () => {
