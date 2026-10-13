@@ -1,4 +1,6 @@
 import { Component, lazy, Suspense, type ReactNode } from "react";
+import { Analytics } from "@vercel/analytics/react";
+import { SpeedInsights } from "@vercel/speed-insights/react";
 import { Button } from "@/components/ui/button";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
@@ -34,6 +36,8 @@ const App = () => (
     <TooltipProvider>
       <Toaster />
       <Sonner />
+      <Analytics />
+      <SpeedInsights />
       <BrowserRouter>
         <Routes>
           <Route path="/" element={<Index />} />
