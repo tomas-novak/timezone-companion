@@ -10,6 +10,8 @@
     --brand-navy: 204 77% 8%;
     --brand-footer: 211 57% 9%;
     --brand-navy-raised: 204 50% 20%;
+    --tint-cyan: 174 75% 90%;
+    --tint-purple: 232 100% 96%;
 
     --background: 0 0% 100%;
     --foreground: 0 2% 8%;
@@ -48,6 +50,9 @@
   }
 
   .dark {
+    --tint-cyan: 178 55% 15%;
+    --tint-purple: 232 40% 22%;
+
     --background: 204 77% 8%;
     --foreground: 0 0% 100%;
 

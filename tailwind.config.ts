@@ -61,6 +61,10 @@ export default {
           footer: "hsl(var(--brand-footer))",
           "navy-raised": "hsl(var(--brand-navy-raised))",
         },
+        tint: {
+          cyan: "hsl(var(--tint-cyan))",
+          purple: "hsl(var(--tint-purple))",
+        },
       },
       borderRadius: {
         lg: "var(--radius)",

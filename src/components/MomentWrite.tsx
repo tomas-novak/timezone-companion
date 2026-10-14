@@ -37,7 +37,7 @@ export function MomentWrite({ example, onExampleChange, onSent, use24Hour }: { e
   };
 
   return (
-    <section id="write" className="grid items-center gap-6 rounded-2xl border bg-card p-6 shadow-sm sm:p-10">
+    <section id="write" className="grid items-center gap-6 rounded-2xl border bg-tint-cyan p-6 shadow-sm sm:p-10">
       <div className="space-y-4 text-center">
         <h2 className={H2}>Before you send, see how your time lands</h2>
         <p className="text-muted-foreground">Write in your own time. Before it goes out, you see what it means for every city.</p>
