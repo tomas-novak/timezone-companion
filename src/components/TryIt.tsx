@@ -33,23 +33,25 @@ function Result({ outcome, you, cities, use24Hour }: { outcome: Extract<Outcome,
   const lines = converted.length ? headline(rows) : [...new Set(expressions.map((e) => `Not converted: ${NOT_CONVERTED[e.flag ?? "not_specific"]}`))];
   const warn = rows.flat().some((r) => r.status === "After hours" || r.status === "Weekend");
   return (
-    <div className="space-y-3 rounded-lg border bg-card p-3">
+    <div className="space-y-3">
       <h3 className="font-semibold">Before you send</h3>
-      <p dir="auto" className="text-sm leading-7">
-        <MessageText text={text} expressions={expressions} cities={cities} author={you} viewer={null} use24Hour={use24Hour} />
-      </p>
-      {warn && (
-        <div className="space-y-1 rounded-md border border-amber-400 bg-amber-400/10 p-3">
-          <Headline lines={lines} />
-          <p className="text-xs text-muted-foreground">Only you see this check. Your colleagues just see the time in their own zone.</p>
-        </div>
-      )}
-      {!converted.length && <Headline lines={lines} />}
-      <p className="text-xs text-muted-foreground">
-        {day
-          ? `AI read it as ${day}, ${sentAs(first, use24Hour)} ${cities.find((z) => z.tz === first.sourceZone)?.city ?? tzCity(first.sourceZone!)} time (${secs})`
-          : `AI read it (${secs}): no exact time.`}
-      </p>
+      <div className="space-y-3 rounded-lg border bg-card p-3">
+        <p dir="auto" className="text-sm leading-7">
+          <MessageText text={text} expressions={expressions} cities={cities} author={you} viewer={null} use24Hour={use24Hour} />
+        </p>
+        {warn && (
+          <div className="space-y-1 rounded-md border border-amber-400 bg-amber-400/10 p-3">
+            <Headline lines={lines} />
+            <p className="text-xs text-muted-foreground">Only you see this check. Your colleagues just see the time in their own zone.</p>
+          </div>
+        )}
+        {!converted.length && <Headline lines={lines} />}
+        <p className="text-xs text-muted-foreground">
+          {day
+            ? `AI read it as ${day}, ${sentAs(first, use24Hour)} ${cities.find((z) => z.tz === first.sourceZone)?.city ?? tzCity(first.sourceZone!)} time (${secs})`
+            : `AI read it (${secs}): no exact time.`}
+        </p>
+      </div>
     </div>
   );
 }
@@ -92,10 +94,10 @@ export function TryIt({ you, cities, use24Hour }: { you: Zone; cities: Zone[]; u
   };
 
   return (
-    <section id="try" className="scroll-mt-20 grid gap-6 py-10 lg:grid-cols-2 lg:gap-10">
+    <section id="try" className="grid gap-6 rounded-2xl border bg-card p-6 shadow-sm sm:p-10">
       <div className="min-w-0 space-y-3">
-        <h2 className="text-2xl font-semibold tracking-tight sm:text-3xl">Try your own message</h2>
-        <label htmlFor="try-message" className="block text-sm text-muted-foreground">
+        <h2 className="text-center text-2xl font-semibold tracking-tight sm:text-3xl">Try your own message</h2>
+        <label htmlFor="try-message" className="block text-center text-sm text-muted-foreground">
           Sending from {you.city}. Write a message with a time, in English or Arabic.
         </label>
         <Textarea id="try-message" dir="auto" maxLength={500} rows={3} value={text} onChange={(e) => setText(e.target.value)} />

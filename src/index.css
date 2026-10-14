@@ -267,3 +267,103 @@
     scroll-behavior: smooth;
   }
 }
+
+.card-stack {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 4rem;
+}
+
+.card-stack > section {
+  position: relative;
+  scroll-margin-top: 6rem;
+  grid-template-columns: minmax(0, 1fr);
+}
+
+/* Tint over an opaque card, since the cards slide over each other */
+.card-stack > section {
+  background: linear-gradient(hsl(var(--primary) / var(--card-tint)), hsl(var(--primary) / var(--card-tint))), hsl(var(--card));
+}
+
+.card-stack > section:nth-child(1) {
+  --card-tint: 0.06;
+}
+
+.card-stack > section:nth-child(2) {
+  --card-tint: 0.12;
+}
+
+.card-stack > section:nth-child(3) {
+  --card-tint: 0.18;
+}
+
+.card-stack > section > * {
+  width: 100%;
+  max-width: 48rem;
+  margin-inline: auto;
+}
+
+/* A pinned card taller than the window would hide its bottom forever, so pin only where they fit */
+@media (min-width: 768px) and (min-height: 47.5em) {
+  .card-stack {
+    gap: 30svh;
+    --pin-top: 6rem;
+  }
+
+  /* Equal heights, or a taller card peeks out under a shorter one. Content stays on top so growing it never shifts what was clicked */
+  .card-stack > section {
+    min-height: min(calc(100svh - var(--pin-top) - 2rem), 40rem);
+    scroll-margin-top: var(--pin-top);
+    align-content: start;
+  }
+
+  .card-stack > section:not(:last-child) {
+    position: sticky;
+    top: var(--pin-top);
+  }
+}
+
+/* The header wraps to two lines below about 860px */
+@media (min-width: 768px) and (max-width: 1023px) and (min-height: 47.5em) {
+  .card-stack {
+    --pin-top: 8.5rem;
+  }
+}
+
+@media (min-width: 768px) and (min-height: 47.5em) and (prefers-reduced-motion: no-preference) {
+  @supports (timeline-scope: --x) {
+    .card-stack {
+      timeline-scope: --card-2, --card-3;
+    }
+
+    .card-stack > section:nth-child(2) {
+      view-timeline: --card-2;
+    }
+
+    .card-stack > section:nth-child(3) {
+      view-timeline: --card-3;
+    }
+
+    .card-stack > section:nth-child(1),
+    .card-stack > section:nth-child(2) {
+      animation: card-recede 1ms linear both;
+      /* The covered card ends at pin-top + its min-height, so the next card reaches it after scrolling 100svh - pin-top - min-height */
+      animation-range: cover max(2rem, calc(100svh - var(--pin-top) - 40rem)) cover calc(100svh - var(--pin-top));
+    }
+
+    .card-stack > section:nth-child(1) {
+      animation-timeline: --card-2;
+    }
+
+    .card-stack > section:nth-child(2) {
+      animation-timeline: --card-3;
+    }
+  }
+}
+
+@keyframes card-recede {
+  to {
+    transform: scale(0.95);
+    filter: brightness(0.85);
+  }
+}

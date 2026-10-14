@@ -12,7 +12,7 @@ We enter the Ooredoo BuildAI Challenge (submission Thursday 15 October 2026: dem
 
 | Decision | Choice |
 | --- | --- |
-| How a converted time is shown | Variant B: original text stays, a chip follows it ("→ 16:00 your time"). Working status (Working, Early, Late, After hours, Weekend) shows only to the sender and in the popup for other cities: readers know their own hours |
+| How a converted time is shown | Variant B: original text stays, a chip follows it ("→ 16:00 your time"). Working status (Working, Early, Late, After hours, Weekend) shows by name only to the sender and in the popup for other cities: readers know their own hours. The reader's chip takes the status colour without the word |
 | Sender side | A headline (worst first) and a popup per time before sending; in Outlook the check runs on Send, in Teams it is one button before sending |
 | What the AI does | Only extracts time expressions and their source zone; conversion is deterministic code |
 | When the AI runs | Once per typed message text, on the sender side, after a local pre-filter finds a candidate; the examples use offline fixtures |
@@ -188,7 +188,7 @@ Both examples use the fixed demo date Tue 13 Oct 2026, 10:00 Prague (`DEMO_NOW`)
 ### Behaviour
 
 - **Popup (sections 3–5):** each time in a message is highlighted; hover opens a popup (a click after a hover keeps it open); a tap, Enter or Space opens or closes a popup listing each city's date, time and status word (Working / Early / Late / After hours / Weekend); Esc or a click outside closes it. The sender view leaves the author out. In the reader view the reader's row reads "You" without a status (readers know their own hours) and the author's row reads the time as written in its source zone: "Sent as 15:00", or "Sent as 13:00 Doha time" when the author named another city's time.
-- **Reader chips (section 4):** one style, no status; the author sees none; a different local date adds a bold weekday ("→ Fri 03:30 your time"). Bubbles use `dir="auto"`, so Arabic reads right to left.
+- **Reader chips (section 4):** no status word, but the status colour (green working, amber early or late, grey after hours or weekend); the author sees none; a different local date adds a bold weekday ("→ Fri 03:30 your time"). Bubbles use `dir="auto"`, so Arabic reads right to left.
 - **Default reader (section 4):** You; when You is the example's author, the first other city that gets a chip (`firstReaderWithChip`). A reader picked by hand stays until the example changes.
 - **Example switch:** shared by sections 3 and 4; switching examples or readers never calls the AI.
 - **Try it:** one AI call per message text: "Check how it lands" makes it and shows both moments from that one answer: on the left the text with its popup, the headline and "AI read it as …"; on the right the message in the chat, read as the first city that gets a chip, with "Viewing as" to switch. The chat keeps the last message that converted while the visitor edits the next one. Clicks while a check runs are ignored. Results are kept per sender zone and text, so a new "My time zone" checks again. Text without a `TIME_HINT` match shows the no-time copy and calls nothing. Typed text uses the real current date and "You" as sender. "Your time" in a group is flagged while typing, without an AI call. Unclear items use copy from `flag`, never model text.

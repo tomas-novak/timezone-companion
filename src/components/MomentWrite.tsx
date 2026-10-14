@@ -12,7 +12,7 @@ export function ExampleSwitch({ example, onExampleChange }: { example: Example; 
       aria-label="Example message"
       value={example.id}
       onValueChange={(v) => v && onExampleChange(v as Example["id"])}
-      className="flex-wrap justify-start"
+      className="flex-wrap justify-center"
     >
       {EXAMPLES.map((x) => (
         <ToggleGroupItem key={x.id} value={x.id} size="sm" variant="outline" className="h-auto min-h-8 px-2.5 py-1 text-left">
@@ -36,8 +36,8 @@ export function MomentWrite({ example, onExampleChange, onSent, use24Hour }: { e
   };
 
   return (
-    <section id="write" className="scroll-mt-20 grid items-center gap-6 py-10 lg:grid-cols-[2fr_3fr] lg:gap-10">
-      <div className="space-y-4">
+    <section id="write" className="grid items-center gap-6 rounded-2xl border bg-card p-6 shadow-sm sm:p-10">
+      <div className="space-y-4 text-center">
         <h2 className="text-2xl font-semibold tracking-tight sm:text-3xl">Before you send, see how your time lands</h2>
         <p className="text-muted-foreground">Write in your own time. Before it goes out, you see what it means for every city.</p>
         <ExampleSwitch example={example} onExampleChange={onExampleChange} />
