@@ -7,3 +7,5 @@ defaultTabs:
   - title: Agent
   - title: Dev server
     command: node scripts/orca-dev.mjs
+  - title: Review
+    command: codex
