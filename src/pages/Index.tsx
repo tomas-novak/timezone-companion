@@ -30,7 +30,7 @@ const Index = () => {
         zones={settings.zones}
       />
 
-      <main className="flex-1 container py-6 space-y-6">
+      <main id="main" tabIndex={-1} className="flex-1 container scroll-mt-24 py-10 space-y-8 outline-none">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
           <TabsList className="grid w-full max-w-md grid-cols-2 mx-auto mb-6">
             <TabsTrigger value="clocks" className="gap-2">

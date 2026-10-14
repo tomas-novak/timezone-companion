@@ -4,6 +4,7 @@ import type { Zone } from "@/lib/storage";
 import { firstReaderWithChip } from "@/lib/timeDetect";
 import { ChatFrame } from "./ChatFrame";
 import { ExampleSwitch } from "./MomentWrite";
+import { H2 } from "./PitchSections";
 
 export function MomentRead({ example, onExampleChange, you, inDemo, use24Hour }: { example: Example; onExampleChange: (id: Example["id"]) => void; you: Zone; inDemo: boolean; use24Hour: boolean }) {
   const preferred = inDemo ? you : DEMO_CITIES.find((z) => z.tz === "Asia/Qatar")!;
@@ -14,9 +15,9 @@ export function MomentRead({ example, onExampleChange, you, inDemo, use24Hour }:
   const viewer = (pick?.key === key && DEMO_CITIES.find((z) => z.id === pick.id)) || fallback;
 
   return (
-    <section id="read" className="grid items-center gap-6 rounded-2xl border bg-card p-6 shadow-sm sm:p-10">
+    <section id="read" className="grid items-center gap-6 rounded-2xl border bg-muted p-6 shadow-sm sm:p-10">
       <div className="space-y-4 text-center">
-        <h2 id="read-title" tabIndex={-1} className="outline-none text-2xl font-semibold tracking-tight sm:text-3xl">Every reader sees their own time</h2>
+        <h2 id="read-title" tabIndex={-1} className={`outline-none ${H2}`}>Every reader sees their own time</h2>
         <p className="text-muted-foreground">Switch who is reading. The words stay as written; each reader gets their own time.</p>
         <ExampleSwitch example={example} onExampleChange={onExampleChange} />
         <p className="text-sm text-muted-foreground">Tap the time to check everyone else.</p>

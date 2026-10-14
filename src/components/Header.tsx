@@ -39,15 +39,21 @@ export function Header({
   );
 
   return (
-    <header className="border-b bg-card/50 backdrop-blur-sm sm:sticky sm:top-0 z-50">
+    <header className="border-b bg-background/90 backdrop-blur-sm sm:sticky sm:top-0 z-50">
+      <a
+        href="#main"
+        className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-2 focus:z-50 focus:rounded-full focus:bg-primary focus:px-4 focus:py-2 focus:text-primary-foreground"
+      >
+        Skip to main content
+      </a>
       <div className="container flex min-h-16 flex-wrap items-center justify-between gap-y-2 py-2">
         {/* Logo / Title */}
         <div className="flex items-center gap-3">
           <img src={logo} alt="OFTI logo" className="h-9 w-9 rounded-lg object-cover" />
           {onConcept ? (
-            <p className="text-lg font-semibold">OFTI time zones</p>
+            <p className="font-display text-xl font-bold">OFTI time zones</p>
           ) : (
-            <h1 className="text-lg font-semibold">OFTI time zones</h1>
+            <h1 className="text-xl font-bold">OFTI time zones</h1>
           )}
         </div>
 
@@ -70,7 +76,7 @@ export function Header({
               <select
                 value={homeTz ?? ""}
                 onChange={(e) => onHomeTzChange(e.target.value || null)}
-                className="max-w-40 truncate rounded-md border bg-background px-2 py-1 text-sm text-foreground"
+                className="max-w-40 truncate rounded-full border border-input bg-background px-3 py-1.5 text-sm text-foreground"
               >
                 <option value="">Auto ({zoneLabel(detectedTz)})</option>
                 {extraZones.map((tz) => (

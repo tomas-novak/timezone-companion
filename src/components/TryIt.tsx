@@ -10,6 +10,7 @@ import { tzCity } from "@/lib/timezones";
 import { callParseTime, firstReaderWithChip, teamZonesFor, toExpressions, type TimeExpression } from "@/lib/timeDetect";
 import { ChatFrame } from "./ChatFrame";
 import { Headline, MessageText } from "./TimesPopover";
+import { H2 } from "./PitchSections";
 
 type Outcome = { text: string } & ({ kind: "none" } | { kind: "error" } | { kind: "done"; expressions: TimeExpression[]; ms: number });
 
@@ -94,9 +95,9 @@ export function TryIt({ you, cities, use24Hour }: { you: Zone; cities: Zone[]; u
   };
 
   return (
-    <section id="try" className="grid gap-6 rounded-2xl border bg-card p-6 shadow-sm sm:p-10">
+    <section id="try" className="dark grid gap-6 rounded-2xl border bg-brand-navy p-6 text-foreground shadow-sm dark:bg-brand-navy-raised sm:p-10">
       <div className="min-w-0 space-y-3">
-        <h2 className="text-center text-2xl font-semibold tracking-tight sm:text-3xl">Try your own message</h2>
+        <h2 className={`text-center ${H2}`}>Try your own message</h2>
         <label htmlFor="try-message" className="block text-center text-sm text-muted-foreground">
           Sending from {you.city}. Write a message with a time, in English or Arabic.
         </label>
