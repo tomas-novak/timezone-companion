@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { TIME_HINT } from "./timeHint";
+import { TIME_HINT, excerpt } from "./timeHint";
 import { EXAMPLES, UNCLEAR_EXAMPLE } from "./demoPresets";
 
 const POSITIVE = [
@@ -85,5 +85,54 @@ describe("TIME_HINT", () => {
 
   it("leaves small talk alone", () => {
     expect(TIME_HINT.test("thanks, looks good")).toBe(false);
+  });
+});
+
+describe("excerpt", () => {
+  const LONG = "Hi team. The client loved the deck. I'm in Dubai this week. Can we sync Thursday at 3pm? Budget is fine. Legal still has questions. Ping me later.";
+
+  it("keeps the time sentence and one on each side, verbatim", () => {
+    expect(excerpt(LONG)).toBe("I'm in Dubai this week. Can we sync Thursday at 3pm? Budget is fine.");
+  });
+
+  it("joins runs that are apart with a marker the model cannot copy across", () => {
+    const out = excerpt("Call at 9am. A. B. C. D. E. Then lunch at noon.");
+    expect(out).toBe("Call at 9am. A.\n…\nE. Then lunch at noon.");
+    for (const run of out.split("\n…\n")) expect("Call at 9am. A. B. C. D. E. Then lunch at noon.").toContain(run);
+  });
+
+  it("does not split inside 10.30, a.m. or Arabic", () => {
+    expect(excerpt("One. Two. Three. Meet at 10.30 a.m. tomorrow. Four. Five.")).toBe("Three. Meet at 10.30 a.m. tomorrow. Four.");
+    expect(excerpt("مرحبا. شكرا. تمام. الاجتماع الساعة ٣؟ نعم. لا.")).toBe("تمام. الاجتماع الساعة ٣؟ نعم.");
+  });
+
+  it("splits on line breaks", () => {
+    expect(excerpt("a\nb\nc\nstandup 9:30\nd\ne")).toBe("c\nstandup 9:30\nd");
+  });
+
+  it("never counts a line break as the neighbouring sentence", () => {
+    expect(excerpt("One. Two. Meet at 10:30.\nDoha time for this call. End.")).toBe("Two. Meet at 10:30.\nDoha time for this call.");
+    expect(excerpt("One. Two. Meet at 10:30.\r\n\r\nDoha time for this call.\r\nEnd.")).toBe("Two. Meet at 10:30.\r\n\r\nDoha time for this call.");
+  });
+
+  it("does not end a sentence at a.m. or p.m.", () => {
+    expect(excerpt("One. Two. Meet at 10 a.m. sharp. Doha time for this call. End.")).toBe("Two. Meet at 10 a.m. sharp. Doha time for this call.");
+    expect(excerpt("One. Two. Call at 4 P.M. today. London time. End.")).toBe("Two. Call at 4 P.M. today. London time.");
+  });
+
+  it("ends a sentence after a closing quote, so the next one stays out", () => {
+    expect(excerpt('One. Two. Meet at 9am. He said "fine." Private salary details. End.')).toBe('Two. Meet at 9am. He said "fine."');
+    expect(excerpt("One. Two. Meet at 9am. He said “fine.” Private salary details. End.")).toBe("Two. Meet at 9am. He said “fine.”");
+  });
+
+  it("keeps a distant lunchtime the prompt supports", () => {
+    expect(excerpt("Meet at 9am. Notes follow. Budget approved. Legal is fine. Let us meet for lunchtime. Bring snacks. Thanks.")).toBe(
+      "Meet at 9am. Notes follow.\n…\nLegal is fine. Let us meet for lunchtime. Bring snacks.",
+    );
+  });
+
+  it("sends short messages and hint-less ones whole", () => {
+    expect(excerpt("Hi. Call at 3pm? Thanks.")).toBe("Hi. Call at 3pm? Thanks.");
+    expect(excerpt("a. b. c. d. e.")).toBe("a. b. c. d. e.");
   });
 });
