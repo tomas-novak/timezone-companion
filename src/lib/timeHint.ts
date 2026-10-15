@@ -15,8 +15,10 @@ export const TIME_HINT = new RegExp([
 ].join("|"), "i");
 
 // A sentence ends at . ! ? ؟ (and closing quotes) before whitespace, or at a line break, and takes the whitespace after it,
-// so "10.30" stays whole and a newline is never a sentence of its own. a.m./p.m. are eaten as one token so they never end one.
-const SENTENCE = /(?:\b[ap]\.m\.|[^])*?(?:[.!?؟]["'”’»)]*(?:\s+|$)|\n\s*|$)/gi;
+// so "10.30" stays whole and a newline is never a sentence of its own. a.m./p.m. is one token unless a capital follows,
+// so "10 a.m. tomorrow" stays one sentence but "10 a.m. Salary is private." is two.
+// No i flag: with it \p{Lu} would match lowercase too
+const SENTENCE = /(?:\b[aApP]\.[mM]\.(?!\s+\p{Lu})|[^])*?(?:[.!?؟]["'”’»)]*(?:\s+|$)|\n\s*|$)/gu;
 
 // Only sentences with a hint and one on each side go to the AI, so it never reads the rest of a long message.
 // Each run is a verbatim slice, so the texts the model returns are still substrings of the whole message.

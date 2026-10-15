@@ -120,6 +120,11 @@ describe("excerpt", () => {
     expect(excerpt("One. Two. Call at 4 P.M. today. London time. End.")).toBe("Two. Call at 4 P.M. today. London time.");
   });
 
+  it("ends a sentence at a.m. or p.m. when a new sentence starts after it", () => {
+    expect(excerpt("Intro. Meet at 10 a.m. Salary is private. Another secret.")).toBe("Intro. Meet at 10 a.m. Salary is private.");
+    expect(excerpt("One. Two. Three. Call at 4 p.m. My salary is private. Another secret. End.")).toBe("Three. Call at 4 p.m. My salary is private.");
+  });
+
   it("ends a sentence after a closing quote, so the next one stays out", () => {
     expect(excerpt('One. Two. Meet at 9am. He said "fine." Private salary details. End.')).toBe('Two. Meet at 9am. He said "fine."');
     expect(excerpt("One. Two. Meet at 9am. He said “fine.” Private salary details. End.")).toBe("Two. Meet at 9am. He said “fine.”");
