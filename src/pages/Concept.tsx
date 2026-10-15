@@ -1,4 +1,4 @@
-import { useEffect, useState, type FocusEvent } from "react";
+import { useEffect, useRef, useState, type FocusEvent } from "react";
 import { useLocation } from "react-router-dom";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
@@ -16,7 +16,9 @@ function revealCoveredCard(e: FocusEvent<HTMLDivElement>) {
   if (!card || !next || next.getBoundingClientRect().top >= card.getBoundingClientRect().bottom) return;
   if (!(e.target as Element).matches(":focus-visible")) return;
   card.style.position = "static";
-  card.scrollIntoView();
+  card.scrollIntoView({ behavior: "instant" });
+  // A card taller than the screen can leave the focused control below the fold
+  (e.target as Element).scrollIntoView({ block: "nearest", behavior: "instant" });
   card.style.position = "";
 }
 
@@ -26,6 +28,21 @@ const Concept = () => {
   const { you, cities, inDemo } = youFor(settings.homeTz);
   const [exampleId, setExampleId] = useState<Example["id"]>(EXAMPLES[0].id);
   const example = EXAMPLES.find((x) => x.id === exampleId)!;
+
+  // CSS cannot read an element's own height, and the phone stack pins each card by its bottom edge
+  const stack = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (typeof ResizeObserver === "undefined") return;
+    const header = document.querySelector("header");
+    const ro = new ResizeObserver(() => {
+      const pinned = header && getComputedStyle(header).position !== "static" ? header.offsetHeight : 0;
+      stack.current?.style.setProperty("--header-h", `${pinned}px`);
+      for (const s of stack.current?.children ?? []) (s as HTMLElement).style.setProperty("--h", `${(s as HTMLElement).offsetHeight}px`);
+    });
+    if (header) ro.observe(header);
+    for (const s of stack.current?.children ?? []) ro.observe(s);
+    return () => ro.disconnect();
+  }, []);
 
   // The page is lazy-loaded, so the browser's own hash scroll runs before the target exists
   useEffect(() => {
@@ -46,7 +63,7 @@ const Concept = () => {
       <main id="main" tabIndex={-1} className="container scroll-mt-24 outline-none max-w-6xl flex-1 space-y-16 py-10 sm:space-y-24">
         <Hero />
         <Today />
-        <div className="card-stack" onFocus={revealCoveredCard}>
+        <div ref={stack} className="card-stack" onFocus={revealCoveredCard}>
           <MomentWrite
             example={example}
             onExampleChange={setExampleId}
