@@ -11,7 +11,7 @@ npm i
 npm run dev
 ```
 
-The app runs on http://localhost:8080. In an Orca worktree, `orca.yaml` runs `npm ci` and creates `.env.local` from `.env.example`; its Dev server tab (`node scripts/orca-dev.mjs`) picks a port in 8100–8899 from the worktree name, so worktrees don't collide.
+The app runs on http://localhost:8080. In an Orca worktree, `orca.yaml` runs `npm ci` and `.worktreeinclude` copies `.env.local` from the main checkout; its Dev server tab (`node scripts/orca-dev.mjs`) picks a port in 8100–8899 from the worktree name, so worktrees don't collide.
 
 The examples on `/concept` work offline. Typed messages ("Try your own message") need an OpenAI key in `.env.local` (git ignores it):
 

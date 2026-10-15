@@ -1,6 +1,5 @@
 scripts:
   setup: |
-    node -e "require('fs').existsSync('.env.local') || require('fs').copyFileSync('.env.example', '.env.local')"
     npm ci
 
 defaultTabs:
