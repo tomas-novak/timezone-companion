@@ -4,85 +4,87 @@
 
 @layer base {
   :root {
-    /* Brand colors - teal palette */
-    --brand-teal: 169 97% 48%;
-    --brand-teal-shade: 174 93% 39%;
+    --brand-teal: 174 94% 48%;
+    --brand-teal-shade: 174 90% 40%;
     --brand-red: 2 93% 47%;
-    --brand-navy: 205 68% 8%;
+    --brand-navy: 204 77% 8%;
+    --brand-footer: 211 57% 9%;
+    --brand-navy-raised: 204 50% 20%;
+    --tint-cyan: 174 75% 90%;
+    --tint-purple: 232 100% 96%;
 
-    /* Light mode */
-    --background: 0 0% 98%;
-    --foreground: 205 68% 8%;
+    --background: 0 0% 100%;
+    --foreground: 0 2% 8%;
 
-    --card: 0 0% 100%;
-    --card-foreground: 205 68% 8%;
+    --card: 0 0% 96%;
+    --card-foreground: 0 2% 8%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 205 68% 8%;
+    --popover-foreground: 0 2% 8%;
 
-    --primary: 169 97% 48%;
-    --primary-foreground: 205 68% 8%;
+    --primary: 174 94% 48%;
+    --primary-foreground: 204 77% 8%;
 
-    --secondary: 210 40% 96%;
-    --secondary-foreground: 205 68% 8%;
+    --secondary: 0 0% 98%;
+    --secondary-foreground: 204 77% 8%;
 
-    --muted: 210 40% 96%;
-    --muted-foreground: 215 16% 47%;
+    --muted: 0 0% 92%;
+    --muted-foreground: 0 0% 40%;
 
-    --accent: 169 97% 48%;
-    --accent-foreground: 205 68% 8%;
+    --accent: 174 94% 48%;
+    --accent-foreground: 204 77% 8%;
 
-    --destructive: 0 84% 60%;
+    --destructive: 0 72% 45%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 214 32% 91%;
-    --input: 214 32% 91%;
-    --ring: 169 97% 48%;
+    --border: 0 0% 88%;
+    --input: 0 0% 55%;
+    --ring: 217 100% 37%;
 
     --radius: 0.75rem;
 
-    /* Custom tokens */
-    --clock-glow: 169 97% 48%;
-    --working-badge: 169 90% 25%;
-    --reasonable-badge: 45 93% 47%;
-    --outside-badge: 215 16% 40%;
-    --weekend-badge: 2 93% 47%;
+    --working-badge: 172 90% 22%;
+    --reasonable-badge: 32 95% 30%;
+    --outside-badge: 0 0% 40%;
+    --weekend-badge: 2 80% 40%;
   }
 
   .dark {
-    --background: 205 68% 8%;
-    --foreground: 210 40% 98%;
+    --tint-cyan: 178 55% 15%;
+    --tint-purple: 232 40% 22%;
 
-    --card: 205 58% 12%;
-    --card-foreground: 210 40% 98%;
+    --background: 204 77% 8%;
+    --foreground: 0 0% 100%;
 
-    --popover: 205 58% 12%;
-    --popover-foreground: 210 40% 98%;
+    --card: 204 60% 13%;
+    --card-foreground: 0 0% 100%;
 
-    --primary: 169 97% 48%;
-    --primary-foreground: 205 68% 8%;
+    --popover: 204 60% 13%;
+    --popover-foreground: 0 0% 100%;
 
-    --secondary: 205 50% 15%;
-    --secondary-foreground: 210 40% 98%;
+    --primary: 174 94% 48%;
+    --primary-foreground: 204 77% 8%;
 
-    --muted: 205 50% 15%;
-    --muted-foreground: 215 20% 65%;
+    --secondary: 204 55% 16%;
+    --secondary-foreground: 0 0% 100%;
 
-    --accent: 169 97% 48%;
-    --accent-foreground: 205 68% 8%;
+    --muted: 204 55% 16%;
+    --muted-foreground: 206 13% 72%;
 
-    --destructive: 0 63% 31%;
-    --destructive-foreground: 210 40% 98%;
+    --accent: 174 94% 48%;
+    --accent-foreground: 204 77% 8%;
 
-    --border: 205 50% 20%;
-    --input: 205 50% 20%;
-    --ring: 169 97% 48%;
+    --destructive: 0 63% 40%;
+    --destructive-foreground: 0 0% 100%;
 
-    --clock-glow: 169 97% 48%;
-    --working-badge: 169 97% 48%;
-    --reasonable-badge: 45 93% 47%;
-    --outside-badge: 215 20% 65%;
-    --weekend-badge: 2 93% 47%;
+    --border: 204 45% 22%;
+    --input: 204 30% 45%;
+    --ring: 174 94% 48%;
+
+    --working-badge: 174 94% 48%;
+    --reasonable-badge: 45 93% 55%;
+    --outside-badge: 206 13% 72%;
+    --weekend-badge: 2 90% 65%;
   }
 }
 
@@ -92,21 +94,28 @@
   }
 
   body {
-    @apply bg-background text-foreground antialiased;
+    @apply bg-background font-sans text-foreground antialiased;
+  }
+
+  h1,
+  h2,
+  h3 {
+    @apply font-display;
+  }
+
+  :focus-visible {
+    outline: 3px solid hsl(var(--ring));
+    outline-offset: 3px;
   }
 }
 
 @layer components {
   .clock-card {
-    @apply relative rounded-xl border bg-card p-6 shadow-sm transition-all duration-300;
+    @apply relative rounded-2xl bg-card p-6 transition-shadow duration-300;
   }
 
   .clock-card-active {
-    @apply ring-2 ring-primary shadow-xl;
-    box-shadow: 
-      0 0 20px hsl(var(--clock-glow) / 0.4),
-      0 0 40px hsl(var(--clock-glow) / 0.25),
-      0 0 60px hsl(var(--clock-glow) / 0.1);
+    @apply shadow-md ring-2 ring-primary;
   }
 
   .clock-time {
@@ -138,7 +147,7 @@
   }
 
   .settings-panel {
-    @apply rounded-xl border bg-card p-4 md:p-6;
+    @apply rounded-2xl bg-card p-4 md:p-6;
   }
 
   .time-input {
@@ -155,7 +164,7 @@
 
   /* Schedule View Styles */
   .schedule-view {
-    @apply rounded-xl border bg-card overflow-hidden;
+    @apply rounded-2xl border bg-card overflow-hidden;
   }
 
   .schedule-header {
@@ -278,23 +287,6 @@
   position: relative;
   scroll-margin-top: 6rem;
   grid-template-columns: minmax(0, 1fr);
-}
-
-/* Tint over an opaque card, since the cards slide over each other */
-.card-stack > section {
-  background: linear-gradient(hsl(var(--primary) / var(--card-tint)), hsl(var(--primary) / var(--card-tint))), hsl(var(--card));
-}
-
-.card-stack > section:nth-child(1) {
-  --card-tint: 0.06;
-}
-
-.card-stack > section:nth-child(2) {
-  --card-tint: 0.12;
-}
-
-.card-stack > section:nth-child(3) {
-  --card-tint: 0.18;
 }
 
 .card-stack > section > * {

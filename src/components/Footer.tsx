@@ -2,9 +2,9 @@ import { Globe, Clock, Users } from "lucide-react";
 
 export function Footer() {
   return (
-    <footer className="border-t bg-card/50 mt-8">
-      <div className="container py-8">
-        <h3 className="font-semibold mb-4 flex items-center gap-2">
+    <footer className="dark mt-8 border-t bg-brand-footer text-foreground">
+      <div className="container py-12">
+        <h3 className="mb-4 flex items-center gap-2 text-xl font-bold">
           <Globe size={18} className="text-primary" />
           How it works
         </h3>

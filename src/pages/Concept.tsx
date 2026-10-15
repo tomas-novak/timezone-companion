@@ -43,7 +43,7 @@ const Concept = () => {
         onHomeTzChange={setHomeTz}
         zones={settings.zones}
       />
-      <main className="container max-w-6xl flex-1 space-y-16 py-10 sm:space-y-20">
+      <main id="main" tabIndex={-1} className="container scroll-mt-24 outline-none max-w-6xl flex-1 space-y-16 py-10 sm:space-y-24">
         <Hero />
         <Today />
         <div className="card-stack" onFocus={revealCoveredCard}>

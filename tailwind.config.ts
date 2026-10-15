@@ -8,14 +8,15 @@ export default {
   theme: {
     container: {
       center: true,
-      padding: "1rem",
+      padding: "1.25rem",
       screens: {
-        "2xl": "1200px",
+        "2xl": "1280px",
       },
     },
     extend: {
       fontFamily: {
-        sans: ["Inter", "system-ui", "sans-serif"],
+        sans: ["Rubik", "system-ui", "sans-serif"],
+        display: ["Outfit", "Rubik", "system-ui", "sans-serif"],
         mono: ["JetBrains Mono", "SF Mono", "monospace"],
       },
       colors: {
@@ -57,6 +58,12 @@ export default {
           "teal-shade": "hsl(var(--brand-teal-shade))",
           red: "hsl(var(--brand-red))",
           navy: "hsl(var(--brand-navy))",
+          footer: "hsl(var(--brand-footer))",
+          "navy-raised": "hsl(var(--brand-navy-raised))",
+        },
+        tint: {
+          cyan: "hsl(var(--tint-cyan))",
+          purple: "hsl(var(--tint-purple))",
         },
       },
       borderRadius: {

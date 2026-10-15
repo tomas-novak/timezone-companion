@@ -4,6 +4,7 @@ import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { DEMO_CITIES, EXAMPLES, type Example } from "@/lib/demoPresets";
 import { headline, landingRows } from "@/lib/landing";
 import { Headline, MessageText } from "./TimesPopover";
+import { H2 } from "./PitchSections";
 
 export function ExampleSwitch({ example, onExampleChange }: { example: Example; onExampleChange: (id: Example["id"]) => void }) {
   return (
@@ -15,7 +16,7 @@ export function ExampleSwitch({ example, onExampleChange }: { example: Example; 
       className="flex-wrap justify-center"
     >
       {EXAMPLES.map((x) => (
-        <ToggleGroupItem key={x.id} value={x.id} size="sm" variant="outline" className="h-auto min-h-8 px-2.5 py-1 text-left">
+        <ToggleGroupItem key={x.id} value={x.id} size="sm" variant="outline" className="h-auto min-h-8 rounded-2xl px-3 py-1 text-left">
           {x.label}
         </ToggleGroupItem>
       ))}
@@ -36,9 +37,9 @@ export function MomentWrite({ example, onExampleChange, onSent, use24Hour }: { e
   };
 
   return (
-    <section id="write" className="grid items-center gap-6 rounded-2xl border bg-card p-6 shadow-sm sm:p-10">
+    <section id="write" className="grid items-center gap-6 rounded-2xl border bg-tint-cyan p-6 shadow-sm sm:p-10">
       <div className="space-y-4 text-center">
-        <h2 className="text-2xl font-semibold tracking-tight sm:text-3xl">Before you send, see how your time lands</h2>
+        <h2 className={H2}>Before you send, see how your time lands</h2>
         <p className="text-muted-foreground">Write in your own time. Before it goes out, you see what it means for every city.</p>
         <ExampleSwitch example={example} onExampleChange={onExampleChange} />
       </div>

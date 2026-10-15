@@ -120,7 +120,7 @@ function ZoneSettingsCard({
   position: number;
 }) {
   return (
-    <div className="rounded-lg border bg-card p-4">
+    <div className="rounded-xl border bg-background p-4">
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center gap-2">
           <GripVertical size={16} className="text-muted-foreground" />
@@ -247,7 +247,7 @@ export function SettingsPanel({ zones, use24Hour, onUpdateZone, onRemoveZone, on
           className="w-full flex items-center justify-between p-0 h-auto hover:bg-transparent hover:text-foreground"
         >
           <div className="flex items-center gap-2">
-            <Settings2 size={20} className="text-primary" />
+            <Settings2 size={20} aria-hidden />
             <span className="font-semibold text-lg">Settings</span>
           </div>
           {isOpen ? <ChevronUp size={20} /> : <ChevronDown size={20} />}

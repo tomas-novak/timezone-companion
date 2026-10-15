@@ -5,13 +5,16 @@ import { DEMO_CITIES, DEMO_NOW, EXAMPLES, UNCLEAR_EXAMPLE } from "@/lib/demoPres
 import { teamZonesFor } from "@/lib/timeDetect";
 import { MessageText } from "./TimesPopover";
 
-const H2 = "text-2xl font-semibold tracking-tight sm:text-3xl";
+export const H2 = "text-3xl font-bold tracking-tight sm:text-4xl";
 const BUBBLE = "max-w-[90%] rounded-lg border bg-background px-3 py-2 text-sm leading-7";
 
 export function Hero() {
   return (
-    <section id="top" className="scroll-mt-20 space-y-5 pt-4">
-      <h1 className="max-w-4xl text-4xl font-bold tracking-tight sm:text-5xl lg:text-6xl">You write your time. Everyone reads theirs.</h1>
+    <section id="top" className="dark scroll-mt-20 space-y-6 rounded-3xl border bg-background p-6 text-foreground sm:p-12 lg:p-16">
+      <p className="inline-block rounded-full border border-primary/60 px-3 py-1 text-sm font-medium text-primary">Built for Ooredoo BuildAI</p>
+      <h1 className="max-w-4xl text-4xl font-bold leading-[1.05] tracking-tight sm:text-6xl lg:text-7xl">
+        You write your time. Everyone reads <span className="text-primary">theirs.</span>
+      </h1>
       <p className="max-w-2xl text-lg sm:text-xl">
         When someone proposes a time, or I propose one, I open a world clock and do the maths. So does everyone else in the chat. Timezone
         Companion does it for all of us, in Teams and Outlook.
@@ -30,7 +33,7 @@ export function Hero() {
         <Button asChild size="lg">
           <a href="#write">See how it works</a>
         </Button>
-        <Button asChild size="lg" variant="outline">
+        <Button asChild size="lg" className="bg-white text-brand-navy hover:bg-white/90">
           <a href="#try">Try your own message</a>
         </Button>
       </div>
@@ -140,14 +143,16 @@ export function Build() {
 
 export function Ask() {
   return (
-    <section id="ask" className="scroll-mt-20 space-y-4 rounded-xl border bg-primary/10 p-6 sm:p-10">
+    <section id="ask" className="dark scroll-mt-20 space-y-6 rounded-3xl border bg-background p-6 text-foreground sm:p-12">
       <h2 className="sr-only">The ask</h2>
-      <p className="max-w-3xl text-2xl font-semibold tracking-tight sm:text-3xl">
+      <p className="max-w-3xl font-display text-3xl font-bold tracking-tight sm:text-4xl">
         A 90-day pilot with one cross-country team. We count late and weekend times caught before sending.
       </p>
-      <Link to="/" className="inline-block font-medium text-primary underline-offset-4 hover:underline">
-        The world clock tool works today <span aria-hidden>→</span>
-      </Link>
+      <Button asChild size="lg" className="h-auto min-h-12 whitespace-normal py-3">
+        <Link to="/">
+          The world clock tool works today <span aria-hidden>→</span>
+        </Link>
+      </Button>
     </section>
   );
 }
