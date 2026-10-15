@@ -29,6 +29,7 @@ describe("TryIt", () => {
   afterEach(() => {
     cleanup();
     vi.unstubAllGlobals();
+    vi.useRealTimers();
   });
 
   it("says no time found without calling the AI, and when the AI finds none", async () => {
@@ -133,5 +134,22 @@ describe("TryIt", () => {
     await click("Check how it lands");
     expect(fetch).toHaveBeenCalledTimes(2);
     expect(status()).toContain("Doha time");
+  });
+
+  it("apologises for slow test infrastructure only after 10 s of waiting", async () => {
+    vi.useFakeTimers();
+    let answer!: (r: unknown) => void;
+    vi.stubGlobal("fetch", vi.fn(() => new Promise((r) => (answer = r))));
+    render(<TryIt you={prague.you} cities={prague.cities} use24Hour />);
+    type("call at 3pm");
+    await click("Check how it lands");
+    expect(status()).toContain("Asking the AI");
+    await act(async () => vi.advanceTimersByTime(9_900));
+    expect(status()).not.toContain("slow test infrastructure");
+    await act(async () => vi.advanceTimersByTime(200));
+    expect(status()).toContain("slow test infrastructure");
+    await act(async () => answer({ ok: true, status: 200, json: async () => ({ expressions: at3pm("call at 3pm") }) }));
+    expect(status()).not.toContain("slow test infrastructure");
+    expect(status()).toMatch(/AI read it as/);
   });
 });

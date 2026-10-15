@@ -2,7 +2,13 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const { create, Timeout } = vi.hoisted(() => ({ create: vi.fn(), Timeout: class extends Error {} }));
-vi.mock("openai", () => ({ default: class { responses = { create }; }, APIConnectionTimeoutError: Timeout }));
+// Like the SDK's APIPromise: awaitable, plus withResponse() for the headers
+const apiPromise = (...args: unknown[]) => {
+  const data = Promise.resolve().then(() => create(...args));
+  const headers = { "openai-processing-ms": "1234" };
+  return Object.assign(data, { withResponse: async () => ({ data: await data, response: new Response(null, { headers }), request_id: null }) });
+};
+vi.mock("openai", () => ({ default: class { responses = { create: apiPromise }; }, APIConnectionTimeoutError: Timeout }));
 
 import { POST } from "../../api/parse-time";
 
@@ -22,7 +28,10 @@ describe("POST /api/parse-time", () => {
     create.mockReset();
     log = vi.spyOn(console, "info").mockImplementation(() => {});
   });
-  afterEach(() => log.mockRestore());
+  afterEach(() => {
+    log.mockRestore();
+    vi.unstubAllEnvs();
+  });
 
   it("rejects cross-site calls, oversized bodies and invalid requests without calling the model", async () => {
     expect((await post(JSON.stringify(body), { "sec-fetch-site": "cross-site" })).status).toBe(403);
@@ -77,5 +86,20 @@ describe("POST /api/parse-time", () => {
     const logged = log.mock.calls.flat().join(" ");
     expect(logged).toContain('"model"');
     expect(logged).not.toContain("Thursday");
+  });
+
+  it("logs what explains slowness: cold start, model time, effort, host and region", async () => {
+    vi.stubEnv("OPENAI_BASE_URL", "");
+    vi.stubEnv("OPENAI_REASONING_EFFORT", "none");
+    vi.stubEnv("VERCEL_REGION", "fra1");
+    vi.resetModules();
+    const { POST: fresh } = await import("../../api/parse-time");
+    modelSays({ expressions: [] });
+    const call = () => fresh(new Request("http://localhost/api/parse-time", { method: "POST", body: JSON.stringify(body) }));
+    await call();
+    await call();
+    const [first, second] = log.mock.calls.map(([line]) => JSON.parse(String(line)));
+    expect(first).toMatchObject({ cold: true, modelMs: 1234, effort: "none", host: "api.openai.com", region: "fra1" });
+    expect(second.cold).toBe(false);
   });
 });

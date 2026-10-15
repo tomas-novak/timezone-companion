@@ -1,5 +1,6 @@
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { DateTime } from "luxon";
+import { Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import type { Zone } from "@/lib/storage";
@@ -61,7 +62,14 @@ export function TryIt({ you, cities, use24Hour }: { you: Zone; cities: Zone[]; u
   const [text, setText] = useState("");
   const [outcomes, setOutcomes] = useState<Record<string, Outcome>>({});
   const [checking, setChecking] = useState(false);
+  const [slow, setSlow] = useState(false);
   const running = useRef(false);
+  useEffect(() => {
+    setSlow(false);
+    if (!checking) return;
+    const timer = setTimeout(() => setSlow(true), 10_000);
+    return () => clearTimeout(timer);
+  }, [checking]);
   // The chat keeps the last message that converted, so it stays while the visitor edits the next one
   const [read, setRead] = useState<{ author: Zone; text: string; expressions: TimeExpression[] } | null>(null);
   const [viewerId, setViewerId] = useState<string | null>(null);
@@ -114,11 +122,20 @@ export function TryIt({ you, cities, use24Hour }: { you: Zone; cities: Zone[]; u
           </p>
         )}
         <Button type="button" onClick={check} aria-disabled={checking || !key} className="aria-disabled:opacity-50">
+          {checking && <Loader2 aria-hidden className="motion-safe:animate-spin" />}
           {checking ? "Checking…" : "Check how it lands"}
         </Button>
         <p className="text-xs text-muted-foreground">Demo: don't paste real company messages. Typed text goes to OpenAI to read the time. The app keeps no copy; OpenAI may keep it for up to 30 days for abuse monitoring.</p>
         <div role="status" className="space-y-2 text-sm">
-          {checking && <p className="text-muted-foreground">Checking…</p>}
+          {checking && (
+            <p className="flex items-center gap-2 text-muted-foreground">
+              <Loader2 aria-hidden className="h-4 w-4 shrink-0 motion-safe:animate-spin" />
+              Asking the AI…
+            </p>
+          )}
+          {checking && slow && (
+            <p className="text-muted-foreground">Sorry for the wait. This demo runs on slow test infrastructure, so the AI can take a few more seconds.</p>
+          )}
           {current?.kind === "none" && <p>{NO_TIME}</p>}
           {current?.kind === "error" && (
             <>

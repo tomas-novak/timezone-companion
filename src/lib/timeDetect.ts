@@ -3,6 +3,7 @@ import { getWorkStatus, parseTimeToMinutes, type WorkStatus } from "./workStatus
 import type { Zone } from "./storage";
 import { CITY_PRESETS, tzCity } from "./timezones";
 import { locate, sanitize, type Expr, type ParseTimeRequest } from "./extraction";
+import { excerpt } from "./timeHint";
 
 // clock_change is set here, never by the model: the time falls in an hour a clock change skips or repeats
 export type Flag = NonNullable<Expr["flag"]> | "clock_change";
@@ -31,7 +32,7 @@ export async function callParseTime(body: ParseTimeRequest): Promise<Expr[]> {
     const res = await fetch("/api/parse-time", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(body),
+      body: JSON.stringify({ ...body, message: excerpt(body.message) }),
       signal: ctrl.signal,
     });
     if (res.status === 504) throw new ParseTimeTimeout();
