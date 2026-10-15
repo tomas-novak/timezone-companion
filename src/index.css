@@ -315,6 +315,14 @@
   }
 }
 
+/* On phones a card rarely fits under the header, so each pins once its bottom edge reaches the screen bottom; until JS sets --h it never pins */
+@media not all and (min-width: 768px) and (min-height: 47.5em) {
+  .card-stack > section:not(:last-child) {
+    position: sticky;
+    top: min(var(--header-h, 0px) + 0.5rem, 100svh - var(--h, 1000svh) - 1rem);
+  }
+}
+
 /* The header wraps to two lines below about 860px */
 @media (min-width: 768px) and (max-width: 1023px) and (min-height: 47.5em) {
   .card-stack {

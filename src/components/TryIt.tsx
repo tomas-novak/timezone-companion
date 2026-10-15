@@ -7,12 +7,12 @@ import { YOUR_TIME, readerZone } from "@/lib/extraction";
 import { TIME_HINT } from "@/lib/timeHint";
 import { NOT_CONVERTED, headline, landingRows, sentAs } from "@/lib/landing";
 import { tzCity } from "@/lib/timezones";
-import { callParseTime, firstReaderWithChip, teamZonesFor, toExpressions, type TimeExpression } from "@/lib/timeDetect";
+import { callParseTime, firstReaderWithChip, ParseTimeTimeout, teamZonesFor, toExpressions, type TimeExpression } from "@/lib/timeDetect";
 import { ChatFrame } from "./ChatFrame";
 import { Headline, MessageText } from "./TimesPopover";
 import { H2 } from "./PitchSections";
 
-type Outcome = { text: string } & ({ kind: "none" } | { kind: "error" } | { kind: "done"; expressions: TimeExpression[]; ms: number });
+type Outcome = { text: string } & ({ kind: "none" } | { kind: "error"; timedOut: boolean } | { kind: "done"; expressions: TimeExpression[]; ms: number });
 
 const NO_TIME = 'No time found. Try a time like "3pm", "15:00" or "half past three".';
 
@@ -86,7 +86,7 @@ export function TryIt({ you, cities, use24Hour }: { you: Zone; cities: Zone[]; u
     if (TIME_HINT.test(key)) {
       running.current = true;
       setChecking(true);
-      r = await readTimes(key, you, cities).catch((): Outcome => ({ text: key, kind: "error" }));
+      r = await readTimes(key, you, cities).catch((err): Outcome => ({ text: key, kind: "error", timedOut: err instanceof ParseTimeTimeout }));
       running.current = false;
       setChecking(false);
     }
@@ -101,7 +101,13 @@ export function TryIt({ you, cities, use24Hour }: { you: Zone; cities: Zone[]; u
         <label htmlFor="try-message" className="block text-center text-sm text-muted-foreground">
           Sending from {you.city}. Write a message with a time, in English or Arabic.
         </label>
-        <Textarea id="try-message" dir="auto" maxLength={500} rows={3} value={text} onChange={(e) => setText(e.target.value)} />
+        <Textarea id="try-message" dir="auto" maxLength={500} rows={3} value={text} onChange={(e) => setText(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key !== "Enter" || e.shiftKey || e.nativeEvent.isComposing) return;
+            e.preventDefault();
+            check();
+          }}
+        />
         {yourTimeNote && (
           <p className="rounded-lg border border-amber-400 bg-amber-400/10 p-3 text-sm">
             "Your time" is a different time for each reader, so it won't be converted. Name a city instead, like "3pm Doha time".
@@ -116,7 +122,7 @@ export function TryIt({ you, cities, use24Hour }: { you: Zone; cities: Zone[]; u
           {current?.kind === "none" && <p>{NO_TIME}</p>}
           {current?.kind === "error" && (
             <>
-              <p>The AI didn't answer.</p>
+              <p>{current.timedOut ? "Timeout: the AI took too long to answer." : "The AI didn't answer."}</p>
               <Button type="button" size="sm" variant="outline" onClick={check}>
                 Try again
               </Button>

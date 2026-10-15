@@ -1,4 +1,4 @@
-import OpenAI from "openai";
+import OpenAI, { APIConnectionTimeoutError } from "openai";
 import { EXTRACTION_JSON_SCHEMA, ParseTimeRequest, sanitize } from "../src/lib/extraction.js";
 import { SYSTEM_PROMPT, buildCalendar } from "../src/lib/prompt.js";
 
@@ -8,7 +8,7 @@ const EFFORTS = ["none", "minimal", "low", "medium", "high", "xhigh", "max"] as 
 const effort = () => EFFORTS.find((e) => e === process.env.OPENAI_REASONING_EFFORT) ?? "none";
 let client: OpenAI | undefined;
 const openai = () =>
-  (client ??= new OpenAI({ baseURL: process.env.OPENAI_BASE_URL || undefined, timeout: 6000, maxRetries: 0 }));
+  (client ??= new OpenAI({ baseURL: process.env.OPENAI_BASE_URL || undefined, timeout: 12000, maxRetries: 0 }));
 
 const parseJson = (text: string): unknown => {
   try {
@@ -49,7 +49,8 @@ export async function POST(req: Request): Promise<Response> {
     if (!expressions) return new Response(null, { status: 502 });
     return Response.json({ expressions }, { headers: { "Cache-Control": "no-store" } });
   } catch (err) {
-    log({ error: (err as { status?: number }).status ?? "network_or_timeout" });
-    return new Response(null, { status: 502 });
+    const timedOut = err instanceof APIConnectionTimeoutError;
+    log({ error: timedOut ? "timeout" : ((err as { status?: number }).status ?? "network") });
+    return new Response(null, { status: timedOut ? 504 : 502 });
   }
 }

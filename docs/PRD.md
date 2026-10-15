@@ -176,7 +176,7 @@ Both examples use the fixed demo date Tue 13 Oct 2026, 10:00 Prague (`DEMO_NOW`)
 | 5 Check box | Shown only when a city is After hours or on its Weekend: an amber box with all headline lines (Late and Early lines included) and Only you see this check. Your colleagues just see the time in their own zone. |
 | 5 Result | AI read it as Thu 15 Oct, 15:00 Prague time (1.8 s) |
 | 5 No time | No time found. Try a time like "3pm", "15:00" or "half past three". |
-| 5 Failure | The AI didn't answer. + "Try again" / The examples above keep working without it. |
+| 5 Failure | The AI didn't answer. (or, on a timeout, Timeout: the AI took too long to answer.) + "Try again" / The examples above keep working without it. |
 | 5 Note | Demo: don't paste real company messages. Typed text goes to OpenAI to read the time. The app keeps no copy; OpenAI may keep it for up to 30 days for abuse monitoring. |
 | 6 H2 | Why you can trust it |
 | 6 Points | The AI only reads the time in the sentence. Calendar maths does the conversion. / If a time is unclear, like "3pm your time" in a group, it is flagged, not guessed. (next to it the unclear example from Prague, viewed as Doha) / Tested on 30 English and Arabic messages, 3 runs, 0 unclear times shown as exact. Median answer about 1.5 s. About $0.10–0.34 per 1,000 messages. |
@@ -213,7 +213,7 @@ The presets wall (and the doha-sunday, doha-time and not-time presets), the demo
 | Same offset as the author | No chip for that reader; the sender popup still lists the city with its status |
 | Local time skipped or repeated by a clock change (Prague 29 Mar 02:30, 25 Oct 02:30) | Not converted: kind `ambiguous`, client-side flag `clock_change`, "Not converted: pick a time outside the clock change" |
 | A range runs past working hours | The status is the worst moment inside the range, boundaries included |
-| Bad AI JSON, timeout (8 s) or non-200 | The failure copy with "Try again"; the examples keep working |
+| Bad AI JSON, timeout (15 s client, 12 s server) or non-200 | The failure copy with "Try again", naming the timeout when there was one; the examples keep working |
 | Message over 500 chars | `maxLength={500}`; the API rejects longer text |
 | `/concept` chunk fails to load (stale tab after a redeploy) | An error boundary shows "This page couldn't load." with Reload instead of a blank app |
 
@@ -239,7 +239,7 @@ One model call per sent message turns chat text into structured time expressions
 | Azure OpenAI | Your deployment of `gpt-6-luna` (version 2026-09-22) | Global Standard same as OpenAI | `OPENAI_BASE_URL=https://<resource>.openai.azure.com/openai/v1/`, `OPENAI_MODEL=<deployment name>`; EU Data Zone available |
 | Vercel AI Gateway | `openai/gpt-6-luna` | $0.10 / n/a / $0.50 | `OPENAI_BASE_URL=https://ai-gateway.vercel.sh/v1`; passthrough of effort `none` and strict schema unverified |
 
-Call settings: Responses API with a strict `json_schema`, `reasoning.effort: "none"` (overridable with `OPENAI_REASONING_EFFORT`), `max_output_tokens: 800`, `store: false`, server timeout 6 s with 0 retries (the client times out at 8 s).
+Call settings: Responses API with a strict `json_schema`, `reasoning.effort: "none"` (overridable with `OPENAI_REASONING_EFFORT`), `max_output_tokens: 800`, `store: false`, server timeout 12 s with 0 retries (the client times out at 15 s). 6 s cut off real calls in production on 15 Oct 2026.
 
 ### Output schema
 
@@ -526,10 +526,12 @@ export function teamZonesFor(zones: Zone[]): Record<string, string> {
 // Luxon moves a skipped local time forward and silently picks one offset for a repeated one
 const inClockChange = (d: DateTime, hhmm: string) => d.toISO()!.slice(11, 16) !== hhmm || d.getPossibleOffsets().length > 1;
 
+export class ParseTimeTimeout extends Error {}
+
 // A manual controller: AbortSignal.timeout is missing in jsdom and in Safari before 16
 export async function callParseTime(body: ParseTimeRequest): Promise<Expr[]> {
   const ctrl = new AbortController();
-  const timer = setTimeout(() => ctrl.abort(), 8000);
+  const timer = setTimeout(() => ctrl.abort(), 15000);
   try {
     const res = await fetch("/api/parse-time", {
       method: "POST",
@@ -537,9 +539,13 @@ export async function callParseTime(body: ParseTimeRequest): Promise<Expr[]> {
       body: JSON.stringify(body),
       signal: ctrl.signal,
     });
-    const expressions = res.ok ? sanitize(await res.json(), body.message, body.senderZone) : null;
+    if (res.status === 504) throw new ParseTimeTimeout();
+    const expressions = res.ok ? sanitize(await res.json(), body.message, body.senderZone, body.teamZones) : null;
     if (!expressions) throw new Error(`parse-time ${res.status}`);
     return expressions;
+  } catch (err) {
+    // The abort can also land while the body is still being read
+    throw ctrl.signal.aborted ? new ParseTimeTimeout() : err;
   } finally {
     clearTimeout(timer);
   }
@@ -754,13 +760,14 @@ WW = web workaround, CP = concept page, AI = AI feature, Infra = build and deplo
 | 200 | Model answered and the output passed `sanitize` | `{ "expressions": Expr[] }` (0–10 items), `Cache-Control: no-store` |
 | 400 | Invalid JSON, extra key or a rule violated | empty |
 | 413 | Body over 8,192 characters | empty |
-| 502 | OpenAI error, 6 s timeout, refusal, truncated or invalid output | empty |
+| 502 | OpenAI error, refusal, truncated or invalid output | empty |
+| 504 | OpenAI call passed the 12 s timeout | empty |
 
-The client treats anything other than 200, including a 403 for cross-site calls, a WAF 429 or its own 8 s timeout, as status `error`.
+The client treats anything other than 200, including a 403 for cross-site calls, a WAF 429 or its own 15 s timeout, as status `error`; a 504 or its own timeout shows the timeout copy.
 
 ```ts
 // api/parse-time.ts
-import OpenAI from "openai";
+import OpenAI, { APIConnectionTimeoutError } from "openai";
 import { EXTRACTION_JSON_SCHEMA, ParseTimeRequest, sanitize } from "../src/lib/extraction.js";
 import { SYSTEM_PROMPT, buildCalendar } from "../src/lib/prompt.js";
 
@@ -770,7 +777,7 @@ const EFFORTS = ["none", "minimal", "low", "medium", "high", "xhigh", "max"] as 
 const effort = () => EFFORTS.find((e) => e === process.env.OPENAI_REASONING_EFFORT) ?? "none";
 let client: OpenAI | undefined;
 const openai = () =>
-  (client ??= new OpenAI({ baseURL: process.env.OPENAI_BASE_URL || undefined, timeout: 6000, maxRetries: 0 }));
+  (client ??= new OpenAI({ baseURL: process.env.OPENAI_BASE_URL || undefined, timeout: 12000, maxRetries: 0 }));
 
 const parseJson = (text: string): unknown => {
   try { return JSON.parse(text); } catch { return null; }
@@ -806,8 +813,9 @@ export async function POST(req: Request): Promise<Response> {
     if (!expressions) return new Response(null, { status: 502 });
     return Response.json({ expressions }, { headers: { "Cache-Control": "no-store" } });
   } catch (err) {
-    log({ error: (err as { status?: number }).status ?? "network_or_timeout" });
-    return new Response(null, { status: 502 });
+    const timedOut = err instanceof APIConnectionTimeoutError;
+    log({ error: timedOut ? "timeout" : ((err as { status?: number }).status ?? "network") });
+    return new Response(null, { status: timedOut ? 504 : 502 });
   }
 }
 ```
@@ -819,7 +827,7 @@ export async function POST(req: Request): Promise<Response> {
 | `OPENAI_API_KEY` | yes | OpenAI project key, Azure key or AI Gateway key; Vercel (Sensitive) and `.env.local`; never prefixed `VITE_` |
 | `OPENAI_MODEL` | no, default `gpt-6-luna` | `gpt-5.6-luna`, an Azure deployment name, or `openai/gpt-6-luna` on the Gateway |
 | `OPENAI_BASE_URL` | no | Unset for OpenAI; the Azure or Gateway URL otherwise |
-| `OPENAI_REASONING_EFFORT` | no, default `none` | `none`, `minimal`, `low`, `medium`, `high`, `xhigh` or `max`; an unknown value falls back to `none`. Above `none`, reasoning tokens count toward `max_output_tokens` and the 6 s timeout, so re-run the eval before changing it |
+| `OPENAI_REASONING_EFFORT` | no, default `none` | `none`, `minimal`, `low`, `medium`, `high`, `xhigh` or `max`; an unknown value falls back to `none`. Above `none`, reasoning tokens count toward `max_output_tokens` and the 12 s timeout, so re-run the eval before changing it |
 
 Add `openai@^7.32.0` (latest on npm on 10 Oct 2026, needs Node ≥ 22 locally and on Vercel). Keep `zod` 3.25 and `luxon` 3.7; validation uses zod's main entry.
 
@@ -909,7 +917,7 @@ Files that use `fetch`, `AbortSignal` or the API start with `// @vitest-environm
 | `src/lib/extraction.test.ts` | `text` not in the message dropped; "24:00" and "2026-02-30" dropped; `sender_default` items take `senderZone`; a bad explicit zone becomes null, exact becomes ambiguous and the flag becomes `zone_unclear`; range without end becomes ambiguous; 12 items capped to 10; non-object returns null; JSON-schema keys equal zod keys; `locate` on "3pm or 3pm" gives two ranges; Arabic offsets slice back to the same text; `ParseTimeRequest` rejects 501 chars, 31 zones, a bad zone and an extra key; "your time" with several other zones is always zone_unclear, with one other zone it is that zone, also in Arabic (بتوقيتك); `zoneReason` "unknown" with a zone drops the zone and reads zone_unclear |
 | `src/lib/landing.test.ts` | Story numbers for both examples; the reader and the author carry no status; the unclear example stays unconverted; headline worst first, "Working hours for every city" and "every other city" for a reader; the author row keeps the zone the time was written in ("13:00 Doha time"); `youFor` adds a sixth city when home is not one of the five |
 | `src/lib/prompt.test.ts` | `buildCalendar` at `DEMO_NOW` for Prague: 14 lines, "2026-10-13 Tue (this week)", "2026-10-19 Mon (next week)", "2026-10-26 Mon (later)"; a New Delhi sender at 2026-10-13T20:00Z starts at "2026-10-14 Wed"; labels correct across 2027 |
-| `src/lib/timeDetect.test.ts` | Null date resolves to today in the source zone; "23:00–01:00" ends the next day; Prague Mon 26 Oct 15:00 shows Doha "17:00 · late" and no chip for Tunis; Prague Thu 23:00 shows Doha "Fri 00:00 · weekend" and New Delhi "Fri 02:30 · after hours"; Prague 07:30 shows Doha "08:30 · early"; Muscat 17:00 on a working day is "late"; `keepSameOffset` returns a chip for a same-offset reader; unclear chip for readers, none for the author or a reader on the author's offset (Riyadh for a Doha author); a 16:00–20:00 range reads "after hours" for 09:00–17:00 hours; 12h "4:00 PM"; English "Fri 12:00 AM" in a `cs` browser locale and "early" in an `ar-QA` one; `teamZonesFor` keeps labels 1–40 chars and does not merge different zones; `sameOffsetEverywhere` true for Doha and Baghdad, false for Prague and Tunis at `DEMO_NOW` and at 2026-11-01; both examples come out `exact` and the unclear one `ambiguous`; `callParseTime` (no signal argument: nothing aborts a sent message) aborts at 8 s with fake timers and throws on 502 |
+| `src/lib/timeDetect.test.ts` | Null date resolves to today in the source zone; "23:00–01:00" ends the next day; Prague Mon 26 Oct 15:00 shows Doha "17:00 · late" and no chip for Tunis; Prague Thu 23:00 shows Doha "Fri 00:00 · weekend" and New Delhi "Fri 02:30 · after hours"; Prague 07:30 shows Doha "08:30 · early"; Muscat 17:00 on a working day is "late"; `keepSameOffset` returns a chip for a same-offset reader; unclear chip for readers, none for the author or a reader on the author's offset (Riyadh for a Doha author); a 16:00–20:00 range reads "after hours" for 09:00–17:00 hours; 12h "4:00 PM"; English "Fri 12:00 AM" in a `cs` browser locale and "early" in an `ar-QA` one; `teamZonesFor` keeps labels 1–40 chars and does not merge different zones; `sameOffsetEverywhere` true for Doha and Baghdad, false for Prague and Tunis at `DEMO_NOW` and at 2026-11-01; both examples come out `exact` and the unclear one `ambiguous`; `callParseTime` (no signal argument: nothing aborts a sent message) aborts at 15 s with fake timers as `ParseTimeTimeout`, throws on 502 and reports 504 as `ParseTimeTimeout` |
 | `src/lib/timezones.test.ts` (from the branch) | Still passes |
 | `src/lib/parseTime.test.ts` | The real `POST` handler with the OpenAI client mocked: 403 cross-site, 413 over 8,192 chars, 400 for bad JSON, an extra key or 501 chars, all without a model call; 200 with sanitized expressions, `Cache-Control: no-store`, `gpt-6-luna`, effort `none`, `store: false`; 502 for unusable output, an incomplete response or a failed call; the log holds no message text |
 | `src/lib/apiDev.test.ts` | Starts the Vite dev server from `vite.config.ts` and posts with `sec-fetch-site: cross-site`: 403 through the dev middleware too; `OPENAI_API_KEY` is blanked so a broken guard can never make a paid call |
