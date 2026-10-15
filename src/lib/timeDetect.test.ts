@@ -3,7 +3,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { DateTime, Settings } from "luxon";
 import { createZone } from "./storage";
 import { sanitize, type Expr } from "./extraction";
-import { callParseTime, chipFor, firstReaderWithChip, sameOffsetEverywhere, teamZonesFor, toExpressions } from "./timeDetect";
+import { callParseTime, chipFor, ParseTimeTimeout, firstReaderWithChip, sameOffsetEverywhere, teamZonesFor, toExpressions } from "./timeDetect";
 import { DEMO_NOW, EXAMPLES, UNCLEAR_EXAMPLE } from "./demoPresets";
 
 const PRAGUE = "Europe/Prague";
@@ -176,7 +176,7 @@ describe("callParseTime", () => {
     vi.unstubAllGlobals();
   });
 
-  it("aborts after 8 s", async () => {
+  it("aborts after 15 s as a timeout", async () => {
     vi.useFakeTimers();
     vi.stubGlobal(
       "fetch",
@@ -184,13 +184,30 @@ describe("callParseTime", () => {
         new Promise((_, reject) => init.signal!.addEventListener("abort", () => reject(new Error("aborted")))),
     );
     const p = callParseTime(body);
-    const assertion = expect(p).rejects.toThrow("aborted");
-    await vi.advanceTimersByTimeAsync(8000);
+    const assertion = expect(p).rejects.toBeInstanceOf(ParseTimeTimeout);
+    await vi.advanceTimersByTimeAsync(15000);
+    await assertion;
+  });
+
+  it("reports an abort while reading the body as a timeout", async () => {
+    vi.useFakeTimers();
+    vi.stubGlobal("fetch", async (_: string, init: RequestInit) => ({
+      ok: true,
+      status: 200,
+      json: () => new Promise((_, reject) => init.signal!.addEventListener("abort", () => reject(new Error("aborted")))),
+    }));
+    const assertion = expect(callParseTime(body)).rejects.toBeInstanceOf(ParseTimeTimeout);
+    await vi.advanceTimersByTimeAsync(15000);
     await assertion;
   });
 
   it("throws on 502", async () => {
     vi.stubGlobal("fetch", async () => new Response(null, { status: 502 }));
     await expect(callParseTime(body)).rejects.toThrow("parse-time 502");
+  });
+
+  it("reports a server 504 as a timeout", async () => {
+    vi.stubGlobal("fetch", async () => new Response(null, { status: 504 }));
+    await expect(callParseTime(body)).rejects.toBeInstanceOf(ParseTimeTimeout);
   });
 });

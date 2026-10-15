@@ -1,8 +1,8 @@
 // @vitest-environment node
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-const { create } = vi.hoisted(() => ({ create: vi.fn() }));
-vi.mock("openai", () => ({ default: class { responses = { create }; } }));
+const { create, Timeout } = vi.hoisted(() => ({ create: vi.fn(), Timeout: class extends Error {} }));
+vi.mock("openai", () => ({ default: class { responses = { create }; }, APIConnectionTimeoutError: Timeout }));
 
 import { POST } from "../../api/parse-time";
 
@@ -62,8 +62,13 @@ describe("POST /api/parse-time", () => {
     expect((await post(JSON.stringify(body))).status).toBe(502);
     create.mockResolvedValue({ status: "incomplete", output_text: "{", usage: {} });
     expect((await post(JSON.stringify(body))).status).toBe(502);
-    create.mockRejectedValue(Object.assign(new Error("timeout"), { status: 504 }));
+    create.mockRejectedValue(Object.assign(new Error("bad gateway"), { status: 500 }));
     expect((await post(JSON.stringify(body))).status).toBe(502);
+  });
+
+  it("answers 504 when the model call times out", async () => {
+    create.mockRejectedValue(new Timeout());
+    expect((await post(JSON.stringify(body))).status).toBe(504);
   });
 
   it("logs metrics only, never the message", async () => {

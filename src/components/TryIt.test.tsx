@@ -11,10 +11,10 @@ const at3pm = (message: string) => {
   return start < 0 ? [] : [{ text: "3pm", localDate: null, localTime: "15:00", endLocalTime: null, sourceZone: null, zoneReason: "sender_default", flag: null, kind: "exact" }];
 };
 
-function setup({ you, cities }: { you: Zone; cities: Zone[] } = prague, fail = false) {
+function setup({ you, cities }: { you: Zone; cities: Zone[] } = prague, fail: false | number = false) {
   const fetch = vi.fn(async (_: string, init: RequestInit) => {
     const { message } = ParseTimeRequest.parse(JSON.parse(String(init.body)));
-    if (fail) throw new Error("down");
+    if (fail) return { ok: false, status: fail, json: async () => null };
     return { ok: true, status: 200, json: async () => ({ expressions: at3pm(message) }) };
   });
   vi.stubGlobal("fetch", fetch);
@@ -79,12 +79,35 @@ describe("TryIt", () => {
   });
 
   it("offers a retry that makes exactly one more call", async () => {
-    const fetch = setup(prague, true);
+    const fetch = setup(prague, 502);
     type("call at 3pm");
     await click("Check how it lands");
     expect(status()).toContain("The AI didn't answer.");
     await click("Try again");
     expect(fetch).toHaveBeenCalledTimes(2);
+  });
+
+  it("checks on Enter but not on Shift+Enter", async () => {
+    const fetch = setup();
+    type("call at 3pm");
+    const box = screen.getByLabelText(/Sending from/);
+    // fireEvent returns false when the handler prevented the default (the newline)
+    expect(fireEvent.keyDown(box, { key: "Enter", shiftKey: true })).toBe(true);
+    expect(fireEvent.keyDown(box, { key: "Enter", isComposing: true })).toBe(true);
+    expect(fetch).not.toHaveBeenCalled();
+    let notPrevented = true;
+    await act(async () => {
+      notPrevented = fireEvent.keyDown(box, { key: "Enter" });
+    });
+    expect(notPrevented).toBe(false);
+    expect(fetch).toHaveBeenCalledTimes(1);
+  });
+
+  it("says when the AI timed out", async () => {
+    setup(prague, 504);
+    type("call at 3pm");
+    await click("Check how it lands");
+    expect(status()).toContain("Timeout: the AI took too long to answer.");
   });
 
   it("makes one call on a double click", async () => {

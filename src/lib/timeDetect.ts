@@ -21,10 +21,12 @@ export function teamZonesFor(zones: Zone[]): Record<string, string> {
 // Luxon moves a skipped local time forward and silently picks one offset for a repeated one
 const inClockChange = (d: DateTime, hhmm: string) => d.toISO()!.slice(11, 16) !== hhmm || d.getPossibleOffsets().length > 1;
 
+export class ParseTimeTimeout extends Error {}
+
 // A manual controller: AbortSignal.timeout is missing in jsdom and in Safari before 16
 export async function callParseTime(body: ParseTimeRequest): Promise<Expr[]> {
   const ctrl = new AbortController();
-  const timer = setTimeout(() => ctrl.abort(), 8000);
+  const timer = setTimeout(() => ctrl.abort(), 15000);
   try {
     const res = await fetch("/api/parse-time", {
       method: "POST",
@@ -32,9 +34,13 @@ export async function callParseTime(body: ParseTimeRequest): Promise<Expr[]> {
       body: JSON.stringify(body),
       signal: ctrl.signal,
     });
+    if (res.status === 504) throw new ParseTimeTimeout();
     const expressions = res.ok ? sanitize(await res.json(), body.message, body.senderZone, body.teamZones) : null;
     if (!expressions) throw new Error(`parse-time ${res.status}`);
     return expressions;
+  } catch (err) {
+    // The abort can also land while the body is still being read
+    throw ctrl.signal.aborted ? new ParseTimeTimeout() : err;
   } finally {
     clearTimeout(timer);
   }
