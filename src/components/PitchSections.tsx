@@ -57,7 +57,14 @@ export function Today() {
   return (
     <section id="today" className="scroll-mt-20 space-y-4">
       <h2 className={H2}>Today</h2>
-      <img src={teamsToday} alt={TODAY_ALT} width={1458} height={887} loading="lazy" className="h-auto w-full max-w-3xl" />
+      <figure className="space-y-1">
+        <img src={teamsToday} alt={TODAY_ALT} width={1458} height={887} loading="lazy" className="h-auto w-full" />
+        <figcaption className="text-sm sm:hidden">
+          <a href={teamsToday} target="_blank" rel="noreferrer" className="underline underline-offset-4">
+            Open the chat at full size<span className="sr-only"> (opens in a new tab)</span>
+          </a>
+        </figcaption>
+      </figure>
       <p className="max-w-xl text-lg">
         Seven messages to agree on one time, and it still landed on a non-working day in Doha. Every week, in every cross-country team.
       </p>
