@@ -315,7 +315,7 @@ FIELDS
 - sourceZone: the IANA zone the time is expressed in, or null if unknown.
 - zoneReason: "explicit" (a zone, city or "my time" is named), "sender_default" (no zone named), "unknown".
 - flag: "zone_unclear", "day_unclear", "ampm_unclear", "ampm_assumed", "not_specific", or null.
-- kind: "exact" (one clock time, zone known), "range" (start and end, zone known), "vague" (part of day or deadline, no clock time), "ambiguous" (a clock time, but zone, day or am/pm cannot be determined).
+- kind: "exact" (one clock time, zone known), "range" (start and end, zone known), "vague" (part of day, no clock time), "ambiguous" (a clock time, but zone, day or am/pm cannot be determined).
 
 TIME RULES
 - "3pm", "3 p.m.", "3PM" -> 15:00. "12am" -> 00:00. "12pm", noon, الظهر -> 12:00.
@@ -326,7 +326,7 @@ TIME RULES
 - Hour 1-12 with no am/pm and no part of day ("at 3", "3:30", "الساعة ٣"): 9, 10, 11, 12 -> as written (12 is noon). 1-6 -> pm (add 12) with flag "ampm_assumed". 7 or 8 -> kind "ambiguous", flag "ampm_unclear", localTime null.
 - Ranges ("3-4pm", "11-1pm", "من ٢ إلى ٤ مساءً") are one item with kind "range". A trailing am/pm applies to both ends unless the start would then be after the end ("11-1pm" -> 11:00 to 13:00). Keep an end that is earlier than the start as written ("11pm-1am" -> 23:00, 01:00); code adds the day. A range ending at midnight keeps the start's date and ends at "00:00" ("10pm-midnight today" -> today, 22:00, 00:00).
 - Every time in the message is its own item, in message order. Alternatives and lists ("Wed 11am or Thu 4pm") give one item per time; never drop one.
-- Part of day or deadline with no clock time ("morning", "this afternoon", "tonight", "lunchtime"): kind "vague", flag "not_specific", localTime null. localDate is today for "tonight", "this afternoon"; the stated day otherwise; null if no day.
+- Part of day with no clock time ("morning", "this afternoon", "tonight", "lunchtime"): kind "vague", flag "not_specific", localTime null. localDate is today for "tonight", "this afternoon"; the stated day otherwise; null if no day.
 
 DAY RULES (read dates from calendar; do not compute them)
 - today, اليوم, tonight, الليلة -> first calendar date. tomorrow, غدًا, بكرة -> second calendar date.
