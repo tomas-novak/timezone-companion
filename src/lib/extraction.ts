@@ -63,7 +63,7 @@ export function readerZone(teamZones: Record<string, string>, senderZone: string
 // The model sometimes returns a bare day ("tomorrow", "on Friday") or a greeting as an item, though neither is a time.
 // A denylist, because no list of parts of day ("AM", "after dinner", "الصبح") is ever complete.
 const BARE_DAY = /^(?:(?:on|this|next|by|until)\s+)?(?:today|tomorrow|tmrw?|the day after tomorrow|(?:mon|tues?|wed(?:nes)?|thu(?:rs?)?|fri|sat(?:ur)?|sun)(?:day)?|(?:يوم\s+)?(?:ال)?(?:أحد|احد|اثنين|إثنين|ثلاثاء|أربعاء|اربعاء|خميس|جمعة|سبت)|اليوم|غدا|الغد|بكر[ةه]|بعد\s+غد)[\s.,،!?؟]*$/i;
-const GREETING = /^(?:good\s+(?:morning|afternoon|evening|night)|(?:صباح|مساء)\s+(?:الخير|النور))/i;
+const GREETING = /^(?:(?:have\s+an?\s+)?(?:good|nice|great|lovely)\s+(?:morning|afternoon|evening|night|day)|morning\s+(?:team|all|everyone|folks|guys)[\s.,،!]*$|(?:صباح|مساء)\s+(?:الخير|النور))/i;
 const HARAKAT = /[\p{Mn}ـ]/gu;
 
 const HHMM = /^([01]\d|2[0-3]):[0-5]\d$/;

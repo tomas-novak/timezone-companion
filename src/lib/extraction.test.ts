@@ -22,10 +22,10 @@ describe("sanitize", () => {
 
   it("drops a bare day or a greeting of any kind, keeps any part of day", () => {
     const vague = (text: string) => expr({ text, kind: "vague", localTime: null, flag: "not_specific" });
-    const bare = ["tomorrow", "on Friday", "next Monday", "Thu", "غدًا", "غدًا،", "يوم الخميس،", "بكرة", "Good morning", "صباح الخير"];
+    const bare = ["tomorrow", "on Friday", "next Monday", "Thu", "غدًا", "غدًا،", "يوم الخميس،", "بكرة", "Good morning", "Morning team!", "Good evening all", "Have a good evening", "صباح الخير", "مساء الخير"];
     expect(run(bare.map(vague), bare.join(" | "))).toEqual([]);
     expect(run([expr({ text: "tomorrow", kind: "ambiguous", localTime: null, flag: "day_unclear" })], "tomorrow")).toEqual([]);
-    const kept = ["tomorrow morning", "Thursday PM", "after dinner", "بكرة الصبح", "المسا", "صَباحًا", "tonight", "fortnight"];
+    const kept = ["tomorrow morning", "Thursday PM", "after dinner", "بكرة الصبح", "المسا", "صَباحًا", "tonight", "fortnight", "morning all week"];
     expect(run(kept.map(vague), kept.join(" | "))!.map((e) => e.text)).toEqual(kept);
   });
 
