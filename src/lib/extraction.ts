@@ -60,13 +60,19 @@ export function readerZone(teamZones: Record<string, string>, senderZone: string
   return others.size === 1 ? [...others][0] : null;
 }
 
+// The model sometimes returns a bare day ("tomorrow", "on Friday") or a greeting as an item, though neither is a time.
+// A denylist, because no list of parts of day ("AM", "after dinner", "الصبح") is ever complete.
+const BARE_DAY = /^(?:(?:on|this|next|by|until)\s+)?(?:today|tomorrow|tmrw?|the day after tomorrow|(?:mon|tues?|wed(?:nes)?|thu(?:rs?)?|fri|sat(?:ur)?|sun)(?:day)?|(?:يوم\s+)?(?:ال)?(?:أحد|احد|اثنين|إثنين|ثلاثاء|أربعاء|اربعاء|خميس|جمعة|سبت)|اليوم|غدا|الغد|بكر[ةه]|بعد\s+غد)[\s.,،!?؟]*$/i;
+const GREETING = /^(?:(?:have\s+an?\s+)?(?:good|nice|great|lovely)\s+(?:morning|afternoon|evening|night|day)|morning\s+(?:team|all|everyone|folks|guys)[\s.,،!]*$|(?:صباح|مساء)\s+(?:الخير|النور))/i;
+const HARAKAT = /[\p{Mn}ـ]/gu;
+
 const HHMM = /^([01]\d|2[0-3]):[0-5]\d$/;
 const YMD = /^\d{4}-\d{2}-\d{2}$/;
 
 export function sanitize(raw: unknown, message: string, senderZone: string, teamZones?: Record<string, string>): Expr[] | null {
   const parsed = Extraction.safeParse(raw);
   if (!parsed.success) return null;
-  return parsed.data.expressions.slice(0, 10).flatMap((item) => {
+  return parsed.data.expressions.flatMap((item) => {
     // The model often reads "your time" as the sender's zone or a random team zone, so code decides it
     const yours = teamZones && YOUR_TIME.test(item.text) ? readerZone(teamZones, senderZone) : undefined;
     // Whatever kind and flag the model chose, the zone is the only open question for a clock time here
@@ -84,6 +90,8 @@ export function sanitize(raw: unknown, message: string, senderZone: string, team
               ...(clock && zoneOnly && { kind: item.endLocalTime ? "range" : "exact", flag: item.flag === "zone_unclear" ? null : item.flag }),
             };
     if (!e.text || !message.includes(e.text)) return [];
+    const bare = e.text.trim().replace(HARAKAT, "");
+    if (BARE_DAY.test(bare) || GREETING.test(bare)) return [];
     if ([e.localTime, e.endLocalTime].some((t) => t !== null && !HHMM.test(t))) return [];
     if (e.localDate !== null && !(YMD.test(e.localDate) && DateTime.fromISO(e.localDate).isValid)) return [];
     // sender_default items take the author's zone, so fixtures stored with null work for any author
@@ -97,7 +105,7 @@ export function sanitize(raw: unknown, message: string, senderZone: string, team
     // A downgrade with no flag would fall back to "no exact time" copy when the zone was the real problem
     const flag = kind !== e.kind && !sourceZone ? "zone_unclear" : e.flag;
     return [{ ...e, sourceZone, kind, flag }];
-  });
+  }).slice(0, 10);
 }
 
 export function locate(message: string, exprs: Expr[]) {

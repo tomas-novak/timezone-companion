@@ -154,6 +154,13 @@ const LONG_ROWS: Row[] = [
     "2026-10-13T10:00:00+02:00",
     [w("exact", "2026-10-13", "09:15", "Europe/Prague", "sender_default"), w("exact", "2026-10-16", "17:00", "Asia/Qatar", "explicit")],
   ],
+  // Seen in production: the model also returned the bare "tomorrow" as a vague time
+  [
+    "Good morning, We have a lot to discuss regarding the rollout plan. Let's check it tomorrow. My suggestion is to have it at 11 am or 3 pm. What's the better option for you? We can have it online or in person in the office. I leave everything up to you",
+    "Europe/Prague",
+    "2026-10-15T22:00:00+02:00",
+    [w("exact", "2026-10-16", "11:00", "Europe/Prague", "sender_default"), w("exact", "2026-10-16", "15:00", "Europe/Prague", "sender_default")],
+  ],
   // The neighbouring day belongs to another event, so it must not move the call, in either order
   [
     "Hi team. Budget is approved. The launch is on Thursday. Separately, can we talk at 10am? Bring the slides. Thanks.",

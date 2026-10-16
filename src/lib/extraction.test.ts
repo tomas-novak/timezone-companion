@@ -20,6 +20,20 @@ describe("sanitize", () => {
     expect(run([expr({ text: "4pm" })])).toEqual([]);
   });
 
+  it("drops a bare day or a greeting of any kind, keeps any part of day", () => {
+    const vague = (text: string) => expr({ text, kind: "vague", localTime: null, flag: "not_specific" });
+    const bare = ["tomorrow", "on Friday", "next Monday", "Thu", "غدًا", "غدًا،", "يوم الخميس،", "بكرة", "Good morning", "Morning team!", "Good evening all", "Have a good evening", "صباح الخير", "مساء الخير"];
+    expect(run(bare.map(vague), bare.join(" | "))).toEqual([]);
+    expect(run([expr({ text: "tomorrow", kind: "ambiguous", localTime: null, flag: "day_unclear" })], "tomorrow")).toEqual([]);
+    const kept = ["tomorrow morning", "Thursday PM", "after dinner", "بكرة الصبح", "المسا", "صَباحًا", "tonight", "fortnight", "morning all week"];
+    expect(run(kept.map(vague), kept.join(" | "))!.map((e) => e.text)).toEqual(kept);
+  });
+
+  it("caps at 10 items after dropping", () => {
+    const msg = "tomorrow 3pm";
+    expect(run([...Array.from({ length: 5 }, () => expr({ text: "tomorrow" })), ...Array.from({ length: 10 }, () => expr())], msg)).toHaveLength(10);
+  });
+
   it("drops bad times and dates", () => {
     expect(run([expr({ localTime: "24:00" })])).toEqual([]);
     expect(run([expr({ localDate: "2026-02-30" })])).toEqual([]);
