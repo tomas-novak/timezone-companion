@@ -23,6 +23,7 @@ export function MomentRead({ example, onExampleChange, you, inDemo, use24Hour }:
         <p className="text-sm text-muted-foreground">Tap the time to check everyone else.</p>
       </div>
       <ChatFrame
+        title={example.subject}
         messages={[{ id: example.id, author: example.author, text: example.text, expressions: example.expressions }]}
         cities={DEMO_CITIES}
         viewer={viewer}

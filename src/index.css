@@ -3,7 +3,8 @@
 @tailwind utilities;
 
 @layer base {
-  :root {
+  /* .light keeps a Teams mock-up light inside a .dark section or page */
+  :root, .light {
     --brand-teal: 174 94% 48%;
     --brand-teal-shade: 174 90% 40%;
     --brand-red: 2 93% 47%;
