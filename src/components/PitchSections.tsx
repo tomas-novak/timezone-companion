@@ -1,6 +1,8 @@
 import { Link } from "react-router-dom";
+import { useState } from "react";
 import { DateTime } from "luxon";
 import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { DEMO_CITIES, DEMO_NOW, EXAMPLES, UNCLEAR_EXAMPLE } from "@/lib/demoPresets";
 import { teamZonesFor } from "@/lib/timeDetect";
 import teamsToday from "@/assets/teams-today.png";
@@ -54,17 +56,23 @@ const TODAY_ALT = [
 ].join(" ");
 
 export function Today() {
+  const [zoomed, setZoomed] = useState(false);
   return (
     <section id="today" className="scroll-mt-20 space-y-4">
       <h2 className={H2}>Today</h2>
-      <figure className="space-y-1">
-        <img src={teamsToday} alt={TODAY_ALT} width={1458} height={887} loading="lazy" className="h-auto w-full" />
-        <figcaption className="text-sm sm:hidden">
-          <a href={teamsToday} target="_blank" rel="noreferrer" className="underline underline-offset-4">
-            Open the chat at full size<span className="sr-only"> (opens in a new tab)</span>
-          </a>
-        </figcaption>
-      </figure>
+      <Dialog open={zoomed} onOpenChange={setZoomed}>
+        <DialogTrigger className="block w-full cursor-zoom-in rounded-lg">
+          <img src={teamsToday} alt={TODAY_ALT} width={1458} height={887} loading="lazy" className="h-auto w-full" />
+          <span className="sr-only">Show full screen</span>
+        </DialogTrigger>
+        <DialogContent className="light block h-dvh w-screen max-w-none rounded-none border-0 bg-white p-0 sm:rounded-none">
+          <DialogTitle className="sr-only">Rollout plan chat</DialogTitle>
+          {/* Pans at a readable width on phones; a tap closes it like a photo viewer, keyboard users have Close and Esc */}
+          <div onClick={() => setZoomed(false)} className="flex h-full w-full cursor-zoom-out overflow-auto">
+            <img src={teamsToday} alt={TODAY_ALT} width={1458} height={887} className="m-auto h-auto w-[900px] max-w-none shrink-0 sm:w-full sm:max-w-[1458px]" />
+          </div>
+        </DialogContent>
+      </Dialog>
       <p className="max-w-xl text-lg">
         Seven messages to agree on one time, and it still landed on a non-working day in Doha. Every week, in every cross-country team.
       </p>
