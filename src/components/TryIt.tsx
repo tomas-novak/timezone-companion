@@ -142,7 +142,7 @@ export function TryIt({ you, cities, use24Hour }: { you: Zone; cities: Zone[]; u
           {checking && <Loader2 aria-hidden className="motion-safe:animate-spin" />}
           {checking ? "Checking…" : "Check how it lands"}
         </Button>
-        <p className="text-xs text-muted-foreground">Demo: don't paste real company messages. Typed text goes to OpenAI to read the time. The app keeps no copy; OpenAI may keep it for up to 30 days for abuse monitoring.</p>
+        <p className="text-xs text-muted-foreground">Demo: don't paste real company messages. Typed text goes to OpenAI to read the time; for a long message, only the sentences around it. The app keeps no copy; OpenAI may keep it for up to 30 days for abuse monitoring.</p>
         <div role="status" className="space-y-2 text-sm">
           {checking && <p className="text-muted-foreground">Asking the AI…</p>}
           {checking && slow && <p className="text-muted-foreground">The AI is slower than usual right now. Give it a few more seconds.</p>}

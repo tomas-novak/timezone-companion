@@ -32,13 +32,15 @@ npm test
 npm run lint
 ```
 
-The live eval calls the model with 30 messages. It is not part of `npm test`; run it on its own (it reads the key from `.env.local`):
+The live eval calls the model with 96 messages. It is not part of `npm test`; run it on its own (it reads the key from `.env.local`):
 
 ```
 npm run eval
 ```
 
-It passes with at least 27 of 30 rows right and no critical errors (an unclear time shown as exact).
+It passes with at least 87 of 96 rows right and no critical errors (an unclear time shown as exact). Each run writes a raw log to `logs/eval/` (git-ignored).
+
+The published report (`public/eval/`, linked on `/concept`) covers 93 of those messages in 3 runs on 17 Oct 2026: 84 to 89 right each run, 0 critical errors, median answer 1.5 s. The 3 rows where the zone or date sits two sentences from the time were added after it and have not run yet.
 
 ## Deploy on Vercel
 

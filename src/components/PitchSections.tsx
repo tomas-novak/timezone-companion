@@ -97,7 +97,7 @@ export function Trust({ use24Hour }: { use24Hour: boolean }) {
     <section id="trust" className="scroll-mt-20 space-y-6">
       <h2 className={H2}>Why you can trust it</h2>
       <ul className="max-w-3xl list-disc space-y-4 pl-5">
-        <li>The AI only reads the time in the sentence. Calendar maths does the conversion.</li>
+        <li>The AI only finds the time in the message. Calendar maths does the conversion.</li>
         <li className="space-y-2">
           <p>If a time is unclear, like "3pm your time" in a group, it is flagged, not guessed.</p>
           <div className="light max-w-sm rounded-lg border bg-background p-3 text-foreground">
@@ -115,15 +115,30 @@ export function Trust({ use24Hour }: { use24Hour: boolean }) {
             </TeamsMessage>
           </div>
         </li>
-        <li>
-          Tested on 30 English and Arabic messages, 3 runs, 0 unclear times shown as exact. Median answer about 1.5 s. About $0.10–0.34 per 1,000
-          messages.
-        </li>
+        <li>Tested on 93 English and Arabic messages in 3 runs: 84 to 89 right each run, and the AI never invented a time. Median answer 1.5 s.</li>
       </ul>
+      <p className="max-w-3xl text-sm">
+        Full eval report:{" "}
+        <a className="underline underline-offset-2" href="/eval/eval-report.pdf" download>
+          PDF
+        </a>{" "}
+        ·{" "}
+        <a className="underline underline-offset-2" href="/eval/eval-report.md" download>
+          Markdown (for AI tools)
+        </a>{" "}
+        ·{" "}
+        <a className="underline underline-offset-2" href="/eval/eval-results.csv" download>
+          All results (CSV)
+        </a>
+      </p>
       <details className="max-w-3xl rounded-lg border bg-card p-4">
         <summary className="cursor-pointer font-medium">What the AI receives</summary>
         <div className="mt-3 space-y-3 text-sm">
-          <p>The message, the sender's zone, the date and the team's cities. The app adds no names and no calendars, and the AI never learns who is reading.</p>
+          <p>
+            The message, the sender's zone, the date and the team's cities. In a message of four or more sentences, only the sentences that mention
+            a time, a place or a date, plus one on each side, leave your browser. The app adds no names and no calendars, and the AI never learns who
+            is reading.
+          </p>
           <pre className="max-w-full overflow-x-auto rounded-md bg-muted p-3 text-xs">{REQUEST}</pre>
         </div>
       </details>
