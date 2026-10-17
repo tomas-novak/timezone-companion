@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { act, cleanup, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
+import { act, cleanup, fireEvent, render, screen, within } from "@testing-library/react";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { DEMO_CITIES, EXAMPLES, type Example } from "@/lib/demoPresets";
 import { MomentWrite } from "./MomentWrite";
@@ -35,26 +35,21 @@ describe("Moments", () => {
     expect(fetchSpy).not.toHaveBeenCalled();
   });
 
-  it("checks the draft on Send and sends anyway", () => {
-    const onSent = vi.fn();
+  it("shows the check without a click, from the saved answer", () => {
     render(
       <TooltipProvider>
-        <MomentWrite example={thursday} onExampleChange={() => {}} onSent={onSent} use24Hour />
+        <MomentWrite example={thursday} onExampleChange={() => {}} use24Hour />
       </TooltipProvider>,
     );
-    fireEvent.click(screen.getByRole("button", { name: "Send" }));
-    const check = screen.getByRole("alertdialog");
-    expect(check).toHaveTextContent("Late in the day for 2 cities: Muscat, New Delhi");
-    expect(screen.getByRole("button", { name: "Edit" })).toHaveFocus();
-    fireEvent.click(screen.getByRole("button", { name: "Send anyway" }));
-    expect(onSent).toHaveBeenCalledOnce();
-    expect(screen.queryByRole("alertdialog")).not.toBeInTheDocument();
+    expect(screen.getByText("Late in the day for 2 cities: Muscat, New Delhi")).toBeInTheDocument();
+    expect(screen.getByText(/AI read it as .* \(saved answer\)/)).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /Send/ })).not.toBeInTheDocument();
   });
 
   it("a tap on the time opens the popup and a second tap closes it", () => {
     render(
       <TooltipProvider>
-        <MomentWrite example={thursday} onExampleChange={() => {}} onSent={() => {}} use24Hour />
+        <MomentWrite example={thursday} onExampleChange={() => {}} use24Hour />
       </TooltipProvider>,
     );
     const time = screen.getByRole("button", { name: /Thursday at 3pm/ });
@@ -68,7 +63,7 @@ describe("Moments", () => {
   it("closes the popup when the page scrolls", () => {
     render(
       <TooltipProvider>
-        <MomentWrite example={thursday} onExampleChange={() => {}} onSent={() => {}} use24Hour />
+        <MomentWrite example={thursday} onExampleChange={() => {}} use24Hour />
       </TooltipProvider>,
     );
     const time = screen.getByRole("button", { name: /Thursday at 3pm/ });
@@ -83,7 +78,7 @@ describe("Moments", () => {
     try {
       render(
         <TooltipProvider>
-          <MomentWrite example={thursday} onExampleChange={() => {}} onSent={() => {}} use24Hour />
+          <MomentWrite example={thursday} onExampleChange={() => {}} use24Hour />
         </TooltipProvider>,
       );
       const time = screen.getByRole("button", { name: /Thursday at 3pm/ });
@@ -99,18 +94,6 @@ describe("Moments", () => {
     } finally {
       vi.useRealTimers();
     }
-  });
-
-  it("returns focus to Send after Edit", async () => {
-    render(
-      <TooltipProvider>
-        <MomentWrite example={thursday} onExampleChange={() => {}} onSent={() => {}} use24Hour />
-      </TooltipProvider>,
-    );
-    fireEvent.click(screen.getByRole("button", { name: "Send" }));
-    fireEvent.click(screen.getByRole("button", { name: "Edit" }));
-    expect(screen.queryByRole("alertdialog")).not.toBeInTheDocument();
-    await waitFor(() => expect(screen.getByRole("button", { name: "Send" })).toHaveFocus());
   });
 
   it.each([

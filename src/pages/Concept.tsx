@@ -1,5 +1,7 @@
 import { useEffect, useRef, useState, type FocusEvent } from "react";
 import { useLocation } from "react-router-dom";
+import { ChevronDown } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { Header } from "@/components/Header";
 import { MomentWrite } from "@/components/MomentWrite";
 import { MomentRead } from "@/components/MomentRead";
@@ -19,6 +21,61 @@ function revealCoveredCard(e: FocusEvent<HTMLDivElement>) {
   // A card taller than the screen can leave the focused control below the fold
   (e.target as Element).scrollIntoView({ block: "nearest", behavior: "instant" });
   card.style.position = "";
+}
+
+// Sticky cards have no in-flow position to scroll to, so step by most of a screen instead
+export function ScrollHint() {
+  const [atEnd, setAtEnd] = useState(false);
+  const [progress, setProgress] = useState(0);
+  const button = useRef<HTMLButtonElement>(null);
+  useEffect(() => {
+    const ask = document.getElementById("ask");
+    const main = document.getElementById("main");
+    if (!ask || !main) return;
+    // Full when the end of the page reaches the bottom of the screen, which is when the arrow hides
+    const update = () => {
+      const top = main.getBoundingClientRect().bottom;
+      const end = top + window.scrollY - window.innerHeight;
+      setProgress(end > 0 ? Math.min(1, window.scrollY / end) : 1);
+      const hide = top <= window.innerHeight;
+      // Hiding the focused hint would drop keyboard focus to the page body
+      if (hide && document.activeElement === button.current) {
+        const link = ask.querySelector<HTMLElement>("a, button");
+        link?.focus({ preventScroll: true });
+        // On a short screen the link can sit above the view; instant also cuts off the step's smooth scroll
+        link?.scrollIntoView?.({ block: "nearest", behavior: "instant" });
+      }
+      setAtEnd(hide);
+    };
+    update();
+    window.addEventListener("scroll", update, { passive: true });
+    window.addEventListener("resize", update);
+    // Opening details or a live result moves the end without a scroll or resize
+    const ro = typeof ResizeObserver === "undefined" ? null : new ResizeObserver(update);
+    ro?.observe(main);
+    return () => {
+      ro?.disconnect();
+      window.removeEventListener("scroll", update);
+      window.removeEventListener("resize", update);
+    };
+  }, []);
+  if (atEnd) return null;
+  return (
+    <Button
+      ref={button}
+      variant="outline"
+      size="icon"
+      aria-label="Scroll down"
+      onClick={() => window.scrollBy({ top: window.innerHeight * 0.8 })}
+      className="fixed bottom-4 left-1/2 z-40 -translate-x-1/2 rounded-full border-0 shadow-md"
+    >
+      <svg aria-hidden viewBox="0 0 40 40" className="absolute inset-0 !size-full -rotate-90">
+        <circle cx="20" cy="20" r="18" fill="none" strokeWidth="2" className="stroke-border" />
+        <circle cx="20" cy="20" r="18" fill="none" strokeWidth="2" pathLength={100} strokeDasharray={100} strokeDashoffset={100 - progress * 100} strokeLinecap="round" className="stroke-primary" />
+      </svg>
+      <ChevronDown aria-hidden className="motion-safe:animate-bounce" />
+    </Button>
+  );
 }
 
 const Concept = () => {
@@ -67,20 +124,13 @@ const Concept = () => {
         onHomeTzChange={setHomeTz}
         zones={settings.zones}
       />
+      <ScrollHint />
       <main id="main" tabIndex={-1} className="container scroll-mt-24 outline-none max-w-6xl flex-1 space-y-16 py-10 sm:space-y-24">
         <Hero />
         <Today />
         <Fix />
         <div ref={stack} className="card-stack" onFocus={revealCoveredCard}>
-          <MomentWrite
-            example={example}
-            onExampleChange={setExampleId}
-            onSent={() => {
-              document.getElementById("read")?.scrollIntoView();
-              document.getElementById("read-title")?.focus({ preventScroll: true });
-            }}
-            use24Hour={settings.use24Hour}
-          />
+          <MomentWrite example={example} onExampleChange={setExampleId} use24Hour={settings.use24Hour} />
           <MomentRead example={example} onExampleChange={setExampleId} use24Hour={settings.use24Hour} />
           <TryIt you={you} cities={cities} use24Hour={settings.use24Hour} />
         </div>

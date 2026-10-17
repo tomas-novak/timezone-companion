@@ -178,7 +178,7 @@ The examples use the fixed demo date Sat 17 Oct 2026, 10:00 Prague (`DEMO_NOW`) 
 | 3 Switch | Friday 11am, from Prague / Thursday 3pm, from Prague / Sunday 10am, in Arabic, from Doha |
 | 3 Switch note | These examples replay a saved AI answer from Sat 17 Oct 2026, so the times never change. Your own message below calls the AI live. |
 | 3 Headline (in the Send check) | One line per problem, worst first: Weekend → After hours → Late in the day → Early in the day, each with its cities; none: "Working hours for every city" ("every other city" in a reader's popup, which leaves the reader out) |
-| 3 Send | Shows the check "Before you send" with the headline, "Send anyway" (scrolls to section 4 and moves focus to its heading; nothing is posted) and "Edit" |
+| 3 Check | No Send button: the check "Before you send" shows at once, in the same Team chat window and check box as section 5, ending "AI read it as … (saved answer)". Switching the example updates it |
 | 3 Note | In Outlook this check would run when you press Send. In Teams it would be one button before you send. |
 | 4 H2 | Every reader sees their own time |
 | 4 Chip | → 16:00 your time (Thursday example, read as Doha) |
@@ -186,7 +186,8 @@ The examples use the fixed demo date Sat 17 Oct 2026, 10:00 Prague (`DEMO_NOW`) 
 | 5 Button | Check before sending (the only button; there is no separate Send) |
 | 5 Chat placeholder | Check a message to read it as another city. |
 | 5 Headings | Before you send (left, the sender's result) / What your colleagues read (right, the chat) |
-| 5 Check box | Shown only when a city is After hours or on its Weekend: an amber box with all headline lines (Late and Early lines included) and Only you see this check. Your colleagues just see the time in their own city. |
+| 5 Check box | Shown for every converted time: all headline lines and Only you see this check. Your colleagues just see the time in their own city. Amber when any city is Early, Late, After hours or on its Weekend; neutral for "Working hours for every city" |
+| Scroll hint | A round down arrow fixed at the bottom centre of /concept; a ring around it fills as the page scrolls; a click scrolls 80% of the screen; hidden once the end of the page is in view |
 | 5 Result | AI read it as Thu 22 Oct, 15:00 Prague time (1.8 s) |
 | 5 No time | No time found. Try a time like "3pm", "15:00" or "half past three". |
 | 5 Placeholder | For example: The price is 10.30 QAR. Can we talk at half past three? |
@@ -953,12 +954,12 @@ Files that use `fetch`, `AbortSignal` or the API start with `// @vitest-environm
 
 | Section and input | Read as | Expected |
 | --- | --- | --- |
-| 3, Friday 11am, from Prague, Send | — | Check headline "Weekend for 2 cities: Muscat, Doha" |
+| 3, Friday 11am, from Prague | — | Check headline "Weekend for 2 cities: Muscat, Doha", shown without a click |
 | 3, Thursday 3pm, from Prague, hover or tap the time | — | Popup: Tunis 14:00 Working hours, Muscat 17:00 Late, Doha 16:00 Working hours, New Delhi 18:30 Late; headline "Late in the day for 2 cities: Muscat, New Delhi" |
-| 3, Send | — | The check "Before you send" with the same headline, "Send anyway" and "Edit"; "Send anyway" scrolls to section 4 and focuses its heading, nothing is posted |
+| 3, on load | — | The check "Before you send" already shows the headline in an amber box, with no Send button |
 | 4, Thursday 3pm | Doha | "→ 16:00 your time"; popup row "You" without status, Prague "Sent as 15:00" |
 | 4, Thursday 3pm | New Delhi | "→ 18:30 your time", no status |
-| 3, Sunday 10am, in Arabic, from Doha | — | Weekend for Tunis, Prague and New Delhi; Muscat 11:00 Working; the bubble reads right to left |
+| 3, Sunday 10am, in Arabic, from Doha | — | Weekend for Tunis, Prague and New Delhi; Muscat 11:00 Working hours; the bubble reads right to left |
 | 4, Sunday example | Muscat | "→ 11:00 your time" |
 | 4, switch through all readers | each | Chips update at once; no requests in the Network tab |
 | 5, typed "thanks, looks good" | — | No time found. Try a time like "3pm", "15:00" or "half past three". No request |

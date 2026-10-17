@@ -29,16 +29,15 @@ async function readTimes(message: string, you: Zone, cities: Zone[]): Promise<Ou
   return { text: message, kind: "done", expressions: toExpressions(exprs, message, now), ms: performance.now() - t0 };
 }
 
-function Result({ outcome, you, cities, use24Hour }: { outcome: Extract<Outcome, { kind: "done" }>; you: Zone; cities: Zone[]; use24Hour: boolean }) {
-  const { text, expressions, ms } = outcome;
+// note ends the "AI read it" line: the live answer time, or that the answer was saved
+export function SendCheck({ text, expressions, note, you, cities, use24Hour }: { text: string; expressions: TimeExpression[]; note: string; you: Zone; cities: Zone[]; use24Hour: boolean }) {
   if (!expressions.length) return <p className="text-sm">{NO_TIME}</p>;
   const converted = expressions.filter((e) => e.utcInstant);
-  const secs = `${(ms / 1000).toFixed(1)} s`;
   const first = converted[0];
   const day = first && DateTime.fromISO(first.utcInstant!, { zone: "utc" }).setZone(first.sourceZone!).toFormat("ccc d LLL", { locale: "en" });
   const rows = converted.map((e) => landingRows(e, cities, you, null, use24Hour));
   const lines = converted.length ? headline(rows) : [...new Set(expressions.map((e) => `Not converted: ${NOT_CONVERTED[e.flag ?? "not_specific"]}`))];
-  const warn = rows.flat().some((r) => r.status === "After hours" || r.status === "Weekend");
+  const warn = rows.flat().some((r) => r.status && r.status !== "Working hours");
   return (
     <div className="space-y-3">
       <h3 className="font-semibold">Before you send</h3>
@@ -49,8 +48,8 @@ function Result({ outcome, you, cities, use24Hour }: { outcome: Extract<Outcome,
               <MessageText text={text} expressions={expressions} cities={cities} author={you} viewer={null} use24Hour={use24Hour} />
             </p>
           </TeamsMessage>
-          {warn && (
-            <div className="space-y-1 rounded-md border border-amber-400 bg-amber-400/10 p-3">
+          {converted.length > 0 && (
+            <div className={`space-y-1 rounded-md border p-3 ${warn ? "border-amber-400 bg-amber-400/10" : "bg-muted/40"}`}>
               <Headline lines={lines} />
               <p className="text-xs text-muted-foreground">Only you see this check. Your colleagues just see the time in their own city.</p>
             </div>
@@ -58,8 +57,8 @@ function Result({ outcome, you, cities, use24Hour }: { outcome: Extract<Outcome,
           {!converted.length && <Headline lines={lines} />}
           <p className="text-xs text-muted-foreground">
             {day
-              ? `AI read it as ${day}, ${sentAs(first, use24Hour)} ${cities.find((z) => z.tz === first.sourceZone)?.city ?? tzCity(first.sourceZone!)} time (${secs})`
-              : `AI read it (${secs}): no exact time.`}
+              ? `AI read it as ${day}, ${sentAs(first, use24Hour)} ${cities.find((z) => z.tz === first.sourceZone)?.city ?? tzCity(first.sourceZone!)} time (${note})`
+              : `AI read it (${note}): no exact time.`}
           </p>
         </div>
       </TeamsWindow>
@@ -158,7 +157,9 @@ export function TryIt({ you, cities, use24Hour }: { you: Zone; cities: Zone[]; u
               <p className="text-muted-foreground">The examples above keep working without it.</p>
             </>
           )}
-          {current?.kind === "done" && <Result outcome={current} you={you} cities={cities} use24Hour={use24Hour} />}
+          {current?.kind === "done" && (
+            <SendCheck text={current.text} expressions={current.expressions} note={`${(current.ms / 1000).toFixed(1)} s`} you={you} cities={cities} use24Hour={use24Hour} />
+          )}
         </div>
       </div>
 
