@@ -33,7 +33,7 @@ export async function callParseTime(body: ParseTimeRequest): Promise<Expr[]> {
     const res = await fetch("/api/parse-time", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ ...body, message: excerpt(body.message) }),
+      body: JSON.stringify({ ...body, message: excerpt(body.message, Object.keys(body.teamZones)) }),
       signal: ctrl.signal,
     });
     if (res.status === 504) throw new ParseTimeTimeout();

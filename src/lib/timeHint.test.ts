@@ -138,13 +138,13 @@ describe("excerpt", () => {
   });
 
   it("never counts a line break as the neighbouring sentence", () => {
-    expect(excerpt("One. Two. Meet at 10:30.\nDoha time for this call. End.")).toBe("Two. Meet at 10:30.\nDoha time for this call.");
-    expect(excerpt("One. Two. Meet at 10:30.\r\n\r\nDoha time for this call.\r\nEnd.")).toBe("Two. Meet at 10:30.\r\n\r\nDoha time for this call.");
+    expect(excerpt("One. Two. Meet at 10:30.\nBring the notes. End.")).toBe("Two. Meet at 10:30.\nBring the notes.");
+    expect(excerpt("One. Two. Meet at 10:30.\r\n\r\nBring the notes.\r\nEnd.")).toBe("Two. Meet at 10:30.\r\n\r\nBring the notes.");
   });
 
   it("does not end a sentence at a.m. or p.m.", () => {
-    expect(excerpt("One. Two. Meet at 10 a.m. sharp. Doha time for this call. End.")).toBe("Two. Meet at 10 a.m. sharp. Doha time for this call.");
-    expect(excerpt("One. Two. Call at 4 P.M. today. London time. End.")).toBe("Two. Call at 4 P.M. today. London time.");
+    expect(excerpt("One. Two. Meet at 10 a.m. sharp. Bring the notes. End.")).toBe("Two. Meet at 10 a.m. sharp. Bring the notes.");
+    expect(excerpt("One. Two. Call at 4 P.M. today. Bring snacks. End.")).toBe("Two. Call at 4 P.M. today. Bring snacks.");
   });
 
   it("ends a sentence at a.m. or p.m. when a new sentence starts after it", () => {
@@ -166,5 +166,35 @@ describe("excerpt", () => {
   it("sends short messages and hint-less ones whole", () => {
     expect(excerpt("Hi. Call at 3pm? Thanks.")).toBe("Hi. Call at 3pm? Thanks.");
     expect(excerpt("a. b. c. d. e.")).toBe("a. b. c. d. e.");
+    expect(excerpt("a. b. Due 27 Oct in UTC. c. d.", ["Doha"])).toBe("a. b. Due 27 Oct in UTC. c. d.");
+  });
+
+  it("keeps a zone, a date or a month two sentences from the time, without its far neighbour", () => {
+    expect(excerpt("A. All times are Doha time. B. Kickoff at 10am. C. D. E.")).toBe("All times are Doha time. B. Kickoff at 10am. C.");
+    expect(excerpt("A. Use GMT here. B. Kickoff at 10am. C. D. E.")).toBe("Use GMT here. B. Kickoff at 10am. C.");
+    expect(excerpt("A. The board meets on 27 Oct. B. We start at 3pm. C. D. E.")).toBe("The board meets on 27 Oct. B. We start at 3pm. C.");
+    expect(excerpt("A. Board day is Oct 27. B. We start at 3pm. C. D. E.")).toBe("Board day is Oct 27. B. We start at 3pm. C.");
+    expect(excerpt("A. The offsite is in October. B. We start at 3pm. C. D. E.")).toBe("The offsite is in October. B. We start at 3pm. C.");
+    expect(excerpt("A. We moved it to the 22nd. B. Dinner at 7pm. C. D. E.")).toBe("We moved it to the 22nd. B. Dinner at 7pm. C.");
+    expect(excerpt("A. Due 22/10. B. Dinner at 7pm. C. D. E.")).toBe("Due 22/10. B. Dinner at 7pm. C.");
+    expect(excerpt("أ. الموعد في أكتوبر. ب. نلتقي الساعة ٣. ج. د. هـ.")).toBe("الموعد في أكتوبر. ب. نلتقي الساعة ٣. ج.");
+  });
+
+  it("drops context more than two sentences from any time", () => {
+    expect(excerpt("Call at 3pm. B. C. D. E. F. Use GMT here. G. H.")).toBe("Call at 3pm. B.");
+  });
+
+  it("keeps a sentence that names a team city, accents included", () => {
+    const msg = "A. Ahmed is in Muscat. B. Call at 3pm. C. D. E.";
+    expect(excerpt(msg, ["Prague", "Muscat"])).toBe("Ahmed is in Muscat. B. Call at 3pm. C.");
+    expect(excerpt(msg)).toBe("B. Call at 3pm. C.");
+    expect(excerpt("A. Ahmed is in Malé. B. Call at 3pm. C. D. E.", ["Malé"])).toBe("Ahmed is in Malé. B. Call at 3pm. C.");
+    expect(excerpt("A. Muscatel is nice. B. Call at 3pm. C. D. E.", ["Muscat"])).toBe("B. Call at 3pm. C.");
+  });
+
+  it("does not take words that only look like a month, zone or date for context", () => {
+    for (const s of ["We may march on.", "See you next time.", "Next time, bring notes.", "Jan has the salary sheet.", "May I share the HR case.", "Split it 10/20/30.", "Every time it fails."])
+      expect(excerpt(`A. ${s} B. Call at 3pm. C. D. E.`)).toBe("B. Call at 3pm. C.");
+    expect(excerpt("أ. هو يمارس الرياضة. ب. نلتقي الساعة ٣. ج. د. هـ.")).toBe("ب. نلتقي الساعة ٣. ج.");
   });
 });
