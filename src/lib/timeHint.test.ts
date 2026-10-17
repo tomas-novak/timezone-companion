@@ -177,6 +177,7 @@ describe("excerpt", () => {
     expect(excerpt("A. The offsite is in October. B. We start at 3pm. C. D. E.")).toBe("The offsite is in October. B. We start at 3pm. C.");
     expect(excerpt("A. We moved it to the 22nd. B. Dinner at 7pm. C. D. E.")).toBe("We moved it to the 22nd. B. Dinner at 7pm. C.");
     expect(excerpt("A. Due 22/10. B. Dinner at 7pm. C. D. E.")).toBe("Due 22/10. B. Dinner at 7pm. C.");
+    expect(excerpt("A. The meeting date is 2026-10-27. B. Call at 3pm. C. D. E.")).toBe("The meeting date is 2026-10-27. B. Call at 3pm. C.");
     expect(excerpt("أ. الموعد في أكتوبر. ب. نلتقي الساعة ٣. ج. د. هـ.")).toBe("الموعد في أكتوبر. ب. نلتقي الساعة ٣. ج.");
   });
 
