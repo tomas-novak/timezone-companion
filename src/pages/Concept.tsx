@@ -44,6 +44,14 @@ const Concept = () => {
     return () => ro.disconnect();
   }, []);
 
+  useEffect(() => {
+    const prev = document.title;
+    document.title = "Timezone Companion · AI demo";
+    return () => {
+      document.title = prev;
+    };
+  }, []);
+
   // The page is lazy-loaded, so the browser's own hash scroll runs before the target exists
   useEffect(() => {
     if (hash) document.getElementById(hash.slice(1))?.scrollIntoView();

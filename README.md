@@ -1,6 +1,6 @@
-# OFTI offices time
+# Timezone Companion
 
-Multi-timezone clock and schedule planner. The `/concept` page ("Feature concept" in the header) shows how times in chat messages would be converted for each reader's city. The spec is [docs/PRD.md](docs/PRD.md).
+AI shows every reader a time in their own zone and warns the sender before it lands on an evening or weekend. The main page is a multi-timezone clock and schedule planner. The `/concept` page ("Feature concept" in the header) shows how times in chat messages would be converted for each reader's city. The spec is [docs/PRD.md](docs/PRD.md).
 
 ## Local development
 

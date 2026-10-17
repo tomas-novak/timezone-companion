@@ -27,7 +27,7 @@ describe("story numbers", () => {
     const r = rows(thursday, doha);
     expect(r.find((x) => x.role === "you")).toMatchObject({ zone: doha, time: "16:00", status: null });
     expect(r.find((x) => x.role === "author")).toMatchObject({ time: "15:00", status: null });
-    expect(r.map((x) => x.date)).toContain("Thu 15 Oct");
+    expect(r.map((x) => x.date)).toContain("Thu 22 Oct");
   });
 
   it("the unclear example stays unconverted", () => {

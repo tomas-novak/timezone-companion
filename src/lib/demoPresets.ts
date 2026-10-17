@@ -4,7 +4,7 @@ import { canonicalTz, resolveHomeTz } from "./timezones";
 import { sanitize } from "./extraction";
 import { teamZonesFor, toExpressions, type TimeExpression } from "./timeDetect";
 
-export const DEMO_NOW = "2026-10-13T08:00:00.000Z";
+export const DEMO_NOW = "2026-10-17T08:00:00.000Z";
 
 // The concept page never reads the cities on the main page, so the story's numbers never move
 export const DEMO_CITIES: Zone[] = ["Africa/Tunis", "Europe/Prague", "Asia/Muscat", "Asia/Qatar", "Asia/Kolkata"].map((tz) => createZone(tz, tz));

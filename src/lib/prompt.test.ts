@@ -6,7 +6,7 @@ describe("buildCalendar", () => {
   it("labels 14 days for Prague at the demo clock", () => {
     const cal = buildCalendar(DEMO_NOW, "Europe/Prague");
     expect(cal).toHaveLength(14);
-    expect(cal[0]).toBe("2026-10-13 Tue (this week)");
+    expect(cal[0]).toBe("2026-10-17 Sat (this week)");
     expect(cal).toContain("2026-10-19 Mon (next week)");
     expect(cal).toContain("2026-10-26 Mon (later)");
   });

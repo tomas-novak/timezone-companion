@@ -19,9 +19,11 @@ export function Hero() {
         You write your time. Everyone reads <span className="text-primary">theirs.</span>
       </h1>
       <p className="max-w-2xl text-lg sm:text-xl">
-        When someone proposes a time, or I propose one, I open a world clock and do the maths. So does everyone else in the chat. Timezone
-        Companion does it for all of us, in Teams and Outlook.
+        When someone proposes a time, I open a world clock and do the maths. So does everyone else in the chat. Timezone Companion uses AI
+        to find the time in a message, shows every reader their own time, and warns the sender before it lands on someone's evening or
+        weekend.
       </p>
+      <p className="max-w-2xl font-medium">Live now: the demo on this page, with a real AI call. Next: a pilot inside Teams and Outlook.</p>
       <p className="max-w-2xl text-muted-foreground">
         Ooredoo works across 9 markets, from UTC+1 to UTC+7, with Sunday–Thursday and Monday–Friday weeks.
       </p>
@@ -65,7 +67,7 @@ export function Today() {
           <img src={teamsToday} alt={TODAY_ALT} width={1458} height={887} loading="lazy" className="h-auto w-full" />
           <span className="sr-only">Show full screen</span>
         </DialogTrigger>
-        <DialogContent className="light block h-dvh w-screen max-w-none rounded-none border-0 bg-white p-0 sm:rounded-none">
+        <DialogContent className="light block h-dvh w-screen max-w-none rounded-none border-0 bg-white p-0 text-foreground sm:rounded-none">
           <DialogTitle className="sr-only">Rollout plan chat</DialogTitle>
           {/* Pans at a readable width on phones; a tap closes it like a photo viewer, keyboard users have Close and Esc */}
           <div onClick={() => setZoomed(false)} className="flex h-full w-full cursor-zoom-out overflow-auto">
