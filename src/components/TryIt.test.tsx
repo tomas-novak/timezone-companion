@@ -88,6 +88,32 @@ describe("TryIt", () => {
     expect(fetch).toHaveBeenCalledTimes(2);
   });
 
+  it("asks to wait on a rate limit and offers no instant retry", async () => {
+    setup(prague, 429);
+    type("call at 3pm");
+    await click("Check how it lands");
+    expect(status()).toContain("Too many tries from your network. Wait a minute, then try again.");
+    expect(screen.queryByRole("button", { name: "Try again" })).toBeNull();
+  });
+
+  it("scrolls the chat into view after a check, but not for a late answer to an edited draft", async () => {
+    const scroll = vi.fn();
+    Element.prototype.scrollIntoView = scroll;
+    let answer!: (r: unknown) => void;
+    vi.stubGlobal("fetch", vi.fn(() => new Promise((r) => (answer = r))));
+    render(<TryIt you={prague.you} cities={prague.cities} use24Hour />);
+    const reply = { ok: true, status: 200, json: async () => ({ expressions: at3pm("3pm") }) };
+    type("call at 3pm");
+    await click("Check how it lands");
+    type("call at 3pm today");
+    await act(async () => answer(reply));
+    expect(scroll).not.toHaveBeenCalled();
+    await click("Check how it lands");
+    await act(async () => answer(reply));
+    expect(scroll).toHaveBeenCalledWith({ block: "nearest" });
+    delete (Element.prototype as Partial<Element>).scrollIntoView;
+  });
+
   it("checks on Enter but not on Shift+Enter", async () => {
     const fetch = setup();
     type("call at 3pm");
@@ -136,7 +162,7 @@ describe("TryIt", () => {
     expect(status()).toContain("Doha time");
   });
 
-  it("apologises for slow test infrastructure only after 10 s of waiting", async () => {
+  it("says the AI is slower than usual only after 10 s of waiting", async () => {
     vi.useFakeTimers();
     let answer!: (r: unknown) => void;
     vi.stubGlobal("fetch", vi.fn(() => new Promise((r) => (answer = r))));
@@ -145,11 +171,11 @@ describe("TryIt", () => {
     await click("Check how it lands");
     expect(status()).toContain("Asking the AI");
     await act(async () => vi.advanceTimersByTime(9_900));
-    expect(status()).not.toContain("slow test infrastructure");
+    expect(status()).not.toContain("slower than usual");
     await act(async () => vi.advanceTimersByTime(200));
-    expect(status()).toContain("slow test infrastructure");
+    expect(status()).toContain("slower than usual");
     await act(async () => answer({ ok: true, status: 200, json: async () => ({ expressions: at3pm("call at 3pm") }) }));
-    expect(status()).not.toContain("slow test infrastructure");
+    expect(status()).not.toContain("slower than usual");
     expect(status()).toMatch(/AI read it as/);
   });
 });
