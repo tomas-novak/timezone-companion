@@ -41,6 +41,18 @@ export function createZone(tz: string, id: string = newId()): Zone {
   };
 }
 
+const HHMM = /^([01]\d|2[0-3]):[0-5]\d$/;
+const TIME_KEYS = ["workingStart", "workingEnd", "reasonableStart", "reasonableEnd"] as const;
+
+// Stored data is untrusted: a bad day or time would crash or garble every card, so fall back to the preset field
+function withValidHours(zone: Zone, fallback: Zone): Zone {
+  const days = zone.workingDays;
+  const validDays = Array.isArray(days) && days.every((d) => Number.isInteger(d) && d >= 1 && d <= 7);
+  const fixed = { ...zone, workingDays: validDays ? days : fallback.workingDays };
+  for (const key of TIME_KEYS) if (typeof zone[key] !== "string" || !HHMM.test(zone[key])) fixed[key] = fallback[key];
+  return fixed;
+}
+
 export function getDefaultSettings(): AppSettings {
   return {
     version: 2,
@@ -63,7 +75,7 @@ export function migrate(raw: any): AppSettings {
     zones = Array.isArray(rawZones)
       ? rawZones
           .filter((z) => z && typeof z.id === "string" && IANAZone.isValidZone(z.tz))
-          .map((z) => ({ ...createZone(z.tz, z.id), ...z }))
+          .map((z) => withValidHours({ ...createZone(z.tz, z.id), ...z }, createZone(z.tz, z.id)))
       : defaults.zones;
   } else {
     // v1 stored per-zone hours keyed by IANA id plus a separate zoneOrder; city names lived in code
@@ -73,7 +85,7 @@ export function migrate(raw: any): AppSettings {
       .filter((tz) => IANAZone.isValidZone(tz))
       .map((tz) => {
         const { hidden, ...hours } = old[tz] ?? {};
-        return { ...createZone(tz, tz), ...hours };
+        return withValidHours({ ...createZone(tz, tz), ...hours }, createZone(tz, tz));
       });
   }
 

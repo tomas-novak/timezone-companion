@@ -1,4 +1,4 @@
-import { useRef, useEffect } from "react";
+import { useRef, useEffect, type CSSProperties } from "react";
 import { DateTime } from "luxon";
 import type { Zone } from "@/lib/storage";
 import { getHomeDayHours } from "@/lib/timezones";
@@ -89,12 +89,13 @@ export function ScheduleView({ zones, now, use24Hour, homeTz }: ScheduleViewProp
   return (
     <div className="schedule-view">
       {/* Scrollable container for both header and grid */}
-      <div ref={scrollRef} className="schedule-grid-container">
+      <div ref={scrollRef} className="schedule-grid-container" style={{ "--cols": zones.length } as CSSProperties}>
         {/* Header row - sticky */}
         <div className="schedule-header">
           {zones.map((zone) => (
-            <div key={zone.id} className="schedule-header-cell">
-              <span className="font-semibold">{zone.city}</span>
+            <div key={zone.id} className={`schedule-header-cell ${zone.tz === homeTz ? "schedule-header-cell-home" : ""}`}>
+              <span className="block truncate font-semibold">{zone.city}</span>
+              {zone.tz === homeTz && <span className="schedule-home-tag">You</span>}
             </div>
           ))}
         </div>

@@ -36,7 +36,7 @@ export function useSettings() {
 
   const addZone = useCallback((tz: string) => {
     setSettings((prev) =>
-      prev.zones.length >= MAX_ZONES ? prev : { ...prev, zones: [...prev.zones, createZone(tz)] }
+      prev.zones.length >= MAX_ZONES || prev.zones.some((zone) => zone.tz === tz) ? prev : { ...prev, zones: [...prev.zones, createZone(tz)] }
     );
   }, []);
 

@@ -52,7 +52,7 @@ function HourSelect({
       <select
         value={currentHour}
         onChange={(e) => onChange(`${e.target.value.padStart(2, "0")}:00`)}
-        className="time-input"
+        className="time-input w-auto"
       >
         {hours.map((hour) => (
           <option key={hour} value={hour}>

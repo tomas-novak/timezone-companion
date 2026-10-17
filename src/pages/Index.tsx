@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { Header } from "@/components/Header";
 import { ClockCard } from "@/components/ClockCard";
 import { SettingsPanel } from "@/components/SettingsPanel";
@@ -18,6 +18,7 @@ const Index = () => {
     useSettings();
   const homeTz = resolveHomeTz(settings.homeTz);
   const [activeTab, setActiveTab] = useState("clocks");
+  const added = useMemo(() => settings.zones.map((zone) => zone.tz), [settings.zones]);
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -67,14 +68,15 @@ const Index = () => {
             )}
             <AddCityDialog
               onAdd={addZone}
+              added={added}
               disabled={settings.zones.length >= MAX_ZONES}
-              homeTz={settings.zones.some((zone) => zone.tz === homeTz) ? null : homeTz}
+              homeTz={homeTz}
             />
           </div>
 
           <TabsContent value="clocks" className="space-y-6">
             {/* Clock Grid */}
-            <div className="grid gap-4 md:grid-cols-2">
+            <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
               {settings.zones.map((zone) => (
                 <ClockCard
                   key={zone.id}

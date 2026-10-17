@@ -1,8 +1,20 @@
 import { describe, expect, it } from "vitest";
-import { CITY_PRESETS, DEFAULT_TZS, OOREDOO_TZS, worldTimeZones } from "./timezones";
+import { CITY_PRESETS, DEFAULT_TZS, formatWorkWeek, OOREDOO_TZS, worldTimeZones } from "./timezones";
 import { createZone, getDefaultSettings, migrate } from "./storage";
 
 const TIME_REGEX = /^([01]\d|2[0-3]):[0-5]\d$/;
+
+describe("formatWorkWeek", () => {
+  it("shows one run as a range, wrapping past Sunday, and lists scattered days", () => {
+    expect(formatWorkWeek([1, 2, 3, 4, 5])).toBe("Mon–Fri");
+    expect(formatWorkWeek([7, 1, 2, 3, 4])).toBe("Sun–Thu");
+    expect(formatWorkWeek([6, 7, 1])).toBe("Sat–Mon");
+    expect(formatWorkWeek([3])).toBe("Wed");
+    expect(formatWorkWeek([1, 3, 5])).toBe("Mon, Wed, Fri");
+    expect(formatWorkWeek([])).toBe("No working days");
+    expect(formatWorkWeek([1, 2, 3, 4, 5, 6, 7])).toBe("Every day");
+  });
+});
 
 describe("city presets", () => {
   it("cover every default and Ooredoo zone with valid IANA ids and working days", () => {
@@ -99,6 +111,14 @@ describe("migrate", () => {
     const renamed = { ...createZone("Asia/Qatar", "a"), city: "Doha office" };
     const settings = migrate({ version: 2, zones: [renamed, { id: "b", tz: "Mars/Olympus" }] });
     expect(settings.zones).toEqual([renamed]);
+  });
+
+  it("replaces a stored day or time that would break the cards with the preset value", () => {
+    const doha = createZone("Asia/Qatar", "a");
+    const settings = migrate({ version: 2, zones: [{ ...doha, workingDays: [0, 1, 8], workingStart: "9:00", reasonableEnd: null }] });
+    expect(settings.zones[0]).toEqual(doha);
+    const none = migrate({ version: 2, zones: [{ ...doha, workingDays: [] }] });
+    expect(none.zones[0].workingDays).toEqual([]);
   });
 
   it("keeps an empty v2 list empty", () => {
