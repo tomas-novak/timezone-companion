@@ -23,6 +23,7 @@ export function teamZonesFor(zones: Zone[]): Record<string, string> {
 const inClockChange = (d: DateTime, hhmm: string) => d.toISO()!.slice(11, 16) !== hhmm || d.getPossibleOffsets().length > 1;
 
 export class ParseTimeTimeout extends Error {}
+export class ParseTimeRateLimited extends Error {}
 
 // A manual controller: AbortSignal.timeout is missing in jsdom and in Safari before 16
 export async function callParseTime(body: ParseTimeRequest): Promise<Expr[]> {
@@ -36,6 +37,7 @@ export async function callParseTime(body: ParseTimeRequest): Promise<Expr[]> {
       signal: ctrl.signal,
     });
     if (res.status === 504) throw new ParseTimeTimeout();
+    if (res.status === 429) throw new ParseTimeRateLimited();
     const expressions = res.ok ? sanitize(await res.json(), body.message, body.senderZone, body.teamZones) : null;
     if (!expressions) throw new Error(`parse-time ${res.status}`);
     return expressions;

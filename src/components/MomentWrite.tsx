@@ -85,17 +85,18 @@ export function MomentWrite({ example, onExampleChange, onSent, use24Hour }: { e
                 </div>
               </div>
             )}
-            <div className="flex items-end gap-2 rounded-md border border-b-2 border-b-[#5B5FC7] px-3 py-2">
-              <p dir="auto" className="min-h-16 flex-1 text-base leading-8">
+            <div className="flex flex-wrap items-end justify-end gap-2 rounded-md border border-b-2 border-b-[#5B5FC7] px-3 py-2">
+              <p dir="auto" className="min-h-16 min-w-0 flex-[1_1_12rem] break-words text-base leading-8">
                 <MessageText text={example.text} expressions={example.expressions} cities={DEMO_CITIES} author={example.author} viewer={null} use24Hour={use24Hour} />
               </p>
               {!open && (
-                <Button ref={sendRef} size="icon" variant="ghost" aria-label="Send" className="shrink-0 text-[#5B5FC7] hover:text-[#5B5FC7]" onClick={() => setCheckFor(example.id)}>
-                  <SendHorizontal />
+                <Button ref={sendRef} size="sm" className="shrink-0 bg-[#5B5FC7] text-white hover:bg-[#4F52B2]" onClick={() => setCheckFor(example.id)}>
+                  Send
+                  <SendHorizontal aria-hidden />
                 </Button>
               )}
             </div>
-            <p className="text-xs text-muted-foreground">Hover or tap the highlighted time.</p>
+            <p className="text-xs text-muted-foreground">Press Send to see the check. Hover or tap the highlighted time.</p>
           </div>
         </TeamsWindow>
         <p className="text-sm text-muted-foreground">In Outlook this check would run when you press Send. In Teams it would be one button before you send.</p>

@@ -180,7 +180,9 @@ Both examples use the fixed demo date Sat 17 Oct 2026, 10:00 Prague (`DEMO_NOW`)
 | 5 Check box | Shown only when a city is After hours or on its Weekend: an amber box with all headline lines (Late and Early lines included) and Only you see this check. Your colleagues just see the time in their own zone. |
 | 5 Result | AI read it as Thu 22 Oct, 15:00 Prague time (1.8 s) |
 | 5 No time | No time found. Try a time like "3pm", "15:00" or "half past three". |
-| 5 Failure | The AI didn't answer. (or, on a timeout, Timeout: the AI took too long to answer.) + "Try again" / The examples above keep working without it. |
+| 5 Placeholder | e.g. v2.50 is out, can we go through it at half past three? |
+| 5 Slow | After 10 s: The AI is slower than usual right now. Give it a few more seconds. |
+| 5 Failure | The AI didn't answer. (or, on a timeout, Timeout: the AI took too long to answer.) + "Try again" / on a 429: Too many tries from your network. Wait a minute, then try again. (no "Try again") / The examples above keep working without it. |
 | 5 Note | Demo: don't paste real company messages. Typed text goes to OpenAI to read the time. The app keeps no copy; OpenAI may keep it for up to 30 days for abuse monitoring. |
 | 6 H2 | Why you can trust it |
 | 6 Points | The AI only reads the time in the sentence. Calendar maths does the conversion. / If a time is unclear, like "3pm your time" in a group, it is flagged, not guessed. (next to it the unclear example from Prague, viewed as Doha) / Tested on 30 English and Arabic messages, 3 runs, 0 unclear times shown as exact. Median answer about 1.5 s. About $0.10–0.34 per 1,000 messages. |

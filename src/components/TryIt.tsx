@@ -8,14 +8,19 @@ import { YOUR_TIME, readerZone } from "@/lib/extraction";
 import { TIME_HINT } from "@/lib/timeHint";
 import { NOT_CONVERTED, headline, landingRows, sentAs } from "@/lib/landing";
 import { tzCity } from "@/lib/timezones";
-import { callParseTime, firstReaderWithChip, ParseTimeTimeout, teamZonesFor, toExpressions, type TimeExpression } from "@/lib/timeDetect";
+import { callParseTime, firstReaderWithChip, ParseTimeRateLimited, ParseTimeTimeout, teamZonesFor, toExpressions, type TimeExpression } from "@/lib/timeDetect";
 import { ChatFrame, TeamsMessage, TeamsWindow } from "./ChatFrame";
 import { Headline, MessageText } from "./TimesPopover";
 import { H2 } from "./PitchSections";
 
-type Outcome = { text: string } & ({ kind: "none" } | { kind: "error"; timedOut: boolean } | { kind: "done"; expressions: TimeExpression[]; ms: number });
+type Outcome = { text: string } & ({ kind: "none" } | { kind: "error"; message: string; retry: boolean } | { kind: "done"; expressions: TimeExpression[]; ms: number });
 
 const NO_TIME = 'No time found. Try a time like "3pm", "15:00" or "half past three".';
+
+function failure(err: unknown): string {
+  if (err instanceof ParseTimeRateLimited) return "Too many tries from your network. Wait a minute, then try again.";
+  return err instanceof ParseTimeTimeout ? "Timeout: the AI took too long to answer." : "The AI didn't answer.";
+}
 
 async function readTimes(message: string, you: Zone, cities: Zone[]): Promise<Outcome> {
   const now = DateTime.now().setZone(you.tz).toISO()!;
@@ -68,6 +73,7 @@ export function TryIt({ you, cities, use24Hour }: { you: Zone; cities: Zone[]; u
   const [checking, setChecking] = useState(false);
   const [slow, setSlow] = useState(false);
   const running = useRef(false);
+  const readPanel = useRef<HTMLDivElement>(null);
   useEffect(() => {
     setSlow(false);
     if (!checking) return;
@@ -77,11 +83,18 @@ export function TryIt({ you, cities, use24Hour }: { you: Zone; cities: Zone[]; u
   // The chat keeps the last message that converted, so it stays while the visitor edits the next one
   const [read, setRead] = useState<{ author: Zone; text: string; expressions: TimeExpression[] } | null>(null);
   const [viewerId, setViewerId] = useState<string | null>(null);
+  // At large text sizes the chat sits below the fold, so bring it into view after each check,
+  // but not for a late answer to a message the visitor has since edited away from
+  const draft = useRef("");
+  useEffect(() => {
+    if (read && draft.current === `${read.author.tz}|${read.text}`) readPanel.current?.scrollIntoView?.({ block: "nearest" });
+  }, [read]);
   const viewer = cities.find((z) => z.id === viewerId) ?? cities.find((z) => z.id !== you.id)!;
   const key = text.trim();
   // Keyed by sender zone and text, so an edit or a new home city hides the result and a late answer never shows as current
   const cacheKey = (msg: string) => `${you.tz}|${msg}`;
   const current = outcomes[cacheKey(key)] ?? null;
+  draft.current = cacheKey(key);
   const yourTimeNote = YOUR_TIME.test(text) && readerZone(teamZonesFor(cities), you.tz) === null;
 
   const showRead = (r: Outcome) => {
@@ -98,7 +111,7 @@ export function TryIt({ you, cities, use24Hour }: { you: Zone; cities: Zone[]; u
     if (TIME_HINT.test(key)) {
       running.current = true;
       setChecking(true);
-      r = await readTimes(key, you, cities).catch((err): Outcome => ({ text: key, kind: "error", timedOut: err instanceof ParseTimeTimeout }));
+      r = await readTimes(key, you, cities).catch((err): Outcome => ({ text: key, kind: "error", message: failure(err), retry: !(err instanceof ParseTimeRateLimited) }));
       running.current = false;
       setChecking(false);
     }
@@ -113,7 +126,7 @@ export function TryIt({ you, cities, use24Hour }: { you: Zone; cities: Zone[]; u
         <label htmlFor="try-message" className="block text-center text-sm text-muted-foreground">
           Sending from {you.city}. Write a message with a time, in English or Arabic.
         </label>
-        <Textarea id="try-message" dir="auto" maxLength={500} rows={3} value={text} onChange={(e) => setText(e.target.value)}
+        <Textarea id="try-message" dir="auto" maxLength={500} rows={3} value={text} placeholder="e.g. v2.50 is out, can we go through it at half past three?" onChange={(e) => setText(e.target.value)}
           onKeyDown={(e) => {
             if (e.key !== "Enter" || e.shiftKey || e.nativeEvent.isComposing) return;
             e.preventDefault();
@@ -131,22 +144,17 @@ export function TryIt({ you, cities, use24Hour }: { you: Zone; cities: Zone[]; u
         </Button>
         <p className="text-xs text-muted-foreground">Demo: don't paste real company messages. Typed text goes to OpenAI to read the time. The app keeps no copy; OpenAI may keep it for up to 30 days for abuse monitoring.</p>
         <div role="status" className="space-y-2 text-sm">
-          {checking && (
-            <p className="flex items-center gap-2 text-muted-foreground">
-              <Loader2 aria-hidden className="h-4 w-4 shrink-0 motion-safe:animate-spin" />
-              Asking the AI…
-            </p>
-          )}
-          {checking && slow && (
-            <p className="text-muted-foreground">Sorry for the wait. This demo runs on slow test infrastructure, so the AI can take a few more seconds.</p>
-          )}
+          {checking && <p className="text-muted-foreground">Asking the AI…</p>}
+          {checking && slow && <p className="text-muted-foreground">The AI is slower than usual right now. Give it a few more seconds.</p>}
           {current?.kind === "none" && <p>{NO_TIME}</p>}
           {current?.kind === "error" && (
             <>
-              <p>{current.timedOut ? "Timeout: the AI took too long to answer." : "The AI didn't answer."}</p>
-              <Button type="button" size="sm" variant="outline" onClick={check}>
-                Try again
-              </Button>
+              <p>{current.message}</p>
+              {current.retry && (
+                <Button type="button" size="sm" variant="outline" onClick={check}>
+                  Try again
+                </Button>
+              )}
               <p className="text-muted-foreground">The examples above keep working without it.</p>
             </>
           )}
@@ -154,7 +162,7 @@ export function TryIt({ you, cities, use24Hour }: { you: Zone; cities: Zone[]; u
         </div>
       </div>
 
-      <div className="min-w-0 space-y-3 lg:max-h-[560px] lg:overflow-y-auto">
+      <div ref={readPanel} className="min-w-0 space-y-3 lg:max-h-[560px] lg:overflow-y-auto">
         <h3 className="font-semibold">What your colleagues read</h3>
         {read ? (
           <ChatFrame
