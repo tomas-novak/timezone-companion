@@ -35,10 +35,10 @@ const Index = () => {
       <main id="main" tabIndex={-1} className="flex-1 container scroll-mt-24 py-10 space-y-8 outline-none">
         <div className="space-y-4">
           <p className="text-muted-foreground">
-            Who can you reach right now? Live hours across Ooredoo markets, on Sunday–Thursday and Monday–Friday weeks.
+            Who can you reach right now? See the time and working hours in each city, for Sunday–Thursday and Monday–Friday work weeks.
           </p>
           <p className="rounded-lg border border-primary/40 bg-primary/10 px-4 py-3">
-            BuildAI Challenge entry.{" "}
+            Ooredoo BuildAI Challenge entry.{" "}
             <Link to="/concept" className="font-medium underline underline-offset-4">
               Try the AI demo →
             </Link>
@@ -53,7 +53,7 @@ const Index = () => {
             </TabsTrigger>
             <TabsTrigger value="schedule" className="gap-2">
               <CalendarDays size={16} />
-              Schedule View
+              Compare hours
             </TabsTrigger>
           </TabsList>
 

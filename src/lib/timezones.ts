@@ -29,6 +29,7 @@ export const CITY_PRESETS: Record<string, CityPreset> = {
   "Africa/Algiers": { city: "Algiers", country: "Algeria", workingDays: SUN_THU },
   "Indian/Maldives": { city: "Malé", country: "Maldives", workingDays: SUN_THU },
   "Asia/Jakarta": { city: "Jakarta", country: "Indonesia", workingDays: MON_FRI },
+  "Asia/Hebron": { city: "Ramallah", country: "Palestine", workingDays: SUN_THU },
 };
 
 export const MAX_ZONES = 8;
@@ -44,6 +45,7 @@ export const OOREDOO_TZS = [
   "Africa/Tunis",
   "Indian/Maldives",
   "Asia/Jakarta",
+  "Asia/Hebron",
 ];
 
 export const tzCity = (tz: string) => tz.split("/").pop()!.replace(/_/g, " ");
@@ -103,12 +105,10 @@ export function formatWorkWeek(days: number[]): string {
 }
 
 export function formatOffsetDiff(minutes: number): string {
-  if (minutes === 0) return "0 h";
-  const sign = minutes > 0 ? "+" : "−";
+  if (minutes === 0) return "Same time as you";
   const abs = Math.abs(minutes);
-  const h = Math.floor(abs / 60);
-  const m = abs % 60;
-  return `${sign}${h}${m ? `:${String(m).padStart(2, "0")}` : ""} h`;
+  const span = [Math.floor(abs / 60) && `${Math.floor(abs / 60)} h`, abs % 60 && `${abs % 60} min`].filter(Boolean).join(" ");
+  return `${span} ${minutes > 0 ? "ahead of" : "behind"} you`;
 }
 
 export function getHomeDayHours(now: DateTime, homeTz: string): DateTime[] {

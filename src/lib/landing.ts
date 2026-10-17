@@ -3,7 +3,7 @@ import type { Zone } from "./storage";
 import { tzCity } from "./timezones";
 import { chipFor, formatTime, type Flag, type TimeChip, type TimeExpression } from "./timeDetect";
 
-export type StatusWord = "Working" | "Early" | "Late" | "After hours" | "Weekend";
+export type StatusWord = "Working hours" | "Early" | "Late" | "After hours" | "Weekend";
 
 export interface LandingRow {
   zone: Zone;
@@ -14,7 +14,7 @@ export interface LandingRow {
   status: StatusWord | null;
 }
 
-const WORD: Record<TimeChip["suffix"], StatusWord> = { "": "Working", early: "Early", late: "Late", "after hours": "After hours", weekend: "Weekend" };
+const WORD: Record<TimeChip["suffix"], StatusWord> = { "": "Working hours", early: "Early", late: "Late", "after hours": "After hours", weekend: "Weekend" };
 
 export const NOT_CONVERTED: Record<Flag, string> = {
   zone_unclear: "say which time zone",

@@ -16,10 +16,10 @@ export function Footer() {
               Time Zones
             </div>
             <p className="text-muted-foreground">
-              This app displays live clocks for the cities you pick with "Add city", including
-              quick picks for the Ooredoo markets. The
-              schedule and the hour difference on each card are relative to your time zone,
-              detected from your browser and changeable under "My time zone" at the top of the page.
+              This app shows live clocks for the cities you pick with "Add city", including
+              quick picks for the Ooredoo markets. Compare hours and the hour difference on each
+              card are relative to your time zone, taken from your browser. Change it under
+              "My time zone" at the top of the page.
             </p>
           </div>
 
@@ -29,8 +29,8 @@ export function Footer() {
               Working Hours
             </div>
             <p className="text-muted-foreground">
-              Each zone has configurable working hours and days. Cards glow when the zone
-              is currently within working hours. Use the Schedule View to compare all zones side-by-side.
+              Each city has its own working hours and days. A card glows when its city is in
+              working hours. Use Compare hours to see all cities side by side.
             </p>
           </div>
         </div>

@@ -39,6 +39,7 @@ describe("city presets", () => {
       "Africa/Tunis": MON_FRI,
       "Indian/Maldives": SUN_THU,
       "Asia/Jakarta": MON_FRI,
+      "Asia/Hebron": SUN_THU,
     };
     OOREDOO_TZS.forEach((tz) => expect(createZone(tz).workingDays, tz).toEqual(expected[tz]));
   });

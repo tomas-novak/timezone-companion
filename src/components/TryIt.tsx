@@ -8,7 +8,7 @@ import { YOUR_TIME, readerZone } from "@/lib/extraction";
 import { TIME_HINT } from "@/lib/timeHint";
 import { NOT_CONVERTED, headline, landingRows, sentAs } from "@/lib/landing";
 import { tzCity } from "@/lib/timezones";
-import { callParseTime, firstReaderWithChip, ParseTimeRateLimited, ParseTimeTimeout, teamZonesFor, toExpressions, type TimeExpression } from "@/lib/timeDetect";
+import { callParseTime, worstReader, ParseTimeRateLimited, ParseTimeTimeout, teamZonesFor, toExpressions, type TimeExpression } from "@/lib/timeDetect";
 import { ChatFrame, TeamsMessage, TeamsWindow } from "./ChatFrame";
 import { Headline, MessageText } from "./TimesPopover";
 import { H2 } from "./PitchSections";
@@ -44,7 +44,7 @@ function Result({ outcome, you, cities, use24Hour }: { outcome: Extract<Outcome,
       <h3 className="font-semibold">Before you send</h3>
       <TeamsWindow title="Team chat">
         <div className="space-y-3 p-4">
-          <TeamsMessage author={you} mine>
+          <TeamsMessage name={you.city} mine>
             <p dir="auto">
               <MessageText text={text} expressions={expressions} cities={cities} author={you} viewer={null} use24Hour={use24Hour} />
             </p>
@@ -52,7 +52,7 @@ function Result({ outcome, you, cities, use24Hour }: { outcome: Extract<Outcome,
           {warn && (
             <div className="space-y-1 rounded-md border border-amber-400 bg-amber-400/10 p-3">
               <Headline lines={lines} />
-              <p className="text-xs text-muted-foreground">Only you see this check. Your colleagues just see the time in their own zone.</p>
+              <p className="text-xs text-muted-foreground">Only you see this check. Your colleagues just see the time in their own city.</p>
             </div>
           )}
           {!converted.length && <Headline lines={lines} />}
@@ -100,7 +100,7 @@ export function TryIt({ you, cities, use24Hour }: { you: Zone; cities: Zone[]; u
   const showRead = (r: Outcome) => {
     if (r.kind !== "done" || !r.expressions.length) return;
     setRead({ author: you, text: r.text, expressions: r.expressions });
-    setViewerId(firstReaderWithChip(r.expressions, you, cities, use24Hour).id);
+    setViewerId(worstReader(r.expressions, you, cities, use24Hour).id);
   };
 
   const check = async () => {
@@ -126,7 +126,7 @@ export function TryIt({ you, cities, use24Hour }: { you: Zone; cities: Zone[]; u
         <label htmlFor="try-message" className="block text-center text-sm text-muted-foreground">
           Sending from {you.city}. Write a message with a time, in English or Arabic.
         </label>
-        <Textarea id="try-message" dir="auto" maxLength={500} rows={3} value={text} placeholder="e.g. v2.50 is out, can we go through it at half past three?" onChange={(e) => setText(e.target.value)}
+        <Textarea id="try-message" dir="auto" maxLength={500} rows={3} value={text} placeholder="For example: The price is 10.30 QAR. Can we talk at half past three?" onChange={(e) => setText(e.target.value)}
           onKeyDown={(e) => {
             if (e.key !== "Enter" || e.shiftKey || e.nativeEvent.isComposing) return;
             e.preventDefault();
@@ -140,9 +140,9 @@ export function TryIt({ you, cities, use24Hour }: { you: Zone; cities: Zone[]; u
         )}
         <Button type="button" onClick={check} aria-disabled={checking || !key} className="aria-disabled:opacity-50">
           {checking && <Loader2 aria-hidden className="motion-safe:animate-spin" />}
-          {checking ? "Checking…" : "Check how it lands"}
+          {checking ? "Checking…" : "Check before sending"}
         </Button>
-        <p className="text-xs text-muted-foreground">Demo: don't paste real company messages. Typed text goes to OpenAI to read the time; for a long message, only the sentences around it. The app keeps no copy; OpenAI may keep it for up to 30 days for abuse monitoring.</p>
+        <p className="text-xs text-muted-foreground">Don't paste real company messages. This demo sends what you type to OpenAI to read the time. The app keeps no copy. OpenAI may keep it for up to 30 days to check for misuse.</p>
         <div role="status" className="space-y-2 text-sm">
           {checking && <p className="text-muted-foreground">Asking the AI…</p>}
           {checking && slow && <p className="text-muted-foreground">The AI is slower than usual right now. Give it a few more seconds.</p>}

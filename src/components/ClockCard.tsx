@@ -2,6 +2,7 @@ import { DateTime } from "luxon";
 import { formatOffsetDiff, formatWorkWeek } from "@/lib/timezones";
 import type { Zone } from "@/lib/storage";
 import { getWorkStatus, type WorkStatus } from "@/lib/workStatus";
+import { isEarly } from "@/lib/timeDetect";
 import { Clock, Briefcase, Coffee, Calendar, Sun } from "lucide-react";
 
 interface ClockCardProps {
@@ -11,7 +12,7 @@ interface ClockCardProps {
   homeTz: string;
 }
 
-function WorkStatusBadge({ status }: { status: WorkStatus }) {
+function WorkStatusBadge({ status, early }: { status: WorkStatus; early: boolean }) {
   switch (status) {
     case "working":
       return (
@@ -24,14 +25,14 @@ function WorkStatusBadge({ status }: { status: WorkStatus }) {
       return (
         <span className="badge-reasonable">
           <Sun size={12} />
-          Reasonable hours
+          {early ? "Early" : "Late"}
         </span>
       );
     case "outside":
       return (
         <span className="badge-outside">
           <Coffee size={12} />
-          Outside hours
+          After hours
         </span>
       );
     case "weekend":
@@ -56,9 +57,6 @@ export function ClockCard({ zone, now, use24Hour, homeTz }: ClockCardProps) {
   // Format date
   const dateString = local.toFormat("EEE, d LLL yyyy");
 
-  // UTC offset
-  const offset = local.toFormat("ZZZZ"); // e.g., "UTC+3"
-  const abbr = local.toFormat("ZZZZZ"); // Full timezone name
   // UTC so a DST jump in the viewer's own zone never shifts a stored "02:00"
   const hour = (t: string) => DateTime.fromFormat(t, "HH:mm", { zone: "utc" }).toFormat(use24Hour ? "HH:mm" : "h:mm a");
   const workWeek = `${formatWorkWeek(zone.workingDays)} · ${hour(zone.workingStart)}–${hour(zone.workingEnd)}`;
@@ -68,7 +66,7 @@ export function ClockCard({ zone, now, use24Hour, homeTz }: ClockCardProps) {
     <div className={`clock-card min-w-0 ${isActive ? "clock-card-active" : ""}`}>
       {/* Status badge */}
       <div className="absolute right-4 top-4">
-        <WorkStatusBadge status={status} />
+        <WorkStatusBadge status={status} early={isEarly(local, zone)} />
       </div>
 
       {/* City & Country */}
@@ -89,15 +87,7 @@ export function ClockCard({ zone, now, use24Hour, homeTz }: ClockCardProps) {
       {/* Timezone info */}
       <div className="flex items-center gap-2 text-xs text-muted-foreground">
         <Clock size={12} />
-        <span>{offset}</span>
-        <span className="opacity-50">•</span>
         <span className="font-medium text-foreground">{homeDiff}</span>
-        {abbr && abbr !== offset && (
-          <>
-            <span className="opacity-50">•</span>
-            <span className="truncate max-w-[120px]">{abbr}</span>
-          </>
-        )}
       </div>
     </div>
   );

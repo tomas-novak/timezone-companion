@@ -61,11 +61,11 @@ export function Header({
           <Button asChild variant={onConcept ? "outline" : "default"} size="sm">
             {onConcept ? (
               <Link to="/">
-                <ArrowLeft size={16} aria-hidden /> Back to clocks
+                <ArrowLeft size={16} aria-hidden /> World clock
               </Link>
             ) : (
               <Link to="/concept">
-                <Sparkles size={16} aria-hidden /> Feature concept
+                <Sparkles size={16} aria-hidden /> AI demo
               </Link>
             )}
           </Button>
@@ -106,9 +106,9 @@ export function Header({
                 </Button>
               </PopoverTrigger>
               <PopoverContent align="end" className="text-sm">
-                Pick the time zone you are in. The Schedule View is laid out in your hours and each clock
-                shows how far ahead or behind you it is (e.g. +2 h); your own city is marked "You". Auto
-                follows your browser, so it updates when you travel; pick a city to keep it fixed.
+                Pick the time zone you are in. Compare hours is laid out in your hours, and each card says how far
+                ahead or behind you a city is. Your own city is marked "You". Auto follows your browser, so it
+                updates when you travel. Pick a city to keep it fixed.
               </PopoverContent>
             </Popover>
           </div>

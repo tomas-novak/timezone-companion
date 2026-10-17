@@ -1,11 +1,10 @@
 import { useEffect, useRef, useState, type FocusEvent } from "react";
 import { useLocation } from "react-router-dom";
 import { Header } from "@/components/Header";
-import { Footer } from "@/components/Footer";
 import { MomentWrite } from "@/components/MomentWrite";
 import { MomentRead } from "@/components/MomentRead";
 import { TryIt } from "@/components/TryIt";
-import { Ask, Build, Hero, Today, Trust } from "@/components/PitchSections";
+import { Ask, Build, Fix, Hero, Today, Trust } from "@/components/PitchSections";
 import { useSettings } from "@/hooks/useSettings";
 import { EXAMPLES, youFor, type Example } from "@/lib/demoPresets";
 
@@ -25,7 +24,7 @@ function revealCoveredCard(e: FocusEvent<HTMLDivElement>) {
 const Concept = () => {
   const { settings, toggle24Hour, toggleDarkMode, setHomeTz } = useSettings();
   const { hash } = useLocation();
-  const { you, cities, inDemo } = youFor(settings.homeTz);
+  const { you, cities } = youFor(settings.homeTz);
   const [exampleId, setExampleId] = useState<Example["id"]>(EXAMPLES[0].id);
   const example = EXAMPLES.find((x) => x.id === exampleId)!;
 
@@ -71,6 +70,7 @@ const Concept = () => {
       <main id="main" tabIndex={-1} className="container scroll-mt-24 outline-none max-w-6xl flex-1 space-y-16 py-10 sm:space-y-24">
         <Hero />
         <Today />
+        <Fix />
         <div ref={stack} className="card-stack" onFocus={revealCoveredCard}>
           <MomentWrite
             example={example}
@@ -81,14 +81,13 @@ const Concept = () => {
             }}
             use24Hour={settings.use24Hour}
           />
-          <MomentRead example={example} onExampleChange={setExampleId} you={you} inDemo={inDemo} use24Hour={settings.use24Hour} />
+          <MomentRead example={example} onExampleChange={setExampleId} use24Hour={settings.use24Hour} />
           <TryIt you={you} cities={cities} use24Hour={settings.use24Hour} />
         </div>
         <Trust use24Hour={settings.use24Hour} />
         <Build />
         <Ask />
       </main>
-      <Footer />
     </div>
   );
 };

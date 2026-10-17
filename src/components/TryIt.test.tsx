@@ -35,11 +35,11 @@ describe("TryIt", () => {
   it("says no time found without calling the AI, and when the AI finds none", async () => {
     const fetch = setup();
     type("thanks, looks good");
-    await click("Check how it lands");
+    await click("Check before sending");
     expect(status()).toContain("No time found");
     expect(fetch).not.toHaveBeenCalled();
     type("see you tomorrow");
-    await click("Check how it lands");
+    await click("Check before sending");
     expect(fetch).toHaveBeenCalledTimes(1);
     expect(status()).toContain("No time found");
   });
@@ -47,7 +47,7 @@ describe("TryIt", () => {
   it("one check shows both moments: the sender's result and the chat to read as others", async () => {
     const fetch = setup();
     type(" call at 3pm ");
-    await click("Check how it lands");
+    await click("Check before sending");
     expect(status()).toMatch(/AI read it as .* 15:00 Prague time/);
     expect(screen.getByRole("log").textContent).toContain("your time");
     await click("Doha", "radio");
@@ -59,13 +59,13 @@ describe("TryIt", () => {
   it("caches by text: an edit checks again, editing back calls nothing", async () => {
     const fetch = setup();
     type("call at 3pm");
-    await click("Check how it lands");
+    await click("Check before sending");
     type("call at 3pm today");
-    await click("Check how it lands");
+    await click("Check before sending");
     expect(fetch).toHaveBeenCalledTimes(2);
     expect(screen.getByRole("log").textContent).toContain("today");
     type("call at 3pm");
-    await click("Check how it lands");
+    await click("Check before sending");
     expect(fetch).toHaveBeenCalledTimes(2);
     expect(status()).toMatch(/AI read it as/);
     expect(screen.getByRole("log").textContent).not.toContain("today");
@@ -75,14 +75,14 @@ describe("TryIt", () => {
     const you = createZone("Asia/Jakarta", "you");
     setup({ you, cities: [...prague.cities, you] });
     type("call at 3pm");
-    await click("Check how it lands");
+    await click("Check before sending");
     expect(status()).toMatch(/AI read it as .* 15:00 Jakarta time/);
   });
 
   it("offers a retry that makes exactly one more call", async () => {
     const fetch = setup(prague, 502);
     type("call at 3pm");
-    await click("Check how it lands");
+    await click("Check before sending");
     expect(status()).toContain("The AI didn't answer.");
     await click("Try again");
     expect(fetch).toHaveBeenCalledTimes(2);
@@ -91,7 +91,7 @@ describe("TryIt", () => {
   it("asks to wait on a rate limit and offers no instant retry", async () => {
     setup(prague, 429);
     type("call at 3pm");
-    await click("Check how it lands");
+    await click("Check before sending");
     expect(status()).toContain("Too many tries from your network. Wait a minute, then try again.");
     expect(screen.queryByRole("button", { name: "Try again" })).toBeNull();
   });
@@ -104,11 +104,11 @@ describe("TryIt", () => {
     render(<TryIt you={prague.you} cities={prague.cities} use24Hour />);
     const reply = { ok: true, status: 200, json: async () => ({ expressions: at3pm("3pm") }) };
     type("call at 3pm");
-    await click("Check how it lands");
+    await click("Check before sending");
     type("call at 3pm today");
     await act(async () => answer(reply));
     expect(scroll).not.toHaveBeenCalled();
-    await click("Check how it lands");
+    await click("Check before sending");
     await act(async () => answer(reply));
     expect(scroll).toHaveBeenCalledWith({ block: "nearest" });
     delete (Element.prototype as Partial<Element>).scrollIntoView;
@@ -133,7 +133,7 @@ describe("TryIt", () => {
   it("says when the AI timed out", async () => {
     setup(prague, 504);
     type("call at 3pm");
-    await click("Check how it lands");
+    await click("Check before sending");
     expect(status()).toContain("Timeout: the AI took too long to answer.");
   });
 
@@ -141,7 +141,7 @@ describe("TryIt", () => {
     const fetch = setup();
     type("call at 3pm");
     await act(async () => {
-      const b = screen.getByRole("button", { name: "Check how it lands" });
+      const b = screen.getByRole("button", { name: "Check before sending" });
       fireEvent.click(b);
       fireEvent.click(b);
     });
@@ -153,11 +153,11 @@ describe("TryIt", () => {
     vi.stubGlobal("fetch", fetch);
     const { rerender } = render(<TryIt you={prague.you} cities={prague.cities} use24Hour />);
     type("call at 3pm");
-    await click("Check how it lands");
+    await click("Check before sending");
     const doha = youFor("Asia/Qatar");
     rerender(<TryIt you={doha.you} cities={doha.cities} use24Hour />);
     expect(status()).not.toContain("Prague time");
-    await click("Check how it lands");
+    await click("Check before sending");
     expect(fetch).toHaveBeenCalledTimes(2);
     expect(status()).toContain("Doha time");
   });
@@ -168,7 +168,7 @@ describe("TryIt", () => {
     vi.stubGlobal("fetch", vi.fn(() => new Promise((r) => (answer = r))));
     render(<TryIt you={prague.you} cities={prague.cities} use24Hour />);
     type("call at 3pm");
-    await click("Check how it lands");
+    await click("Check before sending");
     expect(status()).toContain("Asking the AI");
     await act(async () => vi.advanceTimersByTime(9_900));
     expect(status()).not.toContain("slower than usual");

@@ -3,19 +3,23 @@ import { DEMO_CITIES, DEMO_NOW, EXAMPLES, UNCLEAR_EXAMPLE, youFor } from "./demo
 import { headline, landingRows } from "./landing";
 import { toExpressions } from "./timeDetect";
 
-const [thursday, sunday] = EXAMPLES;
+const [friday, thursday, sunday] = ["friday", "exact", "arabic"].map((id) => EXAMPLES.find((x) => x.id === id)!);
 const doha = DEMO_CITIES.find((z) => z.city === "Doha")!;
 const rows = (ex = thursday, viewer: typeof doha | null = null) => landingRows(ex.expressions[0], DEMO_CITIES, ex.author, viewer, true);
 
 describe("story numbers", () => {
   it("Thursday 3pm from Prague", () => {
     expect(rows().map((r) => `${r.zone.city} ${r.time} ${r.status}`)).toEqual([
-      "Tunis 14:00 Working",
+      "Tunis 14:00 Working hours",
       "Muscat 17:00 Late",
-      "Doha 16:00 Working",
+      "Doha 16:00 Working hours",
       "New Delhi 18:30 Late",
     ]);
     expect(headline([rows()])).toEqual(["Late in the day for 2 cities: Muscat, New Delhi"]);
+  });
+
+  it("Friday 11am from Prague", () => {
+    expect(headline([rows(friday)])).toEqual(["Weekend for 2 cities: Muscat, Doha"]);
   });
 
   it("Sunday 10am from Doha, in Arabic", () => {

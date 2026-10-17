@@ -114,15 +114,18 @@ const SEVERITY: WorkStatus[] = ["working", "reasonable", "outside", "weekend"];
 const ahead = (from: number, to: number) => (((to - from) % 1440) + 1440) % 1440;
 
 // Circular like getWorkStatus, so a night shift (22:00–06:00) reads 07:00 as late, not early
-function isEarly(local: DateTime, reader: Zone) {
+export function isEarly(local: DateTime, reader: Pick<Zone, "workingStart" | "workingEnd">) {
   const now = local.hour * 60 + local.minute;
   return ahead(now, parseTimeToMinutes(reader.workingStart)) < ahead(parseTimeToMinutes(reader.workingEnd), now);
 }
 
 // The author never sees a chip, so after sending the thread jumps to a reader who does
-export function firstReaderWithChip(exprs: TimeExpression[], author: Zone, participants: Zone[], use24Hour: boolean) {
+// The reader the time hurts most; a reader on the author's offset sees no chip, so comes last
+export function worstReader(exprs: TimeExpression[], author: Zone, participants: Zone[], use24Hour: boolean) {
   const others = participants.filter((z) => z.id !== author.id);
-  return others.find((z) => exprs.some((e) => chipFor(e, z, author.tz, use24Hour))) ?? others[0];
+  const rank = (z: Zone) =>
+    Math.max(-1, ...exprs.map((e) => chipFor(e, z, author.tz, use24Hour)).map((c) => (!c ? -1 : c.type === "time" ? SEVERITY.indexOf(c.status) : 0)));
+  return others.reduce((a, b) => (rank(b) > rank(a) ? b : a));
 }
 
 // Weekly for a year: two zones can share an offset on any two dates and still differ for weeks in between

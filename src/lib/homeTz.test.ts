@@ -4,12 +4,12 @@ import { formatOffsetDiff, getHomeDayHours, resolveHomeTz } from "./timezones";
 
 describe("formatOffsetDiff", () => {
   it("formats whole hours, fractions and sign", () => {
-    expect(formatOffsetDiff(120)).toBe("+2 h");
-    expect(formatOffsetDiff(-60)).toBe("−1 h");
-    expect(formatOffsetDiff(210)).toBe("+3:30 h");
-    expect(formatOffsetDiff(345)).toBe("+5:45 h");
-    expect(formatOffsetDiff(-30)).toBe("−0:30 h");
-    expect(formatOffsetDiff(0)).toBe("0 h");
+    expect(formatOffsetDiff(120)).toBe("2 h ahead of you");
+    expect(formatOffsetDiff(-60)).toBe("1 h behind you");
+    expect(formatOffsetDiff(210)).toBe("3 h 30 min ahead of you");
+    expect(formatOffsetDiff(345)).toBe("5 h 45 min ahead of you");
+    expect(formatOffsetDiff(-30)).toBe("30 min behind you");
+    expect(formatOffsetDiff(0)).toBe("Same time as you");
   });
 });
 

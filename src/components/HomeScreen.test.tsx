@@ -24,6 +24,7 @@ describe("home screen", () => {
     expect(screen.getByText("Sun–Thu · 02:00–17:00")).toBeTruthy();
   });
 
+  // cmdk renders every world time zone, which takes about 5 s in jsdom on a busy machine
   it("marks added cities, ignores picks on them, and returns focus to Add city", async () => {
     // cmdk measures its list; jsdom has neither API
     vi.stubGlobal("ResizeObserver", class { observe() {} unobserve() {} disconnect() {} });
@@ -40,5 +41,5 @@ describe("home screen", () => {
     await act(async () => fireEvent.click(screen.getAllByRole("option", { name: /Muscat/ })[0]));
     expect(picks).toEqual(["Asia/Muscat"]);
     expect(document.activeElement).toBe(button);
-  });
+  }, 20_000);
 });
