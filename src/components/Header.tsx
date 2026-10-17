@@ -4,7 +4,6 @@ import { ArrowLeft, Info, Moon, Sparkles, Sun } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import logo from "@/assets/logo.png";
 import { resolveHomeTz, tzCity, worldTimeZones } from "@/lib/timezones";
 import type { Zone } from "@/lib/storage";
 
@@ -49,17 +48,17 @@ export function Header({
       <div className="container flex min-h-16 flex-wrap items-center justify-between gap-y-2 py-2">
         {/* Logo / Title */}
         <div className="flex items-center gap-3">
-          <img src={logo} alt="OFTI logo" className="h-9 w-9 rounded-lg object-cover" />
+          <img src="/favicon.svg" alt="" className="h-9 w-9" />
           {onConcept ? (
-            <p className="font-display text-xl font-bold">OFTI time zones</p>
+            <p className="font-display text-xl font-bold">Timezone Companion</p>
           ) : (
-            <h1 className="text-xl font-bold">OFTI time zones</h1>
+            <h1 className="text-xl font-bold">Timezone Companion</h1>
           )}
         </div>
 
         {/* Controls */}
         <div className="ml-auto flex flex-wrap items-center justify-end gap-x-3 gap-y-2">
-          <Button asChild variant="outline" size="sm">
+          <Button asChild variant={onConcept ? "outline" : "default"} size="sm">
             {onConcept ? (
               <Link to="/">
                 <ArrowLeft size={16} aria-hidden /> Back to clocks

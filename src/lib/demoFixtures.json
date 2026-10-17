@@ -1,5 +1,5 @@
 {
-  "exact": {"expressions":[{"text":"Thursday at 3pm","localDate":"2026-10-15","localTime":"15:00","endLocalTime":null,"sourceZone":null,"zoneReason":"sender_default","flag":null,"kind":"exact"}]},
+  "exact": {"expressions":[{"text":"Thursday at 3pm","localDate":"2026-10-22","localTime":"15:00","endLocalTime":null,"sourceZone":null,"zoneReason":"sender_default","flag":null,"kind":"exact"}]},
   "arabic": {"expressions":[{"text":"يوم الأحد الساعة ١٠ صباحًا","localDate":"2026-10-18","localTime":"10:00","endLocalTime":null,"sourceZone":null,"zoneReason":"sender_default","flag":null,"kind":"exact"}]},
   "unclear": {"expressions":[{"text":"3pm your time","localDate":null,"localTime":"15:00","endLocalTime":null,"sourceZone":null,"zoneReason":"unknown","flag":"zone_unclear","kind":"ambiguous"}]}
 }

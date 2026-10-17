@@ -68,7 +68,9 @@ Work weeks follow [The National](https://thenationalnews.com/mena/2021/12/07/whe
 
 - Export `flushSave()` from `storage.ts` (clears the debounce timer and saves at once). `loadSettings()` calls it first, because the next page mounts and reads localStorage before the previous page unmounts. One flush at read time covers both page orders, so `useSettings` needs no unmount flush.
 - UI copy uses "time zone" as two words: header label "My time zone", the same group heading in `AddCityDialog`, and the banner below. The product name stays "Timezone Companion".
-- The header shows "Feature concept" on `/` and "Back to clocks" on `/concept`.
+- The header shows the mark `/favicon.svg` (`alt=""`) and "Timezone Companion", then "Feature concept" (primary) on `/` and "Back to clocks" (outline) on `/concept`.
+- `/` opens with the subtitle "Who can you reach right now? Live hours across Ooredoo markets, on Sunday–Thursday and Monday–Friday weeks." and a banner "BuildAI Challenge entry. Try the AI demo →" linking to `/concept`.
+- Branding: `public/` holds `favicon.ico`, `favicon.svg`, `apple-touch-icon.png`, `icon-192.png`, `icon-512.png` and `og-image.png` (1200×630). `index.html` has the title "Timezone Companion", the three icon links, description and `og:description` "AI shows every reader a time in their own zone and warns the sender before it lands on an evening or weekend.", absolute `og:url` and `og:image` on ofti-offices.vercel.app and `twitter:card` `summary_large_image`. `/concept` sets the tab title "Timezone Companion · AI demo". The colour tokens stay.
 
 * `vercel.json` with the SPA rewrite (before it, `/concept` returned Vercel's 404 on 11 Oct).
 * `--accent` in `src/index.css` is teal (`169 97% 48%` with the dark foreground `205 68% 8%`), so the selected row in "Add city", the "Viewing as" switcher and the dark-mode hover match the rest of the app.
@@ -129,7 +131,7 @@ The page always uses Tunis, Prague, Muscat, Doha and New Delhi (`DEMO_CITIES`) a
 
 ### Examples
 
-Both examples use the fixed demo date Tue 13 Oct 2026, 10:00 Prague (`DEMO_NOW`) and offline fixtures; typed text uses the real current date.
+Both examples use the fixed demo date Sat 17 Oct 2026, 10:00 Prague (`DEMO_NOW`) and offline fixtures; typed text uses the real current date.
 
 | Example | Author | Text | Expected |
 | --- | --- | --- | --- |
@@ -156,7 +158,8 @@ Both examples use the fixed demo date Tue 13 Oct 2026, 10:00 Prague (`DEMO_NOW`)
 | --- | --- |
 | Header button | Feature concept (on `/`) / Back to clocks (on `/concept`) |
 | 1 H1 | You write your time. Everyone reads theirs. |
-| 1 Text | When someone proposes a time, or I propose one, I open a world clock and do the maths. So does everyone else in the chat. Timezone Companion does it for all of us, in Teams and Outlook. |
+| 1 Text | When someone proposes a time, I open a world clock and do the maths. So does everyone else in the chat. Timezone Companion uses AI to find the time in a message, shows every reader their own time, and warns the sender before it lands on someone's evening or weekend. |
+| 1 Status | Live now: the demo on this page, with a real AI call. Next: a pilot inside Teams and Outlook. |
 | 1 Facts | Ooredoo works across 9 markets, from UTC+1 to UTC+7, with Sunday–Thursday and Monday–Friday weeks. |
 | 1 Imagine | Box above the buttons: Imagine you are writing an email, or chatting in Teams, with colleagues in **Tunis, Prague, Muscat, Doha, and New Delhi** (from `DEMO_CITIES`). / Every example on this page uses these five cities. |
 | 1 Buttons | See how it works (to `#write`, primary) / Try your own message (to `#try`, outline) |
@@ -164,9 +167,10 @@ Both examples use the fixed demo date Tue 13 Oct 2026, 10:00 Prague (`DEMO_NOW`)
 | 2 Caption | Three extra messages to agree on one time. Every week, in every cross-country team. |
 | 3 H2 | Before you send, see how your time lands |
 | 3 Switch | Thursday 3pm, from Prague / Sunday 10am, in Arabic, from Doha |
+| 3 Switch note | These examples replay a saved AI answer from Sat 17 Oct 2026, so the times never change. Your own message below calls the AI live. |
 | 3 Headline (in the Send check) | One line per problem, worst first: Weekend → After hours → Late in the day → Early in the day, each with its cities; none: "Working hours for every city" ("every other city" in a reader's popup, which leaves the reader out) |
 | 3 Send | Shows the check "Before you send" with the headline, "Send anyway" (scrolls to section 4 and moves focus to its heading; nothing is posted) and "Edit" |
-| 3 Note | In Outlook this check runs when you press Send. In Teams it is one button before you send. |
+| 3 Note | In Outlook this check would run when you press Send. In Teams it would be one button before you send. |
 | 4 H2 | Every reader sees their own time |
 | 4 Chip | → 16:00 your time (Thursday example, viewed as Doha) |
 | 5 H2 | Try your own message |
@@ -174,13 +178,13 @@ Both examples use the fixed demo date Tue 13 Oct 2026, 10:00 Prague (`DEMO_NOW`)
 | 5 Chat placeholder | Check a message to read it as another city. |
 | 5 Headings | Before you send (left, the sender's result) / What your colleagues read (right, the chat) |
 | 5 Check box | Shown only when a city is After hours or on its Weekend: an amber box with all headline lines (Late and Early lines included) and Only you see this check. Your colleagues just see the time in their own zone. |
-| 5 Result | AI read it as Thu 15 Oct, 15:00 Prague time (1.8 s) |
+| 5 Result | AI read it as Thu 22 Oct, 15:00 Prague time (1.8 s) |
 | 5 No time | No time found. Try a time like "3pm", "15:00" or "half past three". |
 | 5 Failure | The AI didn't answer. (or, on a timeout, Timeout: the AI took too long to answer.) + "Try again" / The examples above keep working without it. |
 | 5 Note | Demo: don't paste real company messages. Typed text goes to OpenAI to read the time. The app keeps no copy; OpenAI may keep it for up to 30 days for abuse monitoring. |
 | 6 H2 | Why you can trust it |
 | 6 Points | The AI only reads the time in the sentence. Calendar maths does the conversion. / If a time is unclear, like "3pm your time" in a group, it is flagged, not guessed. (next to it the unclear example from Prague, viewed as Doha) / Tested on 30 English and Arabic messages, 3 runs, 0 unclear times shown as exact. Median answer about 1.5 s. About $0.10–0.34 per 1,000 messages. |
-| 6 Collapsed | "What the AI receives": the message, the sender's zone, the date and the team's cities. The app adds no names and no calendars, and the AI never learns who is reading. Plus the pretty-printed request the live path would send for the Thursday example (`now` 2026-10-13T10:00:00.000+02:00, `teamZones` from `teamZonesFor(DEMO_CITIES)`) |
+| 6 Collapsed | "What the AI receives": the message, the sender's zone, the date and the team's cities. The app adds no names and no calendars, and the AI never learns who is reading. Plus the pretty-printed request the live path would send for the Thursday example (`now` 2026-10-17T10:00:00.000+02:00, `teamZones` from `teamZonesFor(DEMO_CITIES)`) |
 | 7 H2 | Can Ooredoo build it? |
 | 7 List | **Teams:** a compose button checks the time and posts a card that shows each reader their own time. / **Outlook:** a check on Send, and a side pane that shows the times in an email you read. / **Who is where:** time zones and working hours come from each person's Outlook settings, not from reading calendars or messages. / **Data:** in production the AI runs on Ooredoo's own Azure OpenAI, so no message leaves the company. / **What we need:** a Teams app registration, an Outlook add-in deployed by IT, and a security review of one small data flow. / **Effort:** a pilot in about 4–6 weeks for one or two developers (our estimate). / **Limit:** third-party apps cannot rewrite every typed message. The check runs on the sender's action or on Send. |
 | 8 Ask | A 90-day pilot with one cross-country team. We count late and weekend times caught before sending. / The world clock tool works today → (to `/`) |
@@ -397,19 +401,24 @@ export function buildCalendar(nowIso: string, zone: string): string[] {
 
 ### Local pre-filter (`src/lib/timeHint.ts`)
 
-English and Arabic only, and permissive on purpose: deciding what is really a time is the AI's job. "half past" and "quarter past/to" pass, so "half past three" (the example in the no-time copy) reaches the AI, and so does an hour in words after "at", "by" and the like ("Meet at three"), matching the prompt's hours-in-words rule. French forms ("15h", "à 3", "demain", "jeudi") and bare durations ("2h") no longer pass. The Arabic stem for "tomorrow" must start the text or follow a non-Arabic character, which keeps Baghdad (بغداد) out; this is written without a lookbehind, because Safari before 16.4 rejects one while parsing and the whole page would fail; Arabic weekdays need the ال prefix so September (سبتمبر) does not match.
+English and Arabic only, and permissive on purpose: deciding what is really a time is the AI's job. "half past" and "quarter past/to" pass, so "half past three" (the example in the no-time copy) reaches the AI, and so does an hour in words after "at", "by" and the like ("Meet at three"), matching the prompt's hours-in-words rule. Also passing: four digits with a zone or "hrs" ("1500 GST", "0930hrs", "1500Z"), an hour in digits or words before a city of up to four words and "time" ("4 Doha time", "four Ho Chi Minh City time"; "one more time" passes too, the AI drops it), an hour and minutes in words ("ten thirty", "eleven-fifteen", "ten oh five"), and the Arabic عصر, الصبح, المغرب, ونص and وربع. French forms ("15h", "à 3", "demain", "jeudi") and bare durations ("2h") no longer pass. The Arabic stem for "tomorrow" must start the text or follow a non-Arabic character, which keeps Baghdad (بغداد) out; this is written without a lookbehind, because Safari before 16.4 rejects one while parsing and the whole page would fail; Arabic weekdays need the ال prefix so September (سبتمبر) does not match.
 
 ```ts
 const D = String.raw`[0-9\u0660-\u0669\u06F0-\u06F9]`;
 const WORD_HOUR = "one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve";
+const ZONE = "GST|AST|IST|GMT|UTC|BST|CET|CEST|EET|EEST|MSK|PKT|WIB|EST|EDT|CST|CDT|PST|PDT|ET|PT|Z|hrs?";
+const DIGIT_WORD = "one|two|three|four|five|six|seven|eight|nine";
 
 export const TIME_HINT = new RegExp([
   String.raw`${D}{1,2}\s?[:.]\s?${D}{2}`,
   String.raw`${D}{1,2}\s?[ap]\.?m\b`,
+  String.raw`(?:^|[^0-9٠-٩۰-۹])${D}{4}\s?(?:${ZONE})\b`,
+  String.raw`(?:${D}{1,2}|\b(?:${WORD_HOUR}))\s+(?:[a-z]+\s+){1,4}time\b`,
+  String.raw`\b(?:${WORD_HOUR})[\s-](?:ten|fifteen|oh[\s-](?:${DIGIT_WORD})|(?:twenty|thirty|forty|fifty)(?:[\s-](?:${DIGIT_WORD}))?)\b`,
   String.raw`\b(?:at|by|around|from|until|till|before|after)\s+(?:${D}{1,2}(?!${D})|(?:${WORD_HOUR})\b)`,
-  String.raw`\b(?:half past|quarter (?:past|to)|noon|midnight|midday|o['’]?clock|today|tonight|tomorrow|tmrw?|morning|afternoon|evening)\b`,
+  String.raw`\b(?:half past|quarter (?:past|to)|noon|midnight|midday|lunchtime|o['’]?clock|today|tonight|tomorrow|tmrw?|morning|afternoon|evening)\b`,
   String.raw`\b(?:mon|tue|tues|wed|thu|thur|thurs|fri|sat|sun)(?:day|nesday|sday|rsday|urday)?\b`,
-  String.raw`ساع|صباح|مساء|ظهر|الليلة|اليوم|(?:^|[^\u0600-\u06FF])غد|الغد|بكر[ةه]`,
+  String.raw`ساع|صباح|الصبح|ظهر|عصر|مساء|المغرب|ونص|وربع|الليلة|اليوم|(?:^|[^\u0600-\u06FF])غد|الغد|بكر[ةه]`,
   String.raw`الأحد|الاحد|الاثنين|الإثنين|الثلاثاء|الأربعاء|الاربعاء|الخميس|الجمعة|السبت`,
 ].join("|"), "i");
 ```
@@ -604,7 +613,7 @@ Each entry is an `Extraction` body keyed by example id; the loader in `demoPrese
 
 ```json
 {
-  "exact":   { "expressions": [{ "text": "Thursday at 3pm", "localDate": "2026-10-15", "localTime": "15:00", "endLocalTime": null, "sourceZone": null, "zoneReason": "sender_default", "flag": null, "kind": "exact" }] },
+  "exact":   { "expressions": [{ "text": "Thursday at 3pm", "localDate": "2026-10-22", "localTime": "15:00", "endLocalTime": null, "sourceZone": null, "zoneReason": "sender_default", "flag": null, "kind": "exact" }] },
   "arabic":  { "expressions": [{ "text": "يوم الأحد الساعة ١٠ صباحًا", "localDate": "2026-10-18", "localTime": "10:00", "endLocalTime": null, "sourceZone": null, "zoneReason": "sender_default", "flag": null, "kind": "exact" }] },
   "unclear": { "expressions": [{ "text": "3pm your time", "localDate": null, "localTime": "15:00", "endLocalTime": null, "sourceZone": null, "zoneReason": "unknown", "flag": "zone_unclear", "kind": "ambiguous" }] }
 }
@@ -752,7 +761,7 @@ WW = web workaround, CP = concept page, AI = AI feature, Infra = build and deplo
 | --- | --- | --- |
 | `message` | string | 1–500 chars |
 | `senderZone` | string | IANA id of the author |
-| `now` | string | ISO with offset; the real current time in the sender's offset (the examples' would-be request uses `DEMO_NOW`, `2026-10-13T10:00:00.000+02:00`) |
+| `now` | string | ISO with offset; the real current time in the sender's offset (the examples' would-be request uses `DEMO_NOW`, `2026-10-17T10:00:00.000+02:00`) |
 | `teamZones` | `Record<cityLabel, IANA>` | ≤ 30 entries (in practice the team: at most 8 cities plus a prepended home zone), labels 1–40 chars, built by `teamZonesFor` from the zone (never the typed label) |
 
 | Status | When | Body |
@@ -916,7 +925,7 @@ Files that use `fetch`, `AbortSignal` or the API start with `// @vitest-environm
 | `src/lib/storage.test.ts` | `loadSettings` sees a save that is still debounced |
 | `src/lib/extraction.test.ts` | `text` not in the message dropped; "24:00" and "2026-02-30" dropped; `sender_default` items take `senderZone`; a bad explicit zone becomes null, exact becomes ambiguous and the flag becomes `zone_unclear`; range without end becomes ambiguous; 12 items capped to 10; non-object returns null; JSON-schema keys equal zod keys; `locate` on "3pm or 3pm" gives two ranges; Arabic offsets slice back to the same text; `ParseTimeRequest` rejects 501 chars, 31 zones, a bad zone and an extra key; "your time" with several other zones is always zone_unclear, with one other zone it is that zone, also in Arabic (بتوقيتك); `zoneReason` "unknown" with a zone drops the zone and reads zone_unclear |
 | `src/lib/landing.test.ts` | Story numbers for both examples; the reader and the author carry no status; the unclear example stays unconverted; headline worst first, "Working hours for every city" and "every other city" for a reader; the author row keeps the zone the time was written in ("13:00 Doha time"); `youFor` adds a sixth city when home is not one of the five |
-| `src/lib/prompt.test.ts` | `buildCalendar` at `DEMO_NOW` for Prague: 14 lines, "2026-10-13 Tue (this week)", "2026-10-19 Mon (next week)", "2026-10-26 Mon (later)"; a New Delhi sender at 2026-10-13T20:00Z starts at "2026-10-14 Wed"; labels correct across 2027 |
+| `src/lib/prompt.test.ts` | `buildCalendar` at `DEMO_NOW` for Prague: 14 lines, "2026-10-17 Sat (this week)", "2026-10-19 Mon (next week)", "2026-10-26 Mon (later)"; a New Delhi sender at 2026-10-13T20:00Z starts at "2026-10-14 Wed"; labels correct across 2027 |
 | `src/lib/timeDetect.test.ts` | Null date resolves to today in the source zone; "23:00–01:00" ends the next day; Prague Mon 26 Oct 15:00 shows Doha "17:00 · late" and no chip for Tunis; Prague Thu 23:00 shows Doha "Fri 00:00 · weekend" and New Delhi "Fri 02:30 · after hours"; Prague 07:30 shows Doha "08:30 · early"; Muscat 17:00 on a working day is "late"; `keepSameOffset` returns a chip for a same-offset reader; unclear chip for readers, none for the author or a reader on the author's offset (Riyadh for a Doha author); a 16:00–20:00 range reads "after hours" for 09:00–17:00 hours; 12h "4:00 PM"; English "Fri 12:00 AM" in a `cs` browser locale and "early" in an `ar-QA` one; `teamZonesFor` keeps labels 1–40 chars and does not merge different zones; `sameOffsetEverywhere` true for Doha and Baghdad, false for Prague and Tunis at `DEMO_NOW` and at 2026-11-01; both examples come out `exact` and the unclear one `ambiguous`; `callParseTime` (no signal argument: nothing aborts a sent message) aborts at 15 s with fake timers as `ParseTimeTimeout`, throws on 502 and reports 504 as `ParseTimeTimeout` |
 | `src/lib/timezones.test.ts` (from the branch) | Still passes |
 | `src/lib/parseTime.test.ts` | The real `POST` handler with the OpenAI client mocked: 403 cross-site, 413 over 8,192 chars, 400 for bad JSON, an extra key or 501 chars, all without a model call; 200 with sanitized expressions, `Cache-Control: no-store`, `gpt-6-luna`, effort `none`, `store: false`; 502 for unusable output, an incomplete response or a failed call; the log holds no message text |
@@ -1058,7 +1067,7 @@ If the Teams test card has not worked by Mon 12 Oct, use this line at 1:30 inste
 ### Recording checklist
 
 - [ ] 1920×1080, 30 fps, clean browser profile, full screen, zoom 125–150%
-- [ ] "My time zone" set to Prague; record around 10:00 Prague on Tue 13 Oct, so live clocks match the examples' demo date
+- [ ] "My time zone" set to Prague; record around 10:00 Prague on Sat 17 Oct, so live clocks match the examples' demo date
 - [ ] Hide dev tools, bookmarks, taskbar, API key, real names; Do Not Disturb on
 - [ ] Large cursor and click highlight; zoom in on chips, popup, headline and payload in the edit
 - [ ] Burned-in captions (Clipchamp auto captions), voice on a headset in a quiet room
@@ -1085,7 +1094,7 @@ Five questions are still open (four were answered by 11 Oct); each has a default
 | Hosting | Answered: Vercel, production at ofti-offices.vercel.app |
 | Can we post a test Adaptive Card in an Ooredoo Teams chat (Workflows or sideloading allowed)? Who does it, by Mon 12 Oct? | Use the fallback caption and voiceover |
 | Submission spec: maximum video length, file format and size, where supporting info goes, and whether a public vercel.app link opens on the Ooredoo network | 2:00 MP4 at 1080p, deck as PDF, app link plus backup video |
-| Product name and logo: the header says "OFTI time zones" with the walletii logo and the tab says "OFTI offices time". Keep, or rename to "Timezone Companion"? | Timezone Companion, group-wide framing |
+| Product name and logo: keep "OFTI time zones" with the walletii logo, or rename to "Timezone Companion"? | Answered on 17 Oct: Timezone Companion with its own mark (`favicon.svg`) |
 | Two or three quotes from colleagues in the Gulf or Tunisia about converting times, by Mon 12 Oct? | The video works without them; quotes make the problem slide stronger |
 | Who checks the Arabic example sentence? | Without a check, the video closes on the Thursday example |
 | Which languages does the demo read? | Answered on 11 Oct: English and Arabic only; the French preset, filter patterns and eval rows were removed |

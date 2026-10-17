@@ -201,21 +201,26 @@ describe("parse-time eval (live model)", () => {
 
   it(`passes the bar: 0 critical errors, at least ${BAR} of ${ROWS.length} rows right`, async () => {
     const { extract } = await import("../../api/parse-time");
-    const results = await Promise.all(
-      ROWS.map(async ([message, senderZone, now, want]) => {
-        const t0 = performance.now();
-        const got = (await extract({ message: excerpt(message), senderZone, now, teamZones: TEAM })).expressions ?? [];
-        const ms = performance.now() - t0;
-        const ok = got.length === want.length && want.every((x, i) => fieldsMatch(got[i], x, message));
-        const critical = want.every((x) => x.kind !== "exact" && x.kind !== "range") && got.some((g) => g.kind === "exact" || g.kind === "range");
-        return { message, ok, critical, got, ms };
-      }),
-    );
-    for (const r of results.filter((r) => !r.ok)) console.log(r.critical ? "CRITICAL" : "wrong", r.message, JSON.stringify(r.got));
+    const check = async ([message, senderZone, now, want]: Row) => {
+      const t0 = performance.now();
+      let error: string | null = null;
+      const got = await extract({ message: excerpt(message), senderZone, now, teamZones: TEAM }).then(
+        (r) => r.expressions ?? [],
+        (e: Error) => ((error = e.message), []),
+      );
+      const ms = performance.now() - t0;
+      const ok = !error && got.length === want.length && want.every((x, i) => fieldsMatch(got[i], x, message));
+      const critical = want.every((x) => x.kind !== "exact" && x.kind !== "range") && got.some((g) => g.kind === "exact" || g.kind === "range");
+      return { message, ok, critical, got, ms, error };
+    };
+    // One slow call used to throw and hide the whole score; it now counts as a wrong row
+    const results: Awaited<ReturnType<typeof check>>[] = [];
+    for (let i = 0; i < ROWS.length; i += 10) results.push(...(await Promise.all(ROWS.slice(i, i + 10).map(check))));
+    for (const r of results.filter((r) => !r.ok)) console.log(r.critical ? "CRITICAL" : "wrong", r.message, r.error ?? JSON.stringify(r.got));
     const right = results.filter((r) => r.ok).length;
     const ms = results.map((r) => r.ms).sort((a, b) => a - b);
     const longRight = results.slice(SHORT_ROWS.length).filter((r) => r.ok).length;
-    // All calls run in parallel, so these are latencies under a burst, not one call at a time
+    // Calls run 10 at a time, so these are latencies under a burst, not one call at a time
     console.log(`eval: ${right}/${ROWS.length} right (long ${longRight}/${LONG_ROWS.length}), ${results.filter((r) => r.critical).length} critical, median ${Math.round(ms[Math.floor(ms.length / 2)])} ms, max ${Math.round(ms[ms.length - 1])} ms`);
     expect(results.filter((r) => r.critical)).toHaveLength(0);
     expect(right).toBeGreaterThanOrEqual(BAR);

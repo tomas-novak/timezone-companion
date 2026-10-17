@@ -44,6 +44,9 @@ export function MomentWrite({ example, onExampleChange, onSent, use24Hour }: { e
         <h2 className={H2}>Before you send, see how your time lands</h2>
         <p className="text-muted-foreground">Write in your own time. Before it goes out, you see what it means for every city.</p>
         <ExampleSwitch example={example} onExampleChange={onExampleChange} />
+        <p className="text-sm text-muted-foreground">
+          These examples replay a saved AI answer from Sat 17 Oct 2026, so the times never change. Your own message below calls the AI live.
+        </p>
       </div>
 
       <div className="space-y-2">
@@ -95,7 +98,7 @@ export function MomentWrite({ example, onExampleChange, onSent, use24Hour }: { e
             <p className="text-xs text-muted-foreground">Hover or tap the highlighted time.</p>
           </div>
         </TeamsWindow>
-        <p className="text-sm text-muted-foreground">In Outlook this check runs when you press Send. In Teams it is one button before you send.</p>
+        <p className="text-sm text-muted-foreground">In Outlook this check would run when you press Send. In Teams it would be one button before you send.</p>
       </div>
     </section>
   );

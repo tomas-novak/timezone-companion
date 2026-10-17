@@ -9,6 +9,7 @@ import { useLiveClock } from "@/hooks/useLiveClock";
 import { useSettings } from "@/hooks/useSettings";
 import { MAX_ZONES, resolveHomeTz } from "@/lib/timezones";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Link } from "react-router-dom";
 import { Clock, CalendarDays } from "lucide-react";
 
 const Index = () => {
@@ -31,6 +32,18 @@ const Index = () => {
       />
 
       <main id="main" tabIndex={-1} className="flex-1 container scroll-mt-24 py-10 space-y-8 outline-none">
+        <div className="space-y-4">
+          <p className="text-muted-foreground">
+            Who can you reach right now? Live hours across Ooredoo markets, on Sunday–Thursday and Monday–Friday weeks.
+          </p>
+          <p className="rounded-lg border border-primary/40 bg-primary/10 px-4 py-3">
+            BuildAI Challenge entry.{" "}
+            <Link to="/concept" className="font-medium underline underline-offset-4">
+              Try the AI demo →
+            </Link>
+          </p>
+        </div>
+
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
           <TabsList className="grid w-full max-w-md grid-cols-2 mx-auto mb-6">
             <TabsTrigger value="clocks" className="gap-2">

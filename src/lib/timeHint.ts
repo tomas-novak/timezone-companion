@@ -3,14 +3,19 @@
 // No lookbehind: Safari before 16.4 rejects it while parsing, which would break the whole page.
 const WORD_HOUR = "one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve";
 const D = String.raw`[0-9٠-٩۰-۹]`;
+const ZONE = "GST|AST|IST|GMT|UTC|BST|CET|CEST|EET|EEST|MSK|PKT|WIB|EST|EDT|CST|CDT|PST|PDT|ET|PT|Z|hrs?";
+const DIGIT_WORD = "one|two|three|four|five|six|seven|eight|nine";
 
 export const TIME_HINT = new RegExp([
   String.raw`${D}{1,2}\s?[:.]\s?${D}{2}`,
   String.raw`${D}{1,2}\s?[ap]\.?m\b`,
+  String.raw`(?:^|[^0-9٠-٩۰-۹])${D}{4}\s?(?:${ZONE})\b`,
+  String.raw`(?:${D}{1,2}|\b(?:${WORD_HOUR}))\s+(?:[a-z]+\s+){1,4}time\b`,
+  String.raw`\b(?:${WORD_HOUR})[\s-](?:ten|fifteen|oh[\s-](?:${DIGIT_WORD})|(?:twenty|thirty|forty|fifty)(?:[\s-](?:${DIGIT_WORD}))?)\b`,
   String.raw`\b(?:at|by|around|from|until|till|before|after)\s+(?:${D}{1,2}(?!${D})|(?:${WORD_HOUR})\b)`,
   String.raw`\b(?:half past|quarter (?:past|to)|noon|midnight|midday|lunchtime|o['’]?clock|today|tonight|tomorrow|tmrw?|morning|afternoon|evening)\b`,
   String.raw`\b(?:mon|tue|tues|wed|thu|thur|thurs|fri|sat|sun)(?:day|nesday|sday|rsday|urday)?\b`,
-  String.raw`ساع|صباح|مساء|ظهر|الليلة|اليوم|(?:^|[^؀-ۿ])غد|الغد|بكر[ةه]`,
+  String.raw`ساع|صباح|الصبح|ظهر|عصر|مساء|المغرب|ونص|وربع|الليلة|اليوم|(?:^|[^؀-ۿ])غد|الغد|بكر[ةه]`,
   String.raw`الأحد|الاحد|الاثنين|الإثنين|الثلاثاء|الأربعاء|الاربعاء|الخميس|الجمعة|السبت`,
 ].join("|"), "i");
 

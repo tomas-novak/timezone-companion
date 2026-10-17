@@ -18,6 +18,25 @@ const POSITIVE = [
   "Meet at three",
   "Can you call by eleven?",
   "نلتقي غدًا",
+  "Call at 1500 GST",
+  "Cutover 0930hrs",
+  "Ops review ١٥٠٠ GST",
+  "Can you do 4 Doha time?",
+  "Ready by 9 New Delhi time",
+  "Let's say ten thirty",
+  "Sync at eleven-fifteen",
+  "Cutover 1500 ET",
+  "Cutover 1500Z",
+  "Can you do four Doha time?",
+  "Can you do 4 Ho Chi Minh City time?",
+  "Sync ten ten",
+  "Sync ten oh five",
+  "Sync two forty-five",
+  "نلتقي العصر",
+  "نتكلم الصبح",
+  "بعد المغرب",
+  "على ثلاث ونص",
+  "الساعة اربع وربع",
 ];
 
 const NEGATIVE = [
@@ -39,6 +58,10 @@ const NEGATIVE = [
   "Réunion jeudi à 15h30 heure de Prague",
   "Dispo entre 14h et 16h heure de Tunis",
   "Build takes about 2h on CI",
+  "We sold 1500 units",
+  "Invoice 1500 QAR",
+  "Ticket 21500 UTC",
+  "ten people joined",
 ];
 
 // The PRD eval set without its French rows and the duration row
@@ -104,6 +127,10 @@ describe("excerpt", () => {
   it("does not split inside 10.30, a.m. or Arabic", () => {
     expect(excerpt("One. Two. Three. Meet at 10.30 a.m. tomorrow. Four. Five.")).toBe("Three. Meet at 10.30 a.m. tomorrow. Four.");
     expect(excerpt("مرحبا. شكرا. تمام. الاجتماع الساعة ٣؟ نعم. لا.")).toBe("تمام. الاجتماع الساعة ٣؟ نعم.");
+  });
+
+  it("keeps a sentence whose only time is in words", () => {
+    expect(excerpt("One. Two. Sync ten oh five. Three. Four.")).toBe("Two. Sync ten oh five. Three.");
   });
 
   it("splits on line breaks", () => {
