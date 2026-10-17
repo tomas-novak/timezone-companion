@@ -2,20 +2,19 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { act, cleanup, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { DEMO_CITIES, EXAMPLES, type Example } from "@/lib/demoPresets";
-import { createZone, type Zone } from "@/lib/storage";
-import { firstReaderWithChip } from "@/lib/timeDetect";
 import { MomentWrite } from "./MomentWrite";
 import { MomentRead } from "./MomentRead";
 
 const thursday = EXAMPLES.find((x) => x.id === "exact")!;
 const arabic = EXAMPLES.find((x) => x.id === "arabic")!;
+const friday = EXAMPLES.find((x) => x.id === "friday")!;
 const city = (tz: string) => DEMO_CITIES.find((z) => z.tz === tz)!;
 const doha = city("Asia/Qatar");
-const reader = () => within(screen.getByRole("group", { name: "Viewing as" })).getAllByRole("radio").find((r) => r.getAttribute("aria-checked") === "true")?.textContent;
-const renderRead = (example: Example, you: Zone, inDemo = true) =>
+const reader = () => within(screen.getByRole("group", { name: "Read as" })).getAllByRole("radio").find((r) => r.getAttribute("aria-checked") === "true")?.textContent;
+const renderRead = (example: Example) =>
   render(
     <TooltipProvider>
-      <MomentRead example={example} onExampleChange={() => {}} you={you} inDemo={inDemo} use24Hour />
+      <MomentRead example={example} onExampleChange={() => {}} use24Hour />
     </TooltipProvider>,
   );
 // jsdom has no PointerEvent, and React derives onPointerEnter/Leave from pointerover/pointerout
@@ -115,28 +114,30 @@ describe("Moments", () => {
   });
 
   it.each([
-    ["the author reads: first city with a chip", thursday, city("Europe/Prague"), true, "Tunis"],
-    ["a visitor outside the demo: Doha", thursday, createZone("Asia/Jakarta", "you"), false, "Doha"],
-    ["Doha wrote it: first city with a chip", arabic, doha, true, firstReaderWithChip(arabic.expressions, doha, DEMO_CITIES, true).city],
-  ])("picks the default reader when %s", (_, example, you, inDemo, expected) => {
-    renderRead(example, you, inDemo);
+    ["Thursday 3pm: late in Muscat", thursday, "Muscat"],
+    ["Sunday in Arabic: weekend in Tunis first", arabic, "Tunis"],
+    ["Friday 11am: weekend in Muscat", friday, "Muscat"],
+  ])("starts on the reader with the worst status: %s", (_, example, expected) => {
+    renderRead(example);
     expect(reader()).toBe(expected);
   });
 
   it("shows each reader their own time", () => {
-    renderRead(thursday, doha);
+    renderRead(thursday);
+    fireEvent.click(screen.getByRole("radio", { name: "Doha" }));
     expect(screen.getByRole("log")).toHaveTextContent("→ 16:00 your time");
     fireEvent.click(screen.getByRole("radio", { name: "Muscat" }));
     expect(screen.getByRole("log")).toHaveTextContent("→ 17:00 your time");
   });
 
-  it("colours the reader's chip by their hours, without naming the status", () => {
-    renderRead(thursday, doha);
+  it("gives every reader the same neutral chip, without naming the status", () => {
+    renderRead(thursday);
     const chip = () => within(screen.getByRole("log")).getByText(/your time/);
-    expect(chip()).toHaveClass("badge-working");
+    fireEvent.click(screen.getByRole("radio", { name: "Doha" }));
+    const working = chip().className;
     fireEvent.click(screen.getByRole("radio", { name: "New Delhi" }));
     expect(chip()).toHaveTextContent("→ 18:30 your time");
-    expect(chip()).toHaveClass("bg-amber-400/25");
+    expect(chip().className).toBe(working);
     expect(chip()).not.toHaveTextContent("Late");
   });
 });

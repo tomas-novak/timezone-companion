@@ -213,9 +213,8 @@ function ZoneSettingsCard({
         </div>
       </div>
 
-      {/* Reasonable Hours */}
       <div className="mt-4 border-t pt-4">
-        <p className="text-sm font-medium mb-2">Reasonable Hours</p>
+        <p className="text-sm font-medium mb-2">Early and late hours</p>
         <div className="flex flex-wrap items-end gap-3">
           <HourSelect
             value={settings.reasonableStart}
@@ -256,7 +255,7 @@ export function SettingsPanel({ zones, use24Hour, onUpdateZone, onRemoveZone, on
 
       <CollapsibleContent className="mt-4">
         <p className="text-sm text-muted-foreground mb-4">
-          Rename cities and configure working and reasonable hours for each one. Use the arrows to change the display order.
+          Rename cities and set working, early and late hours for each one. Use the arrows to change the order.
         </p>
         <div className="grid gap-4 md:grid-cols-2">
           {zones.map((zone, index) => (

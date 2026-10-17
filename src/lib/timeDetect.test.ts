@@ -3,7 +3,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { DateTime, Settings } from "luxon";
 import { createZone } from "./storage";
 import { sanitize, type Expr } from "./extraction";
-import { callParseTime, chipFor, ParseTimeTimeout, firstReaderWithChip, sameOffsetEverywhere, teamZonesFor, toExpressions } from "./timeDetect";
+import { callParseTime, chipFor, ParseTimeTimeout, worstReader, sameOffsetEverywhere, teamZonesFor, toExpressions } from "./timeDetect";
 import { DEMO_NOW, EXAMPLES, UNCLEAR_EXAMPLE } from "./demoPresets";
 
 const PRAGUE = "Europe/Prague";
@@ -136,12 +136,17 @@ describe("teamZonesFor", () => {
   });
 });
 
-describe("firstReaderWithChip", () => {
+describe("worstReader", () => {
   it("skips readers on the author's offset", () => {
     const algiers = createZone("Africa/Algiers");
     const [e] = toExpressions([exact("2026-10-15", "15:00", "Africa/Tunis")], "x", DEMO_NOW);
-    expect(firstReaderWithChip([e], tunis, [tunis, algiers, doha], true)?.tz).toBe("Asia/Qatar");
-    expect(firstReaderWithChip([], tunis, [tunis, algiers, doha], true)?.tz).toBe("Africa/Algiers");
+    expect(worstReader([e], tunis, [tunis, algiers, doha], true)?.tz).toBe("Asia/Qatar");
+    expect(worstReader([], tunis, [tunis, algiers, doha], true)?.tz).toBe("Africa/Algiers");
+  });
+
+  it("picks the reader the time hurts most", () => {
+    const friday = EXAMPLES.find((x) => x.id === "friday")!;
+    expect(worstReader(friday.expressions, friday.author, [friday.author, tunis, doha], true).tz).toBe("Asia/Qatar");
   });
 });
 

@@ -88,6 +88,11 @@ export function ScheduleView({ zones, now, use24Hour, homeTz }: ScheduleViewProp
 
   return (
     <div className="schedule-view">
+      <p className="mb-3 flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted-foreground">
+        <span><span aria-hidden className="schedule-cell-working mr-1.5 inline-block size-3 rounded-sm align-middle" />Working hours</span>
+        <span><span aria-hidden className="schedule-cell-reasonable mr-1.5 inline-block size-3 rounded-sm align-middle" />Early or late</span>
+        <span><span aria-hidden className="schedule-cell-outside mr-1.5 inline-block size-3 rounded-sm border align-middle" />After hours or weekend</span>
+      </p>
       {/* Scrollable container for both header and grid */}
       <div ref={scrollRef} className="schedule-grid-container" style={{ "--cols": zones.length } as CSSProperties}>
         {/* Header row - sticky */}
