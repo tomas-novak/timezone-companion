@@ -91,6 +91,17 @@ export function resolveHomeTz(homeTz: string | null): string {
   return canonicalTz(tz);
 }
 
+export function formatWorkWeek(days: number[]): string {
+  const set = new Set(days);
+  const name = (d: number) => DAYS_OF_WEEK[d - 1].short;
+  if (set.size === 0) return "No working days";
+  if (set.size === 7) return "Every day";
+  const starts = [...set].filter((d) => !set.has(d === 1 ? 7 : d - 1));
+  if (starts.length > 1) return DAYS_OF_WEEK.filter((d) => set.has(d.value)).map((d) => d.short).join(", ");
+  const end = ((starts[0] + set.size - 2) % 7) + 1;
+  return set.size === 1 ? name(starts[0]) : `${name(starts[0])}–${name(end)}`;
+}
+
 export function formatOffsetDiff(minutes: number): string {
   if (minutes === 0) return "0 h";
   const sign = minutes > 0 ? "+" : "−";

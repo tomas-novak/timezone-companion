@@ -1,5 +1,5 @@
 import { DateTime } from "luxon";
-import { formatOffsetDiff } from "@/lib/timezones";
+import { formatOffsetDiff, formatWorkWeek } from "@/lib/timezones";
 import type { Zone } from "@/lib/storage";
 import { getWorkStatus, type WorkStatus } from "@/lib/workStatus";
 import { Clock, Briefcase, Coffee, Calendar, Sun } from "lucide-react";
@@ -59,6 +59,9 @@ export function ClockCard({ zone, now, use24Hour, homeTz }: ClockCardProps) {
   // UTC offset
   const offset = local.toFormat("ZZZZ"); // e.g., "UTC+3"
   const abbr = local.toFormat("ZZZZZ"); // Full timezone name
+  // UTC so a DST jump in the viewer's own zone never shifts a stored "02:00"
+  const hour = (t: string) => DateTime.fromFormat(t, "HH:mm", { zone: "utc" }).toFormat(use24Hour ? "HH:mm" : "h:mm a");
+  const workWeek = `${formatWorkWeek(zone.workingDays)} · ${hour(zone.workingStart)}–${hour(zone.workingEnd)}`;
   const homeDiff = zone.tz === homeTz ? "You" : formatOffsetDiff(local.offset - now.setZone(homeTz).offset);
 
   return (
@@ -72,6 +75,7 @@ export function ClockCard({ zone, now, use24Hour, homeTz }: ClockCardProps) {
       <div className="mb-4">
         <h2 className="text-xl font-semibold text-foreground">{zone.city}</h2>
         <p className="text-sm text-muted-foreground">{zone.country}</p>
+        <p className="text-xs text-muted-foreground">{workWeek}</p>
       </div>
 
       {/* Live Time */}

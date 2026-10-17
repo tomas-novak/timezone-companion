@@ -45,8 +45,8 @@
     --radius: 0.75rem;
 
     --working-badge: 172 90% 22%;
-    --reasonable-badge: 32 95% 30%;
-    --outside-badge: 0 0% 40%;
+    --reasonable-badge: 32 95% 28%;
+    --outside-badge: 0 0% 36%;
     --weekend-badge: 2 80% 40%;
   }
 
@@ -85,7 +85,7 @@
     --working-badge: 174 94% 48%;
     --reasonable-badge: 45 93% 55%;
     --outside-badge: 206 13% 72%;
-    --weekend-badge: 2 90% 65%;
+    --weekend-badge: 2 90% 70%;
   }
 }
 
@@ -168,12 +168,24 @@
     @apply rounded-2xl border bg-card overflow-hidden;
   }
 
+  /* Header, rows and the now bar share one width and equal columns, so they stay aligned and keep their backgrounds when scrolled sideways */
   .schedule-header {
     @apply sticky top-0 z-20 flex border-b bg-card;
+    min-width: calc(var(--cols) * 8rem);
   }
 
   .schedule-header-cell {
-    @apply flex-1 min-w-[100px] px-3 py-3 text-center text-sm font-medium border-r last:border-r-0;
+    @apply min-w-0 flex-1 basis-0 truncate px-3 py-3 text-center text-sm font-medium border-r last:border-r-0;
+  }
+
+  .schedule-header-cell-home {
+    background-color: hsl(var(--primary) / 0.12);
+    box-shadow: inset 0 -2px 0 hsl(var(--primary));
+  }
+
+  .schedule-home-tag {
+    @apply block text-xs font-medium;
+    color: hsl(var(--working-badge));
   }
 
   .schedule-time-column {
@@ -186,6 +198,7 @@
 
   .schedule-grid {
     @apply relative;
+    min-width: calc(var(--cols) * 8rem);
   }
 
   .schedule-row {
@@ -202,7 +215,7 @@
   }
 
   .schedule-cell {
-    @apply flex-1 min-w-[100px] flex items-center justify-center gap-1.5 px-2 py-2 text-sm font-mono border-r last:border-r-0 transition-colors;
+    @apply min-w-0 flex-1 basis-0 flex items-center justify-center gap-1.5 px-2 py-2 text-sm font-mono border-r last:border-r-0 transition-colors;
   }
 
   .schedule-time-text {
@@ -253,7 +266,7 @@
   }
 
   .schedule-current-time-cell {
-    @apply flex-1 min-w-[100px] flex items-center justify-center gap-1.5 text-primary-foreground;
+    @apply min-w-0 flex-1 basis-0 flex items-center justify-center gap-1.5 text-primary-foreground;
   }
 
   .schedule-current-day {
