@@ -1,0 +1,17 @@
+{
+  "detector": {
+    "ignoreRules": [],
+    "ignoreFiles": [],
+    "ignoreValues": [
+      {
+        "rule": "border-accent-on-rounded",
+        "value": "*",
+        "files": [
+          "src/components/MomentWrite.tsx"
+        ],
+        "createdAt": "2026-10-16T09:32:41.919Z",
+        "reason": "Claude decided: compose box deliberately copies the Teams message box (rounded with purple bottom underline) from the user's reference screenshot teams-today.png"
+      }
+    ]
+  }
+}

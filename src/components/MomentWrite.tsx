@@ -1,10 +1,12 @@
 import { useRef, useState } from "react";
+import { SendHorizontal } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { DEMO_CITIES, EXAMPLES, type Example } from "@/lib/demoPresets";
 import { headline, landingRows } from "@/lib/landing";
 import { Headline, MessageText } from "./TimesPopover";
 import { H2 } from "./PitchSections";
+import { TeamsWindow } from "./ChatFrame";
 
 export function ExampleSwitch({ example, onExampleChange }: { example: Example; onExampleChange: (id: Example["id"]) => void }) {
   return (
@@ -45,67 +47,54 @@ export function MomentWrite({ example, onExampleChange, onSent, use24Hour }: { e
       </div>
 
       <div className="space-y-2">
-        <div className="overflow-hidden rounded-lg border bg-card shadow-sm">
-          <div className="flex items-center gap-1.5 border-b bg-muted/40 px-3 py-2" aria-hidden>
-            <span className="size-2.5 rounded-full bg-muted-foreground/30" />
-            <span className="size-2.5 rounded-full bg-muted-foreground/30" />
-            <span className="size-2.5 rounded-full bg-muted-foreground/30" />
-            <span className="ml-2 text-xs text-muted-foreground">New message</span>
-          </div>
-          <div className="divide-y text-sm">
-            <p className="px-4 py-2">
-              <span className="text-muted-foreground">To: </span>
-              {others.map((z) => z.city).join(", ")} team
+        <TeamsWindow title={example.subject}>
+          <div className="space-y-3 p-4">
+            <p className="text-xs text-muted-foreground">
+              From {example.author.city} to the {others.map((z) => z.city).join(", ")} team
             </p>
-            <p className="px-4 py-2">
-              <span className="text-muted-foreground">Subject: </span>
-              {example.subject}
-            </p>
-            <div className="space-y-2 px-4 py-4">
-              <p dir="auto" className="min-h-16 text-base leading-8">
+            {open && (
+              <div
+                role="alertdialog"
+                aria-labelledby="send-check-title"
+                aria-describedby="send-check-lines"
+                onKeyDown={(e) => e.key === "Escape" && edit()}
+                className="space-y-3 rounded-md border bg-muted/40 px-4 py-3"
+              >
+                <p id="send-check-title" className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                  Before you send
+                </p>
+                <div id="send-check-lines">
+                  <Headline lines={lines} />
+                </div>
+                <div className="flex flex-wrap justify-end gap-2">
+                  <Button size="sm" variant="outline" autoFocus onClick={edit}>
+                    Edit
+                  </Button>
+                  <Button
+                    size="sm"
+                    onClick={() => {
+                      setCheckFor(null);
+                      onSent();
+                    }}
+                  >
+                    Send anyway
+                  </Button>
+                </div>
+              </div>
+            )}
+            <div className="flex items-end gap-2 rounded-md border border-b-2 border-b-[#5B5FC7] px-3 py-2">
+              <p dir="auto" className="min-h-16 flex-1 text-base leading-8">
                 <MessageText text={example.text} expressions={example.expressions} cities={DEMO_CITIES} author={example.author} viewer={null} use24Hour={use24Hour} />
               </p>
-              <p className="text-xs text-muted-foreground">Hover or tap the highlighted time.</p>
+              {!open && (
+                <Button ref={sendRef} size="icon" variant="ghost" aria-label="Send" className="shrink-0 text-[#5B5FC7] hover:text-[#5B5FC7]" onClick={() => setCheckFor(example.id)}>
+                  <SendHorizontal />
+                </Button>
+              )}
             </div>
+            <p className="text-xs text-muted-foreground">Hover or tap the highlighted time.</p>
           </div>
-          {open ? (
-            <div
-              role="alertdialog"
-              aria-labelledby="send-check-title"
-              aria-describedby="send-check-lines"
-              onKeyDown={(e) => e.key === "Escape" && edit()}
-              className="space-y-3 border-t bg-muted/40 px-4 py-3"
-            >
-              <p id="send-check-title" className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                Before you send
-              </p>
-              <div id="send-check-lines">
-                <Headline lines={lines} />
-              </div>
-              <div className="flex flex-wrap justify-end gap-2">
-                <Button size="sm" variant="outline" autoFocus onClick={edit}>
-                  Edit
-                </Button>
-                <Button
-                  size="sm"
-                  onClick={() => {
-                    setCheckFor(null);
-                    onSent();
-                  }}
-                >
-                  Send anyway
-                </Button>
-              </div>
-            </div>
-          ) : (
-            <div className="flex items-center justify-between gap-3 border-t px-4 py-3">
-              <span className="text-xs text-muted-foreground">From {example.author.city}</span>
-              <Button ref={sendRef} size="sm" onClick={() => setCheckFor(example.id)}>
-                Send
-              </Button>
-            </div>
-          )}
-        </div>
+        </TeamsWindow>
         <p className="text-sm text-muted-foreground">In Outlook this check runs when you press Send. In Teams it is one button before you send.</p>
       </div>
     </section>

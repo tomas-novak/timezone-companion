@@ -9,7 +9,7 @@ import { TIME_HINT } from "@/lib/timeHint";
 import { NOT_CONVERTED, headline, landingRows, sentAs } from "@/lib/landing";
 import { tzCity } from "@/lib/timezones";
 import { callParseTime, firstReaderWithChip, ParseTimeTimeout, teamZonesFor, toExpressions, type TimeExpression } from "@/lib/timeDetect";
-import { ChatFrame } from "./ChatFrame";
+import { ChatFrame, TeamsMessage, TeamsWindow } from "./ChatFrame";
 import { Headline, MessageText } from "./TimesPopover";
 import { H2 } from "./PitchSections";
 
@@ -37,23 +37,27 @@ function Result({ outcome, you, cities, use24Hour }: { outcome: Extract<Outcome,
   return (
     <div className="space-y-3">
       <h3 className="font-semibold">Before you send</h3>
-      <div className="space-y-3 rounded-lg border bg-card p-3">
-        <p dir="auto" className="text-sm leading-7">
-          <MessageText text={text} expressions={expressions} cities={cities} author={you} viewer={null} use24Hour={use24Hour} />
-        </p>
-        {warn && (
-          <div className="space-y-1 rounded-md border border-amber-400 bg-amber-400/10 p-3">
-            <Headline lines={lines} />
-            <p className="text-xs text-muted-foreground">Only you see this check. Your colleagues just see the time in their own zone.</p>
-          </div>
-        )}
-        {!converted.length && <Headline lines={lines} />}
-        <p className="text-xs text-muted-foreground">
-          {day
-            ? `AI read it as ${day}, ${sentAs(first, use24Hour)} ${cities.find((z) => z.tz === first.sourceZone)?.city ?? tzCity(first.sourceZone!)} time (${secs})`
-            : `AI read it (${secs}): no exact time.`}
-        </p>
-      </div>
+      <TeamsWindow title="Team chat">
+        <div className="space-y-3 p-4">
+          <TeamsMessage author={you} mine>
+            <p dir="auto">
+              <MessageText text={text} expressions={expressions} cities={cities} author={you} viewer={null} use24Hour={use24Hour} />
+            </p>
+          </TeamsMessage>
+          {warn && (
+            <div className="space-y-1 rounded-md border border-amber-400 bg-amber-400/10 p-3">
+              <Headline lines={lines} />
+              <p className="text-xs text-muted-foreground">Only you see this check. Your colleagues just see the time in their own zone.</p>
+            </div>
+          )}
+          {!converted.length && <Headline lines={lines} />}
+          <p className="text-xs text-muted-foreground">
+            {day
+              ? `AI read it as ${day}, ${sentAs(first, use24Hour)} ${cities.find((z) => z.tz === first.sourceZone)?.city ?? tzCity(first.sourceZone!)} time (${secs})`
+              : `AI read it (${secs}): no exact time.`}
+          </p>
+        </div>
+      </TeamsWindow>
     </div>
   );
 }

@@ -1,12 +1,15 @@
 import { Link } from "react-router-dom";
+import { useState } from "react";
 import { DateTime } from "luxon";
 import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { DEMO_CITIES, DEMO_NOW, EXAMPLES, UNCLEAR_EXAMPLE } from "@/lib/demoPresets";
 import { teamZonesFor } from "@/lib/timeDetect";
+import teamsToday from "@/assets/teams-today.png";
 import { MessageText } from "./TimesPopover";
+import { TeamsMessage } from "./ChatFrame";
 
 export const H2 = "text-3xl font-bold tracking-tight sm:text-4xl";
-const BUBBLE = "max-w-[90%] rounded-lg border bg-background px-3 py-2 text-sm leading-7";
 
 export function Hero() {
   return (
@@ -41,25 +44,38 @@ export function Hero() {
   );
 }
 
-const TODAY: [string, string][] = [
-  ["Prague", "Can we meet Thursday at 3pm?"],
-  ["Doha", "Your time or mine?"],
-  ["New Delhi", "That's 18:30 for me. Can we do earlier?"],
-];
+const TODAY_ALT = [
+  "A Teams chat called Rollout plan.",
+  "Me: Can we meet Thursday at 3pm?",
+  "Jiri Kazda: 3PM your time or my time?",
+  "Me: Prague time CET, sorry.",
+  "Vaclav Trnka: That's 18:30 for me. Can we do earlier?",
+  "Me: Ops sorry, then on Friday at 11am Prague time.",
+  "Vaclav Trnka: 14:30 here, works.",
+  "Jiri Kazda: Well, that's a non-working day for me in Doha. But OK, I will join.",
+].join(" ");
 
 export function Today() {
+  const [zoomed, setZoomed] = useState(false);
   return (
     <section id="today" className="scroll-mt-20 space-y-4">
       <h2 className={H2}>Today</h2>
-      <div className="max-w-xl space-y-3 rounded-lg border bg-card p-3 shadow-sm">
-        {TODAY.map(([city, text]) => (
-          <div key={city} className="flex flex-col items-start">
-            <span className="text-xs text-muted-foreground">{city}</span>
-            <p className={BUBBLE}>{text}</p>
+      <Dialog open={zoomed} onOpenChange={setZoomed}>
+        <DialogTrigger className="block w-full cursor-zoom-in rounded-lg">
+          <img src={teamsToday} alt={TODAY_ALT} width={1458} height={887} loading="lazy" className="h-auto w-full" />
+          <span className="sr-only">Show full screen</span>
+        </DialogTrigger>
+        <DialogContent className="light block h-dvh w-screen max-w-none rounded-none border-0 bg-white p-0 sm:rounded-none">
+          <DialogTitle className="sr-only">Rollout plan chat</DialogTitle>
+          {/* Pans at a readable width on phones; a tap closes it like a photo viewer, keyboard users have Close and Esc */}
+          <div onClick={() => setZoomed(false)} className="flex h-full w-full cursor-zoom-out overflow-auto">
+            <img src={teamsToday} alt={TODAY_ALT} width={1458} height={887} className="m-auto h-auto w-[900px] max-w-none shrink-0 sm:w-full sm:max-w-[1458px]" />
           </div>
-        ))}
-      </div>
-      <p className="max-w-xl text-lg">Three extra messages to agree on one time. Every week, in every cross-country team.</p>
+        </DialogContent>
+      </Dialog>
+      <p className="max-w-xl text-lg">
+        Seven messages to agree on one time, and it still landed on a non-working day in Doha. Every week, in every cross-country team.
+      </p>
     </section>
   );
 }
@@ -82,18 +98,19 @@ export function Trust({ use24Hour }: { use24Hour: boolean }) {
         <li>The AI only reads the time in the sentence. Calendar maths does the conversion.</li>
         <li className="space-y-2">
           <p>If a time is unclear, like "3pm your time" in a group, it is flagged, not guessed.</p>
-          <div className="flex max-w-sm flex-col items-start rounded-lg border bg-card p-3">
-            <span className="text-xs text-muted-foreground">{PRAGUE.city}</span>
-            <p dir="auto" className={BUBBLE}>
-              <MessageText
-                text={UNCLEAR_EXAMPLE.text}
-                expressions={UNCLEAR_EXAMPLE.expressions}
-                cities={DEMO_CITIES}
-                author={PRAGUE}
-                viewer={DOHA}
-                use24Hour={use24Hour}
-              />
-            </p>
+          <div className="light max-w-sm rounded-lg border bg-background p-3 text-foreground">
+            <TeamsMessage author={PRAGUE} mine={false}>
+              <p dir="auto">
+                <MessageText
+                  text={UNCLEAR_EXAMPLE.text}
+                  expressions={UNCLEAR_EXAMPLE.expressions}
+                  cities={DEMO_CITIES}
+                  author={PRAGUE}
+                  viewer={DOHA}
+                  use24Hour={use24Hour}
+                />
+              </p>
+            </TeamsMessage>
           </div>
         </li>
         <li>
