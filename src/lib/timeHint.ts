@@ -3,7 +3,8 @@
 // No lookbehind: Safari before 16.4 rejects it while parsing, which would break the whole page.
 const WORD_HOUR = "one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve";
 const D = String.raw`[0-9٠-٩۰-۹]`;
-const ZONE = "GST|AST|IST|GMT|UTC|BST|CET|CEST|EET|EEST|MSK|PKT|WIB|EST|EDT|CST|CDT|PST|PDT|ET|PT|Z|hrs?";
+const NAMED_ZONE = "GST|AST|IST|GMT|UTC|BST|CET|CEST|EET|EEST|MSK|PKT|WIB|EST|EDT|CST|CDT|PST|PDT|ET|PT";
+const ZONE = `${NAMED_ZONE}|Z|hrs?`;
 const DIGIT_WORD = "one|two|three|four|five|six|seven|eight|nine";
 
 export const TIME_HINT = new RegExp([
@@ -25,13 +26,35 @@ export const TIME_HINT = new RegExp([
 // No i flag: with it \p{Lu} would match lowercase too
 const SENTENCE = /(?:\b[aApP]\.[mM]\.(?!\s+\p{Lu})|[^])*?(?:[.!?؟]["'”’»)]*(?:\s+|$)|\n\s*|$)/gu;
 
-// Only sentences with a hint and one on each side go to the AI, so it never reads the rest of a long message.
+// A zone, a month or a date the time sentence may lean on. Case-sensitive, so "we may" and "march on" stay out;
+// Jan, May, March and June are names or words too, so a bare month counts only as a long name that is nothing else.
+// آب (August) is left out: two letters are too likely inside other words.
+const MONTH = "Jan(?:uary)?|Feb(?:ruary)?|Mar(?:ch)?|Apr(?:il)?|May|June?|July?|Aug(?:ust)?|Sept?(?:ember)?|Oct(?:ober)?|Nov(?:ember)?|Dec(?:ember)?";
+const AR_MONTH = "يناير|فبراير|مارس|أبريل|ابريل|مايو|يونيو|يوليو|أغسطس|اغسطس|سبتمبر|أكتوبر|اكتوبر|نوفمبر|ديسمبر|كانون|شباط|آذار|نيسان|أيار|حزيران|تموز|أيلول|تشرين";
+const CONTEXT = new RegExp([
+  String.raw`\b(?:${NAMED_ZONE})\b`,
+  String.raw`\b(?!(?:Next|This|That|Every|Each|Last|Any|Some|First|Same|Free|Spare|Lunch|Dinner|Our|Your|My|The|No|Good|Long|Short|Full|Part|Half|Over)\b)\p{Lu}\p{Ll}+ time\b`,
+  String.raw`\b(?:January|February|April|July|September|October|November|December)\b`,
+  String.raw`${D}{1,2}(?:st|nd|rd|th)?\s(?:${MONTH})\b`,
+  String.raw`\b(?:${MONTH})\.?\s${D}{1,2}(?![0-9٠-٩۰-۹])`,
+  String.raw`${D}{1,2}(?:st|nd|rd|th)\b`,
+  String.raw`(?:^|[^0-9٠-٩۰-۹/])${D}{1,2}/${D}{1,2}(?![0-9٠-٩۰-۹/])`,
+  String.raw`${D}{4}-${D}{2}-${D}{2}`,
+  "توقيت",
+  `(?:^|[^؀-ۿ])[وبل]?(?:${AR_MONTH})(?![؀-ۿ])`,
+].join("|"), "u");
+
+// Sentences with a hint and one on each side go to the AI, plus a context sentence (zone, date, team city) up to two
+// sentences from a hint, so it never reads the rest of a long message. A message without a hint goes whole.
 // Each run is a verbatim slice, so the texts the model returns are still substrings of the whole message.
-export function excerpt(message: string): string {
+export function excerpt(message: string, cities: string[] = []): string {
   const spans = [...message.matchAll(SENTENCE)].map((m) => m[0]).filter((s) => s.trim());
   const hit = spans.map((s) => TIME_HINT.test(s));
-  const keep = spans.map((_, i) => hit[i - 1] || hit[i] || hit[i + 1]);
   if (spans.length <= 3 || !hit.some(Boolean)) return message;
+  // \b is ASCII-only, so it would never close a city like Malé
+  const city = cities.length ? new RegExp(String.raw`(?:^|[^\p{L}])(?:${cities.map((c) => c.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")).join("|")})(?![\p{L}])`, "iu") : null;
+  const hitWithin = (i: number, d: number) => hit.slice(Math.max(0, i - d), i + d + 1).some(Boolean);
+  const keep = spans.map((s, i) => hitWithin(i, 1) || (hitWithin(i, 2) && (CONTEXT.test(s) || !!city?.test(s))));
   const runs: string[] = [];
   let run = "";
   spans.forEach((s, i) => {
