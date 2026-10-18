@@ -1,4 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { useState } from "react";
 import { act, cleanup, fireEvent, render, screen, within } from "@testing-library/react";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { DEMO_CITIES, EXAMPLES, type Example } from "@/lib/demoPresets";
@@ -44,6 +45,22 @@ describe("Moments", () => {
     expect(screen.getByText("Late in the day for 2 cities: Muscat, Doha")).toBeInTheDocument();
     expect(screen.getByText(/AI read it as .* \(saved answer\)/)).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: /Send/ })).not.toBeInTheDocument();
+    expect(screen.getByText("From Tunis to the Prague, Muscat, Doha, New Delhi team")).toBeInTheDocument();
+    expect(screen.getByRole("status")).toBeEmptyDOMElement();
+  });
+
+  it("announces only the new headline after a switch on this card", () => {
+    const Card = () => {
+      const [id, setId] = useState<Example["id"]>(thursday.id);
+      return <MomentWrite example={EXAMPLES.find((x) => x.id === id)!} onExampleChange={setId} use24Hour />;
+    };
+    render(
+      <TooltipProvider>
+        <Card />
+      </TooltipProvider>,
+    );
+    fireEvent.click(screen.getByRole("radio", { name: /Friday/ }));
+    expect(screen.getByRole("status")).toHaveTextContent("Weekend for 2 cities: Muscat, Doha");
   });
 
   it("a tap on the time opens the popup and a second tap closes it", () => {

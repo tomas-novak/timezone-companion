@@ -1,4 +1,4 @@
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { ScrollHint } from "./Concept";
 
@@ -21,11 +21,14 @@ const scrollTo = (bottom: number) => {
 };
 
 describe("ScrollHint", () => {
-  vi.spyOn(HTMLElement.prototype, "getBoundingClientRect").mockImplementation(function (this: HTMLElement) {
-    return { top: 0, bottom: this.id === "main" ? mainBottom : 0 } as DOMRect;
+  beforeEach(() => {
+    vi.spyOn(HTMLElement.prototype, "getBoundingClientRect").mockImplementation(function (this: HTMLElement) {
+      return { top: 0, bottom: this.id === "main" ? mainBottom : 0 } as DOMRect;
+    });
   });
   afterEach(() => {
     cleanup();
+    vi.restoreAllMocks();
     mainBottom = 3000;
   });
 
@@ -36,9 +39,9 @@ describe("ScrollHint", () => {
     expect(scrollBy).toHaveBeenCalledWith({ top: window.innerHeight * 0.8 });
   });
 
-  it("hides at the end of the page and comes back above it", () => {
+  it("hides at the end of the page, a subpixel short included, and comes back above it", () => {
     page();
-    scrollTo(window.innerHeight);
+    scrollTo(window.innerHeight + 0.5);
     expect(screen.queryByRole("button", { name: "Scroll down" })).not.toBeInTheDocument();
     scrollTo(window.innerHeight + 200);
     expect(screen.getByRole("button", { name: "Scroll down" })).toBeInTheDocument();

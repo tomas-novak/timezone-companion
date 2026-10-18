@@ -32,12 +32,12 @@ export function ScrollHint() {
     const ask = document.getElementById("ask");
     const main = document.getElementById("main");
     if (!ask || !main) return;
-    // Full when the end of the page reaches the bottom of the screen, which is when the arrow hides
     const update = () => {
-      const top = main.getBoundingClientRect().bottom;
-      const end = top + window.scrollY - window.innerHeight;
+      const bottom = main.getBoundingClientRect().bottom;
+      const end = bottom + window.scrollY - window.innerHeight;
       setProgress(end > 0 ? Math.min(1, window.scrollY / end) : 1);
-      const hide = top <= window.innerHeight;
+      // Fractional section heights can leave the bottom a subpixel below the screen at full scroll
+      const hide = bottom <= window.innerHeight + 1;
       // Hiding the focused hint would drop keyboard focus to the page body
       if (hide && document.activeElement === button.current) {
         const link = ask.querySelector<HTMLElement>("a, button");
@@ -66,7 +66,12 @@ export function ScrollHint() {
       variant="outline"
       size="icon"
       aria-label="Scroll down"
-      onClick={() => window.scrollBy({ top: window.innerHeight * 0.8 })}
+      onClick={() => {
+        // A sticky header covers the top of the screen, so a step of the full height would skip text under it
+        const header = document.querySelector("header");
+        const pinned = header && getComputedStyle(header).position !== "static" ? header.offsetHeight : 0;
+        window.scrollBy({ top: (window.innerHeight - pinned) * 0.8 });
+      }}
       className="fixed bottom-4 left-1/2 z-40 -translate-x-1/2 rounded-full border-0 shadow-md"
     >
       <svg aria-hidden viewBox="0 0 40 40" className="absolute inset-0 !size-full -rotate-90">

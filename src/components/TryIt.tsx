@@ -29,8 +29,7 @@ async function readTimes(message: string, you: Zone, cities: Zone[]): Promise<Ou
   return { text: message, kind: "done", expressions: toExpressions(exprs, message, now), ms: performance.now() - t0 };
 }
 
-// note ends the "AI read it" line: the live answer time, or that the answer was saved
-export function SendCheck({ text, expressions, note, you, cities, use24Hour }: { text: string; expressions: TimeExpression[]; note: string; you: Zone; cities: Zone[]; use24Hour: boolean }) {
+export function SendCheck({ title = "Team chat", from, text, expressions, note, you, cities, use24Hour }: { title?: string; from?: string; text: string; expressions: TimeExpression[]; note: string; you: Zone; cities: Zone[]; use24Hour: boolean }) {
   if (!expressions.length) return <p className="text-sm">{NO_TIME}</p>;
   const converted = expressions.filter((e) => e.utcInstant);
   const first = converted[0];
@@ -41,8 +40,9 @@ export function SendCheck({ text, expressions, note, you, cities, use24Hour }: {
   return (
     <div className="space-y-3">
       <h3 className="font-semibold">Before you send</h3>
-      <TeamsWindow title="Team chat">
+      <TeamsWindow title={title}>
         <div className="space-y-3 p-4">
+          {from && <p className="text-xs text-muted-foreground">{from}</p>}
           <TeamsMessage name={you.city} mine>
             <p dir="auto">
               <MessageText text={text} expressions={expressions} cities={cities} author={you} viewer={null} use24Hour={use24Hour} />
