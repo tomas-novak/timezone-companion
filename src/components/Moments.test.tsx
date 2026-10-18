@@ -41,7 +41,7 @@ describe("Moments", () => {
         <MomentWrite example={thursday} onExampleChange={() => {}} use24Hour />
       </TooltipProvider>,
     );
-    expect(screen.getByText("Late in the day for 2 cities: Muscat, New Delhi")).toBeInTheDocument();
+    expect(screen.getByText("Late in the day for 2 cities: Muscat, Doha")).toBeInTheDocument();
     expect(screen.getByText(/AI read it as .* \(saved answer\)/)).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: /Send/ })).not.toBeInTheDocument();
   });
@@ -97,7 +97,7 @@ describe("Moments", () => {
   });
 
   it.each([
-    ["Thursday 3pm: late in Muscat", thursday, "Muscat"],
+    ["Thursday 3pm: after hours in New Delhi", thursday, "New Delhi"],
     ["Sunday in Arabic: weekend in Tunis first", arabic, "Tunis"],
     ["Friday 11am: weekend in Muscat", friday, "Muscat"],
   ])("starts on the reader with the worst status: %s", (_, example, expected) => {
@@ -108,19 +108,19 @@ describe("Moments", () => {
   it("shows each reader their own time", () => {
     renderRead(thursday);
     fireEvent.click(screen.getByRole("radio", { name: "Doha" }));
-    expect(screen.getByRole("log")).toHaveTextContent("→ 16:00 your time");
-    fireEvent.click(screen.getByRole("radio", { name: "Muscat" }));
     expect(screen.getByRole("log")).toHaveTextContent("→ 17:00 your time");
+    fireEvent.click(screen.getByRole("radio", { name: "Muscat" }));
+    expect(screen.getByRole("log")).toHaveTextContent("→ 18:00 your time");
   });
 
   it("gives every reader the same neutral chip, without naming the status", () => {
     renderRead(thursday);
     const chip = () => within(screen.getByRole("log")).getByText(/your time/);
-    fireEvent.click(screen.getByRole("radio", { name: "Doha" }));
+    fireEvent.click(screen.getByRole("radio", { name: "Prague" }));
     const working = chip().className;
     fireEvent.click(screen.getByRole("radio", { name: "New Delhi" }));
-    expect(chip()).toHaveTextContent("→ 18:30 your time");
+    expect(chip()).toHaveTextContent("→ 19:30 your time");
     expect(chip().className).toBe(working);
-    expect(chip()).not.toHaveTextContent("Late");
+    expect(chip()).not.toHaveTextContent("After hours");
   });
 });

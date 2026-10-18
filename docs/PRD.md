@@ -140,7 +140,7 @@ The examples use the fixed demo date Sat 17 Oct 2026, 10:00 Prague (`DEMO_NOW`) 
 | Example | Author | Text | Expected |
 | --- | --- | --- | --- |
 | Friday 11am, from Prague (first) | Prague | Then Friday at 11am Prague time? | Tunis 10:00, Muscat 13:00 Weekend, Doha 12:00 Weekend, New Delhi 14:30; headline "Weekend for 2 cities: Muscat, Doha" |
-| Thursday 3pm, from Prague | Prague | Can we meet Thursday at 3pm? | Tunis 14:00, Muscat 17:00 Late, Doha 16:00, New Delhi 18:30 Late |
+| Thursday 3pm, from Tunis | Tunis | Can we meet Thursday at 3pm? | Prague 16:00, Muscat 18:00 Late, Doha 17:00 Late, New Delhi 19:30 After hours |
 | Sunday 10am, in Arabic, from Doha | Doha | هل نعقد المراجعة يوم الأحد الساعة ١٠ صباحًا؟ | Weekend for Tunis, Prague and New Delhi; Muscat 11:00 |
 | Unclear (section 6 only) | Prague | 3pm your time? | Dashed "time unclear" for Doha; not converted |
 
@@ -175,13 +175,13 @@ The examples use the fixed demo date Sat 17 Oct 2026, 10:00 Prague (`DEMO_NOW`) 
 | 2 Chat | "Rollout plan": Me: Can we meet Thursday at 3pm? / Jiri Kazda: 3PM your time or my time? / Me: Prague time CET, sorry. / Vaclav Trnka: That's 18:30 for me. Can we do earlier? / Me: Ops sorry, then on Friday at 11am Prague time. / Vaclav Trnka: 14:30 here, works. / Jiri Kazda: Well, that's a non-working day for me in Doha. But OK, I will join. |
 | 2b Fix | H2 "How we could fix it". Timezone Companion would work inside Teams and Outlook. It helps at two moments: when you send a time, and when someone reads it. Try both below. |
 | 3 H2 | Before you send, see your time in every city |
-| 3 Switch | Friday 11am, from Prague / Thursday 3pm, from Prague / Sunday 10am, in Arabic, from Doha |
+| 3 Switch | Friday 11am, from Prague / Thursday 3pm, from Tunis / Sunday 10am, in Arabic, from Doha |
 | 3 Switch note | These examples replay a saved AI answer from Sat 17 Oct 2026, so the times never change. Your own message below calls the AI live. |
 | 3 Headline (in the Send check) | One line per problem, worst first: Weekend → After hours → Late in the day → Early in the day, each with its cities; none: "Working hours for every city" ("every other city" in a reader's popup, which leaves the reader out) |
 | 3 Check | No Send button: the check "Before you send" shows at once, in the same Team chat window and check box as section 5, ending "AI read it as … (saved answer)". Switching the example updates it |
 | 3 Note | In Outlook this check would run when you press Send. In Teams it would be one button before you send. |
 | 4 H2 | Every reader sees their own time |
-| 4 Chip | → 16:00 your time (Thursday example, read as Doha) |
+| 4 Chip | → 17:00 your time (Thursday example, read as Doha) |
 | 5 H2 | Try your own message |
 | 5 Button | Check before sending (the only button; there is no separate Send) |
 | 5 Chat placeholder | Check a message to read it as another city. |
@@ -955,10 +955,10 @@ Files that use `fetch`, `AbortSignal` or the API start with `// @vitest-environm
 | Section and input | Read as | Expected |
 | --- | --- | --- |
 | 3, Friday 11am, from Prague | — | Check headline "Weekend for 2 cities: Muscat, Doha", shown without a click |
-| 3, Thursday 3pm, from Prague, hover or tap the time | — | Popup: Tunis 14:00 Working hours, Muscat 17:00 Late, Doha 16:00 Working hours, New Delhi 18:30 Late; headline "Late in the day for 2 cities: Muscat, New Delhi" |
+| 3, Thursday 3pm, from Tunis, hover or tap the time | — | Popup: Prague 16:00 Working hours, Muscat 18:00 Late, Doha 17:00 Late, New Delhi 19:30 After hours; headline "After hours for 1 city: New Delhi" and "Late in the day for 2 cities: Muscat, Doha" |
 | 3, on load | — | The check "Before you send" already shows the headline in an amber box, with no Send button |
-| 4, Thursday 3pm | Doha | "→ 16:00 your time"; popup row "You" without status, Prague "Sent as 15:00" |
-| 4, Thursday 3pm | New Delhi | "→ 18:30 your time", no status |
+| 4, Thursday 3pm | Doha | "→ 17:00 your time"; popup row "You" without status, Tunis "Sent as 15:00" |
+| 4, Thursday 3pm | New Delhi | "→ 19:30 your time", no status |
 | 3, Sunday 10am, in Arabic, from Doha | — | Weekend for Tunis, Prague and New Delhi; Muscat 11:00 Working hours; the bubble reads right to left |
 | 4, Sunday example | Muscat | "→ 11:00 your time" |
 | 4, switch through all readers | each | Chips update at once; no requests in the Network tab |
@@ -991,7 +991,7 @@ The concept is buildable on documented Microsoft APIs, but only for messages the
 | Teams, sender | A compose action ([message extension](https://learn.microsoft.com/en-us/microsoftteams/platform/messaging-extensions/how-to/action-commands/respond-to-task-module-submit)) opens a dialog with the check, then inserts a card into the compose box | Plain typed messages are not converted; extensions cannot read the draft or hook send |
 | Teams, readers | The card holds the original text plus `{{TIME(2026-10-15T13:00:00Z)}}` and `{{DATE(…, SHORT)}}`, which [render on each reader's device](https://learn.microsoft.com/en-us/adaptive-cards/authoring-cards/text-features) | A [2023 report](https://learn.microsoft.com/en-us/answers/questions/1185730/why-does-ms-teams-date-and-time-functions-on-adapt) shows Teams desktop rendering UTC; validate before claiming |
 | Teams, every message | A bot with [per-chat consent](https://learn.microsoft.com/en-us/microsoftteams/platform/agents-in-teams/enable-receive-all-chat-messages) (`ChatMessage.Read.Chat`) replies with conversions after a message is sent | Chat owner must consent; privacy review at scale; bot can only reply, not edit |
-| Outlook, sender | [Smart Alerts](https://learn.microsoft.com/en-us/office/dev/add-ins/outlook/onmessagesend-onappointmentsend-events) on send read the body and show "Late in the day for 2 people: Muscat 17:00, New Delhi 18:30" with Send anyway / Don't send | Runs on web, new and classic Windows, Mac; not mobile; no event while typing; needs admin deployment |
+| Outlook, sender | [Smart Alerts](https://learn.microsoft.com/en-us/office/dev/add-ins/outlook/onmessagesend-onappointmentsend-events) on send read the body and show "After hours for 1 person: New Delhi 19:30. Late in the day for 2 people: Muscat 18:00, Doha 17:00" with Send anyway / Don't send | Runs on web, new and classic Windows, Mac; not mobile; no event while typing; needs admin deployment |
 | Outlook, readers | A [pinnable task pane](https://learn.microsoft.com/en-us/office/dev/add-ins/outlook/pinnable-taskpane) lists converted times and refreshes as the reader moves between emails | Not inline in the email body; the reader opens and pins it once |
 | Participant zones | Graph [`getSchedule`](https://learn.microsoft.com/en-us/graph/api/calendar-getschedule) (delegated `Calendars.ReadBasic`) returns each attendee's working hours and time zone | Federated or external users may not return data |
 | Copilot | A bot-based extension with search commands can surface in [M365 Copilot in Teams](https://learn.microsoft.com/en-us/microsoft-365/copilot/extensibility/overview-message-extension-bot) | Preview only, search commands only; do not call it a Copilot agent |
@@ -1026,7 +1026,7 @@ We found no Copilot feature that converts times inside Teams or Outlook messages
 
 - **Where Ooredoo works:** Teams and Outlook, not Slack.
 - **Two sides of one message:** each reader gets the time in their own zone; the sender sees whether it falls in each person's working day, including Sunday–Thursday versus Monday–Friday.
-- **Before sending, not after:** the sender sees "New Delhi 18:30 · late" before the message goes out.
+- **Before sending, not after:** the sender sees "New Delhi 19:30 · after hours" before the message goes out.
 - **No guessing:** "3pm your time" in a group is flagged, not converted. Other tools silently assume a zone.
 
 **Pitch lines to test**
@@ -1045,8 +1045,8 @@ The demo wins on one moment: the same message flipping across four readers, each
 
 | # | Moment | How to stage it (5–10 s) |
 | --- | --- | --- |
-| 1 | "Read as" switcher | Click Doha, Muscat, Tunis, New Delhi, 2 s each. Stop talking and let the chip change. |
-| 2 | Warning before sending | Section 3, "Thursday 3pm, from Prague": hover or tap the time for the popup, then press Send and the check shows the headline: "Before I hit send, I see that Muscat and Delhi are at the end of their day." |
+| 1 | "Read as" switcher | Click Doha, Muscat, Prague, New Delhi, 2 s each. Stop talking and let the chip change. |
+| 2 | Warning before sending | Section 3, "Thursday 3pm, from Tunis": the check already shows the headline, hover or tap the time for the popup: "Before I hit send, I see that Delhi is after hours and Muscat and Doha are at the end of their day." |
 | 3 | Doha writes in Arabic, Sunday lands as a weekend | Section 3, "Sunday 10am, in Arabic, from Doha": Prague, Tunis and Delhi on their weekend, Muscat on a working day. |
 | 4 | A judge's city joins the chat (live only) | Set "My time zone" to the judge's city; in section 5 it joins as a sixth city and their message gets a real AI read. |
 | 5 | The AI refuses to guess a zone | Section 6: "3pm your time?" shows "time unclear" instead of a time. |
@@ -1060,8 +1060,8 @@ The demo wins on one moment: the same message flipping across four readers, each
 | 0:00–0:12 | Concept page hero, then section 2 "Today" | "Someone in Prague writes: can we meet Thursday at 3pm? Simple. But the four people reading it are in Tunis, Muscat, Doha and Delhi." | Thursday at 3pm. Whose 3pm? |
 | 0:12–0:22 | The re-enacted "Rollout plan" chat in "The problem today" (seven messages) | "Doha reads it one way, Tunis another, and for Delhi it is the end of the day. Someone always does the maths." | 5 cities, 2 work weeks |
 | 0:22–0:37 | Web tool: clocks, status colours, 24 h grid | "This is Timezone Companion, and it works today. Live clocks for every team city. Green means working hours. It knows Doha works Sunday to Thursday and Prague Monday to Friday." | Working today |
-| 0:37–0:52 | Section 3: "Thursday 3pm, from Prague", popup and headline, then Send | "Now the AI part. Here is the same message, from Prague. Before I send it, I see what my 3pm means for everyone. Muscat and Delhi are at the end of their day. I can fix that now." | Check before you send |
-| 0:52–1:05 | Section 4 "Read as": Doha, Muscat, Tunis, New Delhi | "The same chat, seen by each person. My words stay as I wrote them. Each reader gets a small tag with their own time." | Same message. Your own time. |
+| 0:37–0:52 | Section 3: "Thursday 3pm, from Tunis", headline, then the popup | "Now the AI part. Here is a message from Tunis. Before I send it, I see what my 3pm means for everyone. Delhi is after hours, Muscat and Doha are at the end of their day. I can fix that now." | Check before you send |
+| 0:52–1:05 | Section 4 "Read as": Doha, Muscat, Prague, New Delhi | "The same chat, seen by each person. My words stay as I wrote them. Each reader gets a small tag with their own time." | Same message. Your own time. |
 | 1:05–1:15 | Section 6: "3pm your time?" flagged | "If the time zone is unclear, it says so instead of guessing." | Unclear zone? It asks. |
 | 1:15–1:30 | Section 6 "What the AI receives", zoom on the payload | "The AI gets the sentence, my time zone, the date and our city list. It only says: this is a day, this is a time. The conversion is plain calendar maths. The app adds nothing else: no calendars, no list of who reads it." | AI reads words. Code does times. |
 | 1:30–1:45 | Section 7 "Can Ooredoo build it?" | "Next, as a concept: a Teams action where each reader sees their own time, and a check in Outlook before a late invite goes out." | Concept: Teams · Outlook |

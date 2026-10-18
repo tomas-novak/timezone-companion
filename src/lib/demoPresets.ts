@@ -27,7 +27,7 @@ function example(id: Example["id"], label: string, subject: string, author: Zone
 
 export const EXAMPLES: Example[] = [
   example("friday", "Friday 11am, from Prague", "Meeting", city("Europe/Prague"), "Then Friday at 11am Prague time?"),
-  example("exact", "Thursday 3pm, from Prague", "Meeting", city("Europe/Prague"), "Can we meet Thursday at 3pm?"),
+  example("exact", "Thursday 3pm, from Tunis", "Meeting", city("Africa/Tunis"), "Can we meet Thursday at 3pm?"),
   example("arabic", "Sunday 10am, in Arabic, from Doha", "Review", city("Asia/Qatar"), "هل نعقد المراجعة يوم الأحد الساعة ١٠ صباحًا؟"),
 ];
 

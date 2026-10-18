@@ -8,14 +8,14 @@ const doha = DEMO_CITIES.find((z) => z.city === "Doha")!;
 const rows = (ex = thursday, viewer: typeof doha | null = null) => landingRows(ex.expressions[0], DEMO_CITIES, ex.author, viewer, true);
 
 describe("story numbers", () => {
-  it("Thursday 3pm from Prague", () => {
+  it("Thursday 3pm from Tunis", () => {
     expect(rows().map((r) => `${r.zone.city} ${r.time} ${r.status}`)).toEqual([
-      "Tunis 14:00 Working hours",
-      "Muscat 17:00 Late",
-      "Doha 16:00 Working hours",
-      "New Delhi 18:30 Late",
+      "Prague 16:00 Working hours",
+      "Muscat 18:00 Late",
+      "Doha 17:00 Late",
+      "New Delhi 19:30 After hours",
     ]);
-    expect(headline([rows()])).toEqual(["Late in the day for 2 cities: Muscat, New Delhi"]);
+    expect(headline([rows()])).toEqual(["After hours for 1 city: New Delhi", "Late in the day for 2 cities: Muscat, Doha"]);
   });
 
   it("Friday 11am from Prague", () => {
@@ -29,7 +29,7 @@ describe("story numbers", () => {
 
   it("the reader and the author carry no status", () => {
     const r = rows(thursday, doha);
-    expect(r.find((x) => x.role === "you")).toMatchObject({ zone: doha, time: "16:00", status: null });
+    expect(r.find((x) => x.role === "you")).toMatchObject({ zone: doha, time: "17:00", status: null });
     expect(r.find((x) => x.role === "author")).toMatchObject({ time: "15:00", status: null });
     expect(r.map((x) => x.date)).toContain("Thu 22 Oct");
   });
@@ -64,7 +64,7 @@ describe("rows as written", () => {
   });
 
   it("a reader's headline never claims their own hours", () => {
-    expect(headline([landingRows(thursday.expressions[0], DEMO_CITIES, thursday.author, delhi, true)])).toEqual(["Late in the day for 1 city: Muscat"]);
+    expect(headline([landingRows(thursday.expressions[0], DEMO_CITIES, thursday.author, delhi, true)])).toEqual(["Late in the day for 2 cities: Muscat, Doha"]);
     expect(headline([landingRows(e, DEMO_CITIES, prague, doha, true)])).toEqual(["Working hours for every other city"]);
   });
 });
