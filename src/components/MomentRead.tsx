@@ -13,7 +13,7 @@ export function MomentRead({ example, onExampleChange, use24Hour }: { example: E
   return (
     <section id="read" className="grid items-center gap-6 rounded-2xl border bg-tint-purple p-6 shadow-sm sm:p-10">
       <div className="space-y-4 text-center">
-        <h2 id="read-title" tabIndex={-1} className={`outline-none ${H2}`}>Every reader sees their own time</h2>
+        <h2 className={H2}>Every reader sees their own time</h2>
         <p className="text-muted-foreground">Switch who is reading. The words stay as written; each reader gets their own time.</p>
         <ExampleSwitch example={example} onExampleChange={onExampleChange} />
         <p className="text-sm text-muted-foreground">Tap the time to check everyone else.</p>

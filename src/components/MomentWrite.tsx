@@ -1,12 +1,9 @@
-import { useRef, useState } from "react";
-import { SendHorizontal } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { useState } from "react";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { DEMO_CITIES, EXAMPLES, type Example } from "@/lib/demoPresets";
 import { headline, landingRows } from "@/lib/landing";
-import { Headline, MessageText } from "./TimesPopover";
 import { H2 } from "./PitchSections";
-import { TeamsWindow } from "./ChatFrame";
+import { SendCheck } from "./TryIt";
 
 export function ExampleSwitch({ example, onExampleChange }: { example: Example; onExampleChange: (id: Example["id"]) => void }) {
   return (
@@ -26,79 +23,40 @@ export function ExampleSwitch({ example, onExampleChange }: { example: Example; 
   );
 }
 
-export function MomentWrite({ example, onExampleChange, onSent, use24Hour }: { example: Example; onExampleChange: (id: Example["id"]) => void; onSent: () => void; use24Hour: boolean }) {
-  // Keyed by example so switching the example closes the check
-  const [checkFor, setCheckFor] = useState<Example["id"] | null>(null);
-  const sendRef = useRef<HTMLButtonElement>(null);
-  const open = checkFor === example.id;
-  const others = DEMO_CITIES.filter((z) => z.id !== example.author.id);
-  const lines = headline(example.expressions.filter((e) => e.utcInstant).map((e) => landingRows(e, DEMO_CITIES, example.author, null, use24Hour)));
-  const edit = () => {
-    setCheckFor(null);
-    requestAnimationFrame(() => sendRef.current?.focus());
-  };
-
+export function MomentWrite({ example, onExampleChange, use24Hour }: { example: Example; onExampleChange: (id: Example["id"]) => void; use24Hour: boolean }) {
+  const [switched, setSwitched] = useState(false);
   return (
     <section id="write" className="grid items-center gap-6 rounded-2xl border bg-tint-cyan p-6 shadow-sm sm:p-10">
       <div className="space-y-4 text-center">
         <h2 className={H2}>Before you send, see your time in every city</h2>
         <p className="text-muted-foreground">Write in your own time. Before it goes out, you see what it means for every city.</p>
-        <ExampleSwitch example={example} onExampleChange={onExampleChange} />
+        <ExampleSwitch
+          example={example}
+          onExampleChange={(id) => {
+            setSwitched(true);
+            onExampleChange(id);
+          }}
+        />
         <p className="text-sm text-muted-foreground">
           These examples replay a saved AI answer from Sat 17 Oct 2026, so the times never change. Your own message below calls the AI live.
         </p>
       </div>
 
       <div className="space-y-2">
-        <TeamsWindow title={example.subject}>
-          <div className="space-y-3 p-4">
-            <p className="text-xs text-muted-foreground">
-              From {example.author.city} to the {others.map((z) => z.city).join(", ")} team
-            </p>
-            {open && (
-              <div
-                role="alertdialog"
-                aria-labelledby="send-check-title"
-                aria-describedby="send-check-lines"
-                onKeyDown={(e) => e.key === "Escape" && edit()}
-                className="space-y-3 rounded-md border bg-muted/40 px-4 py-3"
-              >
-                <p id="send-check-title" className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                  Before you send
-                </p>
-                <div id="send-check-lines">
-                  <Headline lines={lines} />
-                </div>
-                <div className="flex flex-wrap justify-end gap-2">
-                  <Button size="sm" variant="outline" autoFocus onClick={edit}>
-                    Edit
-                  </Button>
-                  <Button
-                    size="sm"
-                    onClick={() => {
-                      setCheckFor(null);
-                      onSent();
-                    }}
-                  >
-                    Send anyway
-                  </Button>
-                </div>
-              </div>
-            )}
-            <div className="flex flex-wrap items-end justify-end gap-2 rounded-md border border-b-2 border-b-[#5B5FC7] px-3 py-2">
-              <p dir="auto" className="min-h-16 min-w-0 flex-[1_1_12rem] break-words text-base leading-8">
-                <MessageText text={example.text} expressions={example.expressions} cities={DEMO_CITIES} author={example.author} viewer={null} use24Hour={use24Hour} />
-              </p>
-              {!open && (
-                <Button ref={sendRef} size="sm" className="shrink-0 bg-[#5B5FC7] text-white hover:bg-[#4F52B2]" onClick={() => setCheckFor(example.id)}>
-                  Send
-                  <SendHorizontal aria-hidden />
-                </Button>
-              )}
-            </div>
-            <p className="text-xs text-muted-foreground">Press Send to see the check. Hover or tap the highlighted time.</p>
-          </div>
-        </TeamsWindow>
+        <SendCheck
+          title={example.subject}
+          from={`From ${example.author.city} to the ${DEMO_CITIES.filter((z) => z.id !== example.author.id).map((z) => z.city).join(", ")} team`}
+          text={example.text}
+          expressions={example.expressions}
+          note="saved answer"
+          you={example.author}
+          cities={DEMO_CITIES}
+          use24Hour={use24Hour}
+        />
+        {/* A switch rewrites the whole check; announce only its headline, and only after a switch made here */}
+        <p role="status" className="sr-only">
+          {switched ? headline(example.expressions.filter((e) => e.utcInstant).map((e) => landingRows(e, DEMO_CITIES, example.author, null, use24Hour))).join(". ") : ""}
+        </p>
         <p className="text-sm text-muted-foreground">In Outlook this check would run when you press Send. In Teams it would be one button before you send.</p>
       </div>
     </section>

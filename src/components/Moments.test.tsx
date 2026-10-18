@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { act, cleanup, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
+import { useState } from "react";
+import { act, cleanup, fireEvent, render, screen, within } from "@testing-library/react";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { DEMO_CITIES, EXAMPLES, type Example } from "@/lib/demoPresets";
 import { MomentWrite } from "./MomentWrite";
@@ -35,26 +36,37 @@ describe("Moments", () => {
     expect(fetchSpy).not.toHaveBeenCalled();
   });
 
-  it("checks the draft on Send and sends anyway", () => {
-    const onSent = vi.fn();
+  it("shows the check without a click, from the saved answer", () => {
     render(
       <TooltipProvider>
-        <MomentWrite example={thursday} onExampleChange={() => {}} onSent={onSent} use24Hour />
+        <MomentWrite example={thursday} onExampleChange={() => {}} use24Hour />
       </TooltipProvider>,
     );
-    fireEvent.click(screen.getByRole("button", { name: "Send" }));
-    const check = screen.getByRole("alertdialog");
-    expect(check).toHaveTextContent("Late in the day for 2 cities: Muscat, New Delhi");
-    expect(screen.getByRole("button", { name: "Edit" })).toHaveFocus();
-    fireEvent.click(screen.getByRole("button", { name: "Send anyway" }));
-    expect(onSent).toHaveBeenCalledOnce();
-    expect(screen.queryByRole("alertdialog")).not.toBeInTheDocument();
+    expect(screen.getByText("Late in the day for 2 cities: Muscat, Doha")).toBeInTheDocument();
+    expect(screen.getByText(/AI read it as .* \(saved answer\)/)).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /Send/ })).not.toBeInTheDocument();
+    expect(screen.getByText("From Tunis to the Prague, Muscat, Doha, New Delhi team")).toBeInTheDocument();
+    expect(screen.getByRole("status")).toBeEmptyDOMElement();
+  });
+
+  it("announces only the new headline after a switch on this card", () => {
+    const Card = () => {
+      const [id, setId] = useState<Example["id"]>(thursday.id);
+      return <MomentWrite example={EXAMPLES.find((x) => x.id === id)!} onExampleChange={setId} use24Hour />;
+    };
+    render(
+      <TooltipProvider>
+        <Card />
+      </TooltipProvider>,
+    );
+    fireEvent.click(screen.getByRole("radio", { name: /Friday/ }));
+    expect(screen.getByRole("status")).toHaveTextContent("Weekend for 2 cities: Muscat, Doha");
   });
 
   it("a tap on the time opens the popup and a second tap closes it", () => {
     render(
       <TooltipProvider>
-        <MomentWrite example={thursday} onExampleChange={() => {}} onSent={() => {}} use24Hour />
+        <MomentWrite example={thursday} onExampleChange={() => {}} use24Hour />
       </TooltipProvider>,
     );
     const time = screen.getByRole("button", { name: /Thursday at 3pm/ });
@@ -68,7 +80,7 @@ describe("Moments", () => {
   it("closes the popup when the page scrolls", () => {
     render(
       <TooltipProvider>
-        <MomentWrite example={thursday} onExampleChange={() => {}} onSent={() => {}} use24Hour />
+        <MomentWrite example={thursday} onExampleChange={() => {}} use24Hour />
       </TooltipProvider>,
     );
     const time = screen.getByRole("button", { name: /Thursday at 3pm/ });
@@ -83,7 +95,7 @@ describe("Moments", () => {
     try {
       render(
         <TooltipProvider>
-          <MomentWrite example={thursday} onExampleChange={() => {}} onSent={() => {}} use24Hour />
+          <MomentWrite example={thursday} onExampleChange={() => {}} use24Hour />
         </TooltipProvider>,
       );
       const time = screen.getByRole("button", { name: /Thursday at 3pm/ });
@@ -101,20 +113,8 @@ describe("Moments", () => {
     }
   });
 
-  it("returns focus to Send after Edit", async () => {
-    render(
-      <TooltipProvider>
-        <MomentWrite example={thursday} onExampleChange={() => {}} onSent={() => {}} use24Hour />
-      </TooltipProvider>,
-    );
-    fireEvent.click(screen.getByRole("button", { name: "Send" }));
-    fireEvent.click(screen.getByRole("button", { name: "Edit" }));
-    expect(screen.queryByRole("alertdialog")).not.toBeInTheDocument();
-    await waitFor(() => expect(screen.getByRole("button", { name: "Send" })).toHaveFocus());
-  });
-
   it.each([
-    ["Thursday 3pm: late in Muscat", thursday, "Muscat"],
+    ["Thursday 3pm: after hours in New Delhi", thursday, "New Delhi"],
     ["Sunday in Arabic: weekend in Tunis first", arabic, "Tunis"],
     ["Friday 11am: weekend in Muscat", friday, "Muscat"],
   ])("starts on the reader with the worst status: %s", (_, example, expected) => {
@@ -125,19 +125,19 @@ describe("Moments", () => {
   it("shows each reader their own time", () => {
     renderRead(thursday);
     fireEvent.click(screen.getByRole("radio", { name: "Doha" }));
-    expect(screen.getByRole("log")).toHaveTextContent("→ 16:00 your time");
-    fireEvent.click(screen.getByRole("radio", { name: "Muscat" }));
     expect(screen.getByRole("log")).toHaveTextContent("→ 17:00 your time");
+    fireEvent.click(screen.getByRole("radio", { name: "Muscat" }));
+    expect(screen.getByRole("log")).toHaveTextContent("→ 18:00 your time");
   });
 
   it("gives every reader the same neutral chip, without naming the status", () => {
     renderRead(thursday);
     const chip = () => within(screen.getByRole("log")).getByText(/your time/);
-    fireEvent.click(screen.getByRole("radio", { name: "Doha" }));
+    fireEvent.click(screen.getByRole("radio", { name: "Prague" }));
     const working = chip().className;
     fireEvent.click(screen.getByRole("radio", { name: "New Delhi" }));
-    expect(chip()).toHaveTextContent("→ 18:30 your time");
+    expect(chip()).toHaveTextContent("→ 19:30 your time");
     expect(chip().className).toBe(working);
-    expect(chip()).not.toHaveTextContent("Late");
+    expect(chip()).not.toHaveTextContent("After hours");
   });
 });
