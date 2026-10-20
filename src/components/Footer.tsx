@@ -1,5 +1,17 @@
 import { Globe, Clock, Users } from "lucide-react";
 
+export function Signature({ className = "" }: { className?: string }) {
+  return (
+    <p className={`text-center text-sm text-muted-foreground ${className}`}>
+      Made with <span role="img" aria-label="AI">🤖</span> and reviewed with <span role="img" aria-label="love">❤️</span> by Tomáš Novák
+      <br />
+      <a href="mailto:tomas.novak@ofti.app" className="underline underline-offset-4 hover:text-foreground">
+        tomas.novak@ofti.app
+      </a>
+    </p>
+  );
+}
+
 export function Footer() {
   return (
     <footer className="dark mt-8 border-t bg-brand-footer text-foreground">
@@ -38,6 +50,7 @@ export function Footer() {
         <div className="mt-6 pt-4 border-t text-center text-xs text-muted-foreground">
           All preferences are saved locally in your browser.
         </div>
+        <Signature className="mt-6" />
       </div>
     </footer>
   );

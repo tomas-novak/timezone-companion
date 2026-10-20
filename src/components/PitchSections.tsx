@@ -131,6 +131,11 @@ export function Trust({ use24Hour }: { use24Hour: boolean }) {
       <h2 className={H2}>Why you can trust it</h2>
       <ul className="max-w-3xl list-disc space-y-4 pl-5">
         <li>The AI only finds the time in the message. Normal code with no AI converts it for each city.</li>
+        <li>
+          Before the app sends a message to the AI, our code checks it for anything that might be a time or a day, in English or Arabic. A
+          message with nothing like that is not sent. From a message of four or more sentences, only the sentences around the time, plus a nearby
+          date, time zone or city, are sent. The rest stays in your browser.
+        </li>
         <li className="space-y-2">
           <p>If a time is unclear, like "3pm your time" in a group chat, the app marks it "time unclear" and does not guess.</p>
           <div className="light max-w-sm rounded-lg border bg-background p-3 text-foreground">
@@ -187,7 +192,6 @@ const BUILD = [
   "Who is where: each person's city and working hours would come from their Microsoft 365 settings, with IT approval; people outside the company pick their city once.",
   "Data: in the pilot the AI would run on Ooredoo's Azure OpenAI, so messages stay in the company's cloud (to be confirmed with IT). This demo uses OpenAI directly.",
   "What we need from IT: approval for a Teams app and an Outlook add-in, access to Azure OpenAI, and a security review of how a message goes to the AI and back.",
-  "Effort: about 4–6 weeks for one or two developers to build the pilot (our estimate).",
   "Limit: an add-in cannot check text while people type; the check runs when the sender presses the button or Send.",
 ];
 
