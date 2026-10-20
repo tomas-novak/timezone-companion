@@ -3,6 +3,7 @@ import { useLocation } from "react-router-dom";
 import { ChevronDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Header } from "@/components/Header";
+import { Signature } from "@/components/Footer";
 import { MomentWrite } from "@/components/MomentWrite";
 import { MomentRead } from "@/components/MomentRead";
 import { TryIt } from "@/components/TryIt";
@@ -142,6 +143,7 @@ const Concept = () => {
         <Trust use24Hour={settings.use24Hour} />
         <Build />
         <Ask />
+        <Signature />
       </main>
     </div>
   );
